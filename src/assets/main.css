@@ -1,0 +1,7 @@
+body {
+  @apply font-sans p-0 m-0 min-h-screen w-full antialiased;
+}
+
+#app {
+  @apply flex flex-col h-full;
+}
