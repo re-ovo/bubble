@@ -12,6 +12,7 @@
     "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
+    "@vueuse/core": "^11.1.0",
     "tweakpane": "^4.0.4",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",
