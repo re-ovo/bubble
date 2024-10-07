@@ -98,7 +98,71 @@ export class WebGPURenderer {
     }
 
     private drawMesh(object: Object3D, renderer: MeshRenderer, camera: Camera, passEncoder: GPURenderPassEncoder) {
+        const vertexData = new Float32Array([
+            -0.5 * Math.random(), -0.5 * Math.random(), 0.0,
+            0.5 * Math.random(), -0.5 * Math.random(), 0.0,
+            0.0, 0.5 * Math.random(), 0.0,
+        ])
+        const vertexBuffer = this.device.createBuffer({
+            size: 1024,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        })
+        this.device.queue.writeBuffer(vertexBuffer, 0, vertexData.buffer)
 
+        const shaderModule = this.device.createShaderModule({
+            code: wgsl`
+                struct Shared {
+                  @builtin(position) position: vec4f,
+                  @location(0) color: vec4f,
+                }
+                
+                @vertex fn vs(
+                   @location(0) position: vec3<f32>,
+                ) -> Shared {
+                    var res: Shared;
+                    res.position = vec4f(position, 1.0);
+                    res.color = vec4f(position.x + 0.5, position.y + 0.5, 0.0, 1.0);
+                    return res;
+                }
+                
+                @fragment fn fs(data: Shared) -> @location(0) vec4f {
+                    // return data.color;
+                    let r = vec2u(data.color.xy * 480.0) / 8;
+                    let checker = (r.x % 2) != (r.y % 2);
+                   
+                    return select(vec4f(1.0, 0.0, 0.0, 1.0), vec4f(0.0, 1.0, 0.0, 1.0), checker);
+                }
+            `
+        })
+
+        const pipeline = this.device.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                buffers: [
+                    {
+                        arrayStride: 12,
+                        attributes: [
+                            {
+                                shaderLocation: 0,
+                                offset: 0,
+                                format: 'float32x3',
+                            }
+                        ]
+                    }
+                ]
+            },
+            fragment: {
+                module: shaderModule,
+                targets: [{
+                    format: this.preferredFormat,
+                }]
+            },
+        })
+
+        passEncoder.setPipeline(pipeline)
+        passEncoder.setVertexBuffer(0, vertexBuffer)
+        passEncoder.draw(3)
     }
 
     private _drawableSortCache: [Object3D, RendererComponent][] = [];
