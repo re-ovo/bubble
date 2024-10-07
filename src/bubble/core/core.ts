@@ -1,4 +1,4 @@
-import type {Object3D} from "@/bubble/core/node";
+import type {Object3D} from "@/bubble/core/object3d";
 
 /**
  * 用于标记需要更新的对象

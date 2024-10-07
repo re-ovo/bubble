@@ -1,4 +1,4 @@
-import type {Object3D} from "@/bubble/core/node";
+import type {Object3D} from "@/bubble/core/object3d";
 
 export interface Shader {
     properties: ShaderProperties;

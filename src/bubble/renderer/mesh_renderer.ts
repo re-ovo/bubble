@@ -1,6 +1,6 @@
-import {RendererComponent} from "@/bubble/components/renderer/renderer";
+import {RendererComponent} from "@/bubble/renderer/renderer";
 import type {Material} from "@/bubble/material/material";
-import type {Mesh} from "@/bubble/core/mesh";
+import type {Mesh} from "@/bubble/mesh/mesh";
 
 export class MeshRenderer extends RendererComponent {
     mesh?: Mesh;

@@ -1,4 +1,4 @@
-import {Object3D} from "@/bubble/core/node";
+import {Object3D} from "@/bubble/core/object3d";
 import {expect, test, vi} from "vitest";
 import {Component} from "@/bubble/core/core";
 
