@@ -31,10 +31,10 @@ class ConditionalState {
     resolve() {
         for (const branch of this.branches) {
             if (branch.expression) {
+                // console.log(branch.string);
                 return branch.string;
             }
         }
-
         return '';
     }
 }

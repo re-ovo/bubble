@@ -109,34 +109,58 @@ export class WebGPURenderer {
         })
         this.device.queue.writeBuffer(vertexBuffer, 0, vertexData.buffer)
 
+        const uniformBufferData = new Float32Array([
+            0.0, 1.0, 0.0, 1.0,
+        ])
+        const uniformBuffer = this.device.createBuffer({
+            size: uniformBufferData.byteLength,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        })
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformBufferData.buffer)
+
         const shaderModule = this.device.createShaderModule({
             code: wgsl`
                 struct Shared {
                   @builtin(position) position: vec4f,
-                  @location(0) color: vec4f,
                 }
                 
-                @vertex fn vs(
+                struct TestUniform {
+                    color: vec4f
+                }
+                
+                @group(0) @binding(0) var<uniform> test: TestUniform;
+
+                @vertex
+                fn vs(
                    @location(0) position: vec3<f32>,
                 ) -> Shared {
                     var res: Shared;
                     res.position = vec4f(position, 1.0);
-                    res.color = vec4f(position.x + 0.5, position.y + 0.5, 0.0, 1.0);
                     return res;
                 }
                 
-                @fragment fn fs(data: Shared) -> @location(0) vec4f {
-                    // return data.color;
-                    let r = vec2u(data.color.xy * 480.0) / 8;
-                    let checker = (r.x % 2) != (r.y % 2);
-                   
-                    return select(vec4f(1.0, 0.0, 0.0, 1.0), vec4f(0.0, 1.0, 0.0, 1.0), checker);
+                @fragment
+                fn fs(data: Shared) -> @location(0) vec4f {
+                    return vec4f(1.0, 0.0, 0.0, 1.0);
                 }
             `
         })
 
+        const bindingGroupLayout = this.device.createBindGroupLayout({
+            entries: [{
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                buffer: {
+                    type: 'uniform'
+                }
+            }]
+        })
+
         const pipeline = this.device.createRenderPipeline({
-            layout: 'auto',
+            layout: this.device.createPipelineLayout({
+                bindGroupLayouts: [bindingGroupLayout]
+            }),
+            label: 'Pipeline',
             vertex: {
                 module: shaderModule,
                 buffers: [
@@ -160,8 +184,20 @@ export class WebGPURenderer {
             },
         })
 
+        const bindingGroup = this.device.createBindGroup({
+            label: 'uniforms',
+            layout: bindingGroupLayout,
+            entries: [{
+                binding: 0,
+                resource: {
+                    buffer: uniformBuffer,
+                }
+            }]
+        })
+
         passEncoder.setPipeline(pipeline)
         passEncoder.setVertexBuffer(0, vertexBuffer)
+        passEncoder.setBindGroup(0, bindingGroup)
         passEncoder.draw(3)
     }
 

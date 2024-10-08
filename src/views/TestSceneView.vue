@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, useTemplateRef} from "vue";
+import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {WebGPURenderer} from "@/bubble/core/renderer";
 import {Object3D, Scene} from "@/bubble/core/object3d";
 import {PerspectiveCamera} from "@/bubble/core/camera";
@@ -17,12 +17,15 @@ const pane = usePane({
   title: 'Settings',
 })
 
+
+let renderer: WebGPURenderer | null = null
+
 onMounted(async () => {
   if (!canvasRef.value) return
   canvasRef.value.width = canvasRef.value.clientWidth
   canvasRef.value.height = canvasRef.value.clientHeight
 
-  const renderer = new WebGPURenderer()
+  renderer = new WebGPURenderer()
   await renderer.init(canvasRef.value)
 
   const scene = new Scene()
@@ -50,5 +53,9 @@ onMounted(async () => {
       1000,
   )
   renderer.render(scene, camera)
+})
+
+onUnmounted(() => {
+  renderer?.destroy()
 })
 </script>
