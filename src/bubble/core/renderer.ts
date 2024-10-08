@@ -98,19 +98,35 @@ export class WebGPURenderer {
     }
 
     private drawMesh(object: Object3D, renderer: MeshRenderer, camera: Camera, passEncoder: GPURenderPassEncoder) {
-        const vertexData = new Float32Array([
-            -0.5 * Math.random(), -0.5 * Math.random(), 0.0,
-            0.5 * Math.random(), -0.5 * Math.random(), 0.0,
-            0.0, 0.5 * Math.random(), 0.0,
-        ])
+        // Vertex Buffer
+        const rnd = (min: number = 0.0, max: number = 1.0) => Math.random() * (max - min) + min
+        const counts = Math.floor(rnd(512, 1024))
+        const vertexData = new Float32Array(counts * 3)
+        for (let i = 0; i < counts; i += 9) {
+            let centerX = rnd(-1, 1)
+            let centerY = rnd(-1, 1)
+
+            vertexData[i] = centerX + rnd(-0.1, 0.1)
+            vertexData[i + 1] = centerY + rnd(-0.1, 0.1)
+            vertexData[i + 2] = 0.0
+
+            vertexData[i + 3] = centerX + rnd(-0.1, 0.1)
+            vertexData[i + 4] = centerY + rnd(-0.1, 0.1)
+            vertexData[i + 5] = 0.0
+
+            vertexData[i + 6] = centerX + rnd(-0.1, 0.1)
+            vertexData[i + 7] = centerY + rnd(-0.1, 0.1)
+            vertexData[i + 8] = 0.0
+        }
         const vertexBuffer = this.device.createBuffer({
-            size: 1024,
+            size: vertexData.byteLength,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         })
         this.device.queue.writeBuffer(vertexBuffer, 0, vertexData.buffer)
 
+        // Uniform Buffer
         const uniformBufferData = new Float32Array([
-            0.0, 1.0, 0.0, 1.0,
+            rnd(), rnd(), rnd(), 1.0,
         ])
         const uniformBuffer = this.device.createBuffer({
             size: uniformBufferData.byteLength,
@@ -118,6 +134,7 @@ export class WebGPURenderer {
         })
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformBufferData.buffer)
 
+        // Shader
         const shaderModule = this.device.createShaderModule({
             code: wgsl`
                 struct Shared {
@@ -141,7 +158,7 @@ export class WebGPURenderer {
                 
                 @fragment
                 fn fs(data: Shared) -> @location(0) vec4f {
-                    return vec4f(1.0, 0.0, 0.0, 1.0);
+                    return test.color;
                 }
             `
         })
@@ -198,7 +215,7 @@ export class WebGPURenderer {
         passEncoder.setPipeline(pipeline)
         passEncoder.setVertexBuffer(0, vertexBuffer)
         passEncoder.setBindGroup(0, bindingGroup)
-        passEncoder.draw(3)
+        passEncoder.draw(counts)
     }
 
     private _drawableSortCache: [Object3D, RendererComponent][] = [];

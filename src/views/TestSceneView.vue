@@ -40,11 +40,11 @@ onMounted(async () => {
   scene.addObject(new Object3D('Cube'))
       .addComponent(MeshRenderer)
       .material = cubeMaterial
-
-  scene.addObject(glass)
-  scene.addObject(new Object3D('Cube22'))
-      .addComponent(MeshRenderer)
-      .material = cubeMaterial
+  //
+  // scene.addObject(glass)
+  // scene.addObject(new Object3D('Cube22'))
+  //     .addComponent(MeshRenderer)
+  //     .material = cubeMaterial
 
   const camera = new PerspectiveCamera(
       75,
