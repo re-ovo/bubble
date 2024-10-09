@@ -68,30 +68,20 @@ export class ScriptableRenderContext {
  * 可以在管线中自定义渲染流程, 类似于Unity的SRP
  */
 export class ScriptablePipeline {
-    passes: ScriptableRenderPass[];
-
-    constructor(passes: ScriptableRenderPass[] = []) {
-        this.passes = passes;
-    }
-
-    addPass(pass: ScriptableRenderPass) {
-        this.passes.push(pass);
-    }
-
     render(context: ScriptableRenderContext, cameras: Camera[]) {
-        context.prepareEncoder();
-        context.beginRenderPass({
-            colorAttachments: [
-                {
-                    view: context.targetView,
-                    loadOp: 'clear',
-                    storeOp: 'store'
-                }
-            ]
-        });
-        context.endRenderPass();
-        context.submit();
-
+        // context.prepareEncoder();
+        // context.beginRenderPass({
+        //     colorAttachments: [
+        //         {
+        //             view: context.targetView,
+        //             loadOp: 'clear',
+        //             storeOp: 'store'
+        //         }
+        //     ]
+        // });
+        // context.endRenderPass();
+        // context.submit();
+        //
 
         // Dummy implementation
         throw new Error("Not implemented");
