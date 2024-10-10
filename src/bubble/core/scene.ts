@@ -1,6 +1,7 @@
 import {Object3D} from "@/bubble/core/object3d";
+import type {Disposable} from "@/bubble/core/dispose";
 
-export class Scene {
+export class Scene implements Disposable {
     readonly objects: Object3D[];
 
     constructor() {
@@ -32,5 +33,11 @@ export class Scene {
             }
         }
         return newDst;
+    }
+
+    dispose() {
+        for (let object of this.objects) {
+            object.dispose();
+        }
     }
 }
