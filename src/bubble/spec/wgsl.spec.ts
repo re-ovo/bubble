@@ -1,4 +1,4 @@
-import {wgsl} from "@/bubble/shader/lang";
+import {wgsl} from "@/bubble/shader/processor";
 import {expect, test} from "vitest";
 
 test("wgsl", () => {
