@@ -1,7 +1,8 @@
 import {Transform} from "@/bubble/math/transform";
 import type {Component} from "@/bubble/core/component";
+import type {Disposable} from "@/bubble/core/dispose";
 
-export class Object3D {
+export class Object3D implements Disposable {
     readonly label: string;
     readonly transform: Transform;
     readonly components: Map<{ new(object3d: Object3D): Component }, Component> = new Map();
@@ -37,6 +38,8 @@ export class Object3D {
         }
         return null;
     }
+
+    dispose() {} // dispose 只负责是否资源托管的资源，子对象的销毁交给它自己完成
 }
 
 
