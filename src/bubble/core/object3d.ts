@@ -5,7 +5,7 @@ import type {Scene} from "@/bubble/core/scene";
 
 export class Object3D implements Disposable {
     readonly label: string;
-    readonly scene: Scene | null = null;
+    scene: Scene | null = null;
     readonly transform: Transform;
     readonly components: Map<{ new(object3d: Object3D): Component }, Component> = new Map();
 
@@ -41,5 +41,9 @@ export class Object3D implements Disposable {
         return null;
     }
 
-    dispose() {} // dispose 只负责是否资源托管的资源，子对象的销毁交给它自己完成
+    dispose() {
+        if (this.scene) {
+            this.scene.removeObject(this);
+        }
+    }
 }

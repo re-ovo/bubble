@@ -9,6 +9,7 @@ export class Scene {
 
     addObject(object: Object3D) {
         this.objects.push(object);
+        object.scene = this;
         return object;
     }
 
@@ -16,6 +17,7 @@ export class Scene {
         const index = this.objects.indexOf(object);
         if (index > -1) {
             this.objects.splice(index, 1);
+            object.scene = null;
         }
     }
 
