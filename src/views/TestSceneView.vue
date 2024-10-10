@@ -7,8 +7,8 @@ import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {WebGPURenderer} from "@/bubble/core/renderer";
 import {Object3D, Scene} from "@/bubble/core/object3d";
 import {PerspectiveCamera} from "@/bubble/core/camera";
-import {MeshRenderer} from "@/bubble/renderer/mesh_renderer";
-import {BlendMode, Material} from "@/bubble/material/material";
+import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
+import {BlendMode, Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')

@@ -1,4 +1,4 @@
-import type {Updatable} from "@/bubble/core/core";
+import type {Updatable} from "@/bubble/core/updatable";
 import {mat4, type Mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
 

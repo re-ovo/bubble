@@ -1,5 +1,5 @@
 import {Transform} from "@/bubble/math/transform";
-import type {Component} from "@/bubble/core/core";
+import type {Component} from "@/bubble/core/component";
 
 export class Object3D {
     readonly label: string;

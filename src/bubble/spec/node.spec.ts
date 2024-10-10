@@ -1,6 +1,6 @@
 import {Object3D} from "@/bubble/core/object3d";
 import {expect, test, vi} from "vitest";
-import {Component} from "@/bubble/core/core";
+import {Component} from "@/bubble/core/component";
 
 test('Object3D', () => {
     const object3d = new Object3D('object3d')

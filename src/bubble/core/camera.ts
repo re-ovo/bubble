@@ -1,5 +1,5 @@
 import {type Mat4, mat4, type Quat, type Vec3} from "wgpu-matrix";
-import type {Updatable} from "@/bubble/core/core";
+import type {Updatable} from "@/bubble/core/updatable";
 import {angleToRadians} from "@/bubble/math/maths";
 import {Transform} from "@/bubble/math/transform";
 

@@ -1,15 +1,6 @@
 import type {Object3D} from "@/bubble/core/object3d";
 
 /**
- * 用于标记需要更新的对象
- */
-export interface Updatable {
-    needsUpdate: boolean;
-
-    update(): void;
-}
-
-/**
  * 组件接口
  */
 export class Component {
