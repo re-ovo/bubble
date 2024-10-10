@@ -1,8 +1,9 @@
-import {Object3D, type Scene} from "@/bubble/core/object3d";
+import {Object3D} from "@/bubble/core/object3d";
 import type {Camera} from "@/bubble/core/camera";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {wgsl} from "@/bubble/shader/lang";
+import type {Scene} from "@/bubble/core/scene";
 
 export class WebGPURenderer {
     private _device: GPUDevice | null = null;
