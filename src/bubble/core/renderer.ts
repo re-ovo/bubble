@@ -4,11 +4,18 @@ import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {wgsl} from "@/bubble/shader/processor";
 import type {Scene} from "@/bubble/core/scene";
+import {loadTexture} from "@/bubble/loader/texture_loader";
+import {generateMipmap} from "@/bubble/pipeline/shared/mipmap";
+
+let texture: ImageBitmap
+loadTexture('/test.png').then((res) => {
+    texture = res
+})
+
 
 export class WebGPURenderer {
     private _device: GPUDevice | null = null;
     private _context: GPUCanvasContext | null = null;
-    private _targetView: GPUTextureView | null = null;
     private readonly preferredFormat: GPUTextureFormat;
     private readonly clock = new Clock();
 
@@ -26,11 +33,6 @@ export class WebGPURenderer {
         return this._context;
     }
 
-    private get targetView(): GPUTextureView {
-        if (!this._targetView) throw new Error("WebGPU target view not initialized.");
-        return this._targetView;
-    }
-
     async init(canvas: HTMLCanvasElement) {
         this._device = await this.getDevice();
         this._context = canvas.getContext("webgpu");
@@ -39,7 +41,6 @@ export class WebGPURenderer {
             format: this.preferredFormat,
             alphaMode: 'opaque',
         })
-        this._targetView = this.context.getCurrentTexture().createView();
         console.log("WebGPU initialized.");
     }
 
@@ -83,7 +84,7 @@ export class WebGPURenderer {
         const commandEncoder = this.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [{
-                view: this.targetView,
+                view: this.context.getCurrentTexture().createView(),
                 loadOp: 'clear',
                 clearValue: {r: 0, g: 0, b: 0, a: 1},
                 storeOp: 'store',
@@ -94,8 +95,113 @@ export class WebGPURenderer {
                 this.drawMesh(object, renderer, camera, passEncoder);
             }
         }
+        if(texture) this.drawTexture(passEncoder)
         passEncoder.end()
         this.device.queue.submit([commandEncoder.finish()])
+    }
+
+    private drawTexture(passEncoder: GPURenderPassEncoder) {
+        const shaderModule = this.device.createShaderModule({
+            code: wgsl`
+                struct OurVertexShaderOutput  {
+                    @builtin(position) pos: vec4f,
+                    @location(0) vPos: vec2f,
+                }
+                
+                @vertex
+                fn vs(@location(0) position: vec2f) -> OurVertexShaderOutput  {
+                    var out: OurVertexShaderOutput ;
+                    out.pos = vec4f(position, 0.0, 1.0);
+                    out.vPos = position;
+                    return out;
+                }
+                
+                @group(0) @binding(0) var tex: texture_2d<f32>;
+                @group(0) @binding(1) var samp: sampler;
+                
+                @fragment
+                fn fs(input: OurVertexShaderOutput) -> @location(0) vec4f {
+                    let s = textureSample(tex, samp, input.vPos.xy + vec2f(0.5));
+                    return s;
+                }
+            `
+        })
+        const pipeline = this.device.createRenderPipeline({
+            vertex: {
+                module: shaderModule,
+                buffers: [{
+                    arrayStride: 2 * 4,
+                    attributes: [{
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: 'float32x2'
+                    }]
+                }]
+            },
+            fragment: {
+                module: shaderModule,
+                targets: [{
+                    format: this.preferredFormat,
+                }]
+            },
+            layout: 'auto'
+        })
+
+        const positionBufferData = new Float32Array([
+            // first triangle
+            -0.5, -0.5,
+            0.5, -0.5,
+            -0.5, 0.5,
+            // second triangle
+            -0.5, 0.5,
+            0.5, -0.5,
+            0.5, 0.5,
+        ])
+        const vertexBuffer = this.device.createBuffer({
+            size: positionBufferData.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        })
+        this.device.queue.writeBuffer(vertexBuffer, 0, positionBufferData.buffer)
+
+        const textureView = this.device.createTexture({
+            format: 'rgba8unorm',
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+            size: {
+                width: texture.width,
+                height: texture.height,
+            }
+        })
+        this.device.queue.copyExternalImageToTexture(
+            {source: texture},
+            {texture: textureView},
+            {width: texture.width, height: texture.height}
+        )
+
+        // generateMipmap(this.device, textureView)
+
+        const sampler = this.device.createSampler({
+            magFilter: 'linear',
+            minFilter: 'linear',
+        })
+
+        const bindGroup = this.device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                {
+                    binding: 0,
+                    resource: textureView.createView()
+                },
+                {
+                    binding: 1,
+                    resource: sampler
+                }
+            ]
+        })
+
+        passEncoder.setPipeline(pipeline)
+        passEncoder.setVertexBuffer(0, vertexBuffer)
+        passEncoder.setBindGroup(0, bindGroup)
+        passEncoder.draw(6)
     }
 
     private drawMesh(object: Object3D, renderer: MeshRenderer, camera: Camera, passEncoder: GPURenderPassEncoder) {

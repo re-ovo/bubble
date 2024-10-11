@@ -18,8 +18,10 @@ const pane = usePane({
   title: 'Settings',
 })
 
-
 let renderer: WebGPURenderer | null = null
+let scene: Scene | null = null
+let camera: PerspectiveCamera | null = null
+let rendering = true
 
 onMounted(async () => {
   if (!canvasRef.value) return
@@ -29,10 +31,9 @@ onMounted(async () => {
   renderer = new WebGPURenderer()
   await renderer.init(canvasRef.value)
 
-  const scene = new Scene()
+  scene = new Scene()
 
   const cubeMaterial = new Material(null)
-
   const glass = new Object3D('Glass')
   const meshRenderer = glass.addComponent(MeshRenderer)
   meshRenderer.material = new Material(null)
@@ -41,22 +42,30 @@ onMounted(async () => {
   scene.addObject(new Object3D('Cube'))
       .addComponent(MeshRenderer)
       .material = cubeMaterial
-  //
-  // scene.addObject(glass)
-  // scene.addObject(new Object3D('Cube22'))
-  //     .addComponent(MeshRenderer)
-  //     .material = cubeMaterial
 
-  const camera = new PerspectiveCamera(
+  camera = new PerspectiveCamera(
       75,
       canvasRef.value.width / canvasRef.value.height,
       0.1,
       1000,
   )
-  renderer.render(scene, camera)
+
+  const render = () => {
+    if (rendering) renderer?.render(scene!, camera!)
+    requestAnimationFrame(render)
+  }
+
+  render()
+
+  pane.addButton({
+    title: 'Pause/Play',
+  }).on('click', () => {
+    rendering = !rendering
+  })
 })
 
 onUnmounted(() => {
   renderer?.destroy()
+  console.log('destroyed renderer')
 })
 </script>
