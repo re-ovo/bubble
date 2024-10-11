@@ -69,20 +69,6 @@ export class ScriptableRenderContext {
  */
 export class ScriptablePipeline {
     render(context: ScriptableRenderContext, cameras: Camera[]) {
-        // context.prepareEncoder();
-        // context.beginRenderPass({
-        //     colorAttachments: [
-        //         {
-        //             view: context.targetView,
-        //             loadOp: 'clear',
-        //             storeOp: 'store'
-        //         }
-        //     ]
-        // });
-        // context.endRenderPass();
-        // context.submit();
-        //
-
         // Dummy implementation
         throw new Error("Not implemented");
     }
