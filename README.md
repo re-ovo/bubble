@@ -19,7 +19,7 @@ npm run dev
 ## 项目结构
 - `bubble`: 渲染引擎
     - `core`: 定义一些核心的接口和类
-    - `pipeline`: 实现类似Unity的可编程渲染管线和渲染图
+    - `pipeline`: 类Unity的可编程渲染管线和渲染图
     - `shader`: 着色器定义和处理，遵循[WebGPU着色器最佳实践](https://toji.dev/webgpu-best-practices/dynamic-shader-construction)
     - `node`: 场景中各种元素(例如Mesh, Material, Light...)的实现
     - `math`: 一些数学工具类

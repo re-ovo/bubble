@@ -1,4 +1,5 @@
 import type {Shader} from "@/bubble/shader/shader";
+import tgpu from "typegpu";
 
 export class Material {
     shader: Shader | null;
@@ -7,6 +8,10 @@ export class Material {
     constructor(shader: Shader | null) {
         this.shader = shader;
         this.blendMode = BlendMode.Opaque;
+    }
+
+    test() {
+        tgpu.write
     }
 }
 
