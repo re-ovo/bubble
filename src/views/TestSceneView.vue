@@ -5,11 +5,12 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {WebGPURenderer} from "@/bubble/core/renderer";
-import {Object3D, Scene} from "@/bubble/core/object3d";
+import {Object3D} from "@/bubble/core/object3d";
 import {PerspectiveCamera} from "@/bubble/core/camera";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {BlendMode, Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
+import {Scene} from "@/bubble/core/scene";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
