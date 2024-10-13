@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
-import {WebGPURenderer} from "@/bubble/core/renderer";
+import {RenderEngine} from "@/bubble/core/engine";
 import {Object3D} from "@/bubble/core/object3d";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
@@ -19,7 +19,7 @@ const pane = usePane({
   title: 'Settings',
 })
 
-let renderer: WebGPURenderer | null = null
+let renderer: RenderEngine | null = null
 let scene: Scene | null = null
 let camera: PerspectiveCamera | null = null
 let rendering = true
@@ -29,7 +29,7 @@ onMounted(async () => {
   canvasRef.value.width = canvasRef.value.clientWidth
   canvasRef.value.height = canvasRef.value.clientHeight
 
-  renderer = new WebGPURenderer()
+  renderer = new RenderEngine()
 
   await renderer.init(canvasRef.value, {
     // 自定义渲染管线

@@ -6,7 +6,7 @@ import type {Scene} from "@/bubble/core/scene";
 import {ScriptablePipeline, ScriptableRenderContext} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 
-export interface WebGPURendererInitOptions {
+export interface EngineOptions {
     // RequestAdapter options
     adapterOptions?: GPURequestAdapterOptions;
 
@@ -14,7 +14,7 @@ export interface WebGPURendererInitOptions {
     pipelineProvider?: () => ScriptablePipeline;
 }
 
-export class WebGPURenderer {
+export class RenderEngine {
     // WebGPU device and canvas context
     private _device: GPUDevice | null = null;
     private _canvasContext: GPUCanvasContext | null = null;
@@ -43,7 +43,7 @@ export class WebGPURenderer {
 
     async init(
         canvas: HTMLCanvasElement,
-        options: WebGPURendererInitOptions
+        options: EngineOptions
     ) {
         this._device = await this.getDevice(options.adapterOptions);
         this._canvasContext = canvas.getContext("webgpu");
