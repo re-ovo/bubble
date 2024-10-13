@@ -5,7 +5,10 @@ import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {wgsl} from "@/bubble/shader/processor";
 import type {Scene} from "@/bubble/core/scene";
 import {loadTexture} from "@/bubble/loader/texture_loader";
-import {generateMipmap} from "@/bubble/pipeline/shared/mipmap";
+import {struct} from "@/bubble/shader/struct/struct";
+import {f32, u32, vec3f} from "@/bubble/shader/struct/basic_types";
+import {vec3} from "wgpu-matrix";
+import {bestMipLevelOfTexture, generateMipmap} from "@/bubble/pipeline/shared/mipmap";
 
 let texture: ImageBitmap
 loadTexture('/test.png').then((res) => {
@@ -95,7 +98,7 @@ export class WebGPURenderer {
                 this.drawMesh(object, renderer, camera, passEncoder);
             }
         }
-        if(texture) this.drawTexture(passEncoder)
+        if (texture) this.drawTexture(passEncoder)
         passEncoder.end()
         this.device.queue.submit([commandEncoder.finish()])
     }
@@ -118,6 +121,7 @@ export class WebGPURenderer {
                 
                 @group(0) @binding(0) var tex: texture_2d<f32>;
                 @group(0) @binding(1) var samp: sampler;
+                // @group(0) @binding(2) var<uniform> color: vec4f;
                 
                 @fragment
                 fn fs(input: OurVertexShaderOutput) -> @location(0) vec4f {
@@ -125,26 +129,6 @@ export class WebGPURenderer {
                     return s;
                 }
             `
-        })
-        const pipeline = this.device.createRenderPipeline({
-            vertex: {
-                module: shaderModule,
-                buffers: [{
-                    arrayStride: 2 * 4,
-                    attributes: [{
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: 'float32x2'
-                    }]
-                }]
-            },
-            fragment: {
-                module: shaderModule,
-                targets: [{
-                    format: this.preferredFormat,
-                }]
-            },
-            layout: 'auto'
         })
 
         const positionBufferData = new Float32Array([
@@ -163,25 +147,65 @@ export class WebGPURenderer {
         })
         this.device.queue.writeBuffer(vertexBuffer, 0, positionBufferData.buffer)
 
-        const textureView = this.device.createTexture({
+        const myTexture = this.device.createTexture({
             format: 'rgba8unorm',
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
             size: {
                 width: texture.width,
                 height: texture.height,
-            }
+            },
+            mipLevelCount: bestMipLevelOfTexture(texture),
         })
+
         this.device.queue.copyExternalImageToTexture(
-            {source: texture},
-            {texture: textureView},
+            {source: texture, flipY: true},
+            {texture: myTexture},
             {width: texture.width, height: texture.height}
         )
 
-        // generateMipmap(this.device, textureView)
+        generateMipmap(this.device, myTexture)
 
         const sampler = this.device.createSampler({
             magFilter: 'linear',
             minFilter: 'linear',
+        })
+
+        const bindingGroupLayout0 = this.device.createBindGroupLayout({
+            entries: [
+                {
+                    binding: 0,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    texture: {}
+                },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    sampler: {}
+                }
+            ]
+        })
+
+        const pipeline = this.device.createRenderPipeline({
+            vertex: {
+                module: shaderModule,
+                buffers: [{
+                    arrayStride: 2 * 4,
+                    attributes: [{
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: 'float32x2'
+                    }]
+                }]
+            },
+            fragment: {
+                module: shaderModule,
+                targets: [{
+                    format: this.preferredFormat,
+                }]
+            },
+            layout: this.device.createPipelineLayout({
+                bindGroupLayouts: [bindingGroupLayout0,], // [group0, group1, ...]
+            })
         })
 
         const bindGroup = this.device.createBindGroup({
@@ -189,7 +213,9 @@ export class WebGPURenderer {
             entries: [
                 {
                     binding: 0,
-                    resource: textureView.createView()
+                    resource: myTexture.createView({
+                        baseMipLevel: 5
+                    })
                 },
                 {
                     binding: 1,

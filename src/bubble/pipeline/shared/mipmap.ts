@@ -4,6 +4,22 @@ let _shaderModule: GPUShaderModule | null = null
 let _sampler: GPUSampler | null = null;
 let _pipelineCache: Map<GPUTextureFormat, GPURenderPipeline> = new Map();
 
+/**
+ * 根据纹理的尺寸，计算出最适合的mip level
+ *
+ * @param size 纹理的尺寸
+ * @returns 最适合的mip level
+ */
+export function bestMipLevelOfTexture(size: {width: number, height: number}): number {
+    return Math.log2(Math.max(size.width, size.height)) | 0;
+}
+
+/**
+ * 为纹理生成mipmap
+ *
+ * @param device GPUDevice
+ * @param texture GPUTexture
+ */
 export function generateMipmap(device: GPUDevice, texture: GPUTexture) {
     if(!_shaderModule) {
         _shaderModule = device.createShaderModule({
@@ -47,7 +63,6 @@ export function generateMipmap(device: GPUDevice, texture: GPUTexture) {
     }
     if(!_sampler) {
         _sampler = device.createSampler({
-            magFilter: 'linear',
             minFilter: 'linear',
         });
     }
@@ -71,7 +86,7 @@ export function generateMipmap(device: GPUDevice, texture: GPUTexture) {
     let width = texture.width;
     let height = texture.height;
     let baseMipLevel = 0;
-    while (width > 1 || height > 1) {
+    while (baseMipLevel < texture.mipLevelCount - 1) {
         width = Math.max(1, width / 2 | 0);
         height = Math.max(1, height / 2 | 0);
 
@@ -102,3 +117,4 @@ export function generateMipmap(device: GPUDevice, texture: GPUTexture) {
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
 }
+
