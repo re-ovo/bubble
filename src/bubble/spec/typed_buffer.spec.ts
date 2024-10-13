@@ -103,10 +103,5 @@ describe('TypedBuffer', () => {
             aaa: 0.5,
             bbb: 2333,
         });
-
-        buffer0.destroy();
-        buffer1.unmap();
-        buffer1.destroy();
-        device.destroy();
     })
 });

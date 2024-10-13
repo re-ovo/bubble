@@ -14,7 +14,6 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderCamera(context: ScriptableRenderContext, camera: Camera): void {
-        context.setupCameraProperties(camera);
 
     }
 }

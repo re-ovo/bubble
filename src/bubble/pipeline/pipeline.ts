@@ -64,10 +64,6 @@ export class ScriptableRenderContext {
     endComputePass() {
         this.computePassEncoder.end();
     }
-
-    setupCameraProperties(camera: Camera) {
-
-    }
 }
 
 /**

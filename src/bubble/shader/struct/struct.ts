@@ -3,11 +3,16 @@ import {TypedBuffer} from "@/bubble/shader/struct/typed_buffer";
 
 /**
  * WebGPU结构体类型定义
- *
- * 结构体值可以是基础类型，也可以是结构体类型
  */
 export interface WebGPUStructType {
     [key: string]: WebGPUDataType;
+}
+
+/**
+ * WebGPU数组类型定义
+ */
+export interface WebGPUArrayType<T extends WebGPUDataType> {
+    length: number;
 }
 
 /**
