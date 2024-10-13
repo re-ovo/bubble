@@ -18,6 +18,14 @@ export class Object3D implements Disposable {
         return this.transform.parent;
     }
 
+    getChildren(recursive: boolean = false, dst?: Object3D[]): Object3D[] {
+        if (!this.scene) {
+            return [];
+        }
+
+        return this.scene.getChildren(this, recursive, dst);
+    }
+
     addComponent<T extends Component>(type: { new(object3d: Object3D): T }): T {
         if (this.getComponent(type)) {
             throw new Error(`Component of type ${type.name} already exists.`);
