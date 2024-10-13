@@ -6,6 +6,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         for (let i = 0; i < cameras.length; i++) {
             this.renderCamera(context, cameras[i]);
         }
+        context.submit();
     }
 
     dispose(): void {
@@ -13,7 +14,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderCamera(context: ScriptableRenderContext, camera: Camera): void {
-        console.log('ForwardPlusPipeline renderCamera');
+        context.setupCameraProperties(camera);
 
     }
 }

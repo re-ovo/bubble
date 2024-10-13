@@ -1,16 +1,24 @@
-import {type Mat4, mat4, type Quat, type Vec3} from "wgpu-matrix";
-import type {Updatable} from "@/bubble/core/updatable";
+import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
-import {Transform} from "@/bubble/math/transform";
+import type {Updatable} from "@/bubble/core/updatable";
+import {Component} from "@/bubble/core/component";
+
+export class CameraComponent extends Component {
+    camera: Camera | null = null;
+
+    update(deltaTime: number) {
+        if(this.camera && this.camera.needsUpdate) {
+            this.camera.update()
+        }
+    }
+}
 
 export interface Camera extends Updatable {
-    transform: Transform;
+    projectionMatrix: Mat4;
 }
 
 export class PerspectiveCamera implements Camera {
     needsUpdate: boolean = true;
-
-    transform: Transform;
 
     fov: number;
     aspect: number;
@@ -25,8 +33,6 @@ export class PerspectiveCamera implements Camera {
         near: number,
         far: number
     ) {
-        this.transform = new Transform();
-
         this.fov = fov;
         this.aspect = aspect;
         this.near = near;
@@ -51,8 +57,6 @@ export class PerspectiveCamera implements Camera {
 export class OrthographicCamera implements Camera {
     needsUpdate: boolean = true;
 
-    transform: Transform;
-
     left: number;
     right: number;
     top: number;
@@ -63,8 +67,6 @@ export class OrthographicCamera implements Camera {
     projectionMatrix: Mat4;
 
     constructor(
-        position: Vec3,
-        rotation: Quat,
         left: number,
         right: number,
         top: number,
@@ -72,8 +74,6 @@ export class OrthographicCamera implements Camera {
         near: number,
         far: number
     ) {
-        this.transform = new Transform();
-
         this.left = left;
         this.right = right;
         this.top = top;

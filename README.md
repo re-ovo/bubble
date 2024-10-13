@@ -1,10 +1,13 @@
 # bubble
+
 一个基于WebGPU的渲染引擎
 
 ## 功能
-WIP... 
+
+WIP...
 
 ## 使用
+
 ```shell
 # 克隆项目
 git clone
@@ -21,16 +24,65 @@ npm run test:unit
 ```
 
 ## 项目结构
+
 - `bubble`: 渲染引擎
     - `core`: 定义一些核心的接口和类
     - `pipeline`: 类Unity的可编程渲染管线和渲染图
-    - `shader`: 着色器定义和处理，遵循[WebGPU着色器最佳实践](https://toji.dev/webgpu-best-practices/dynamic-shader-construction)
+    - `shader`:
+      着色器定义和处理，遵循[WebGPU着色器最佳实践](https://toji.dev/webgpu-best-practices/dynamic-shader-construction)
     - `node`: 场景中各种元素(例如Mesh, Material, Light...)的实现
     - `math`: 一些数学工具类
     - `loader`: 资源/模型加载器
     - `helper`: 一些辅助实现 (如Controller以及一些VisualHelper)
     - `spec`: 基于Vitest的测试用例
 
-## 常用开发参考
+## Typescript类型安全的Buffer
+
+使用TypeScript类型系统约束Buffer的数据类型，同时自动计算偏移，防止出错
+
+```typescript
+let typedBuffer = struct({
+    position: vec3f,
+    normal: vec3f,
+    nested: struct({
+        uv: vec2f
+    })
+});
+
+typedBuffer.write(device, buffer, {
+    position: vec3.create(1, 2, 3),
+    normal: vec3.create(1, 2, 3),
+    nested: {
+        uv: vec2.create(1, 2)
+    }
+})
+```
+
+## Shader
+
+Shader编写遵循[WebGPU着色器最佳实践](https://toji.dev/webgpu-best-practices/dynamic-shader-construction),
+使用JavaScript字符串
+模板来动态生成Shader代码。
+
+```typescript
+const shader = wgsl`
+struct VertexInput {
+  @location(0) position: vec3<f32>;
+  @location(1) normal: vec3<f32>;
+  @location(2) uv: vec2<f32>;
+};
+
+@vertex
+fn vs(input: VertexInput) -> @builtin(position) vec4<f32> {
+  #if ${表达式}
+    return vec4<f32>(input.position, 1.0);
+  #else
+    return vec4<f32>(input.position, 1.0);
+  #endif
+}
+```
+
+## 三方库
+
 - [Tweakpane](https://tweakpane.github.io/docs/getting-started/): 数据驱动的UI，方便调试
-- [TypeGPU](https://docs.swmansion.com/TypeGPU/guides/getting-started/)：基于TypeScript的WebGPU资源管理库
+- [wgsl_reflect](https://github.com/brendan-duncan/wgsl_reflect): WGSL反射库，用于解析wgsl绑定信息用于绑定资源

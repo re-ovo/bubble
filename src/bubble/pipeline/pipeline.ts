@@ -13,6 +13,7 @@ export class ScriptableRenderContext {
     constructor(device: GPUDevice, targetView: GPUTextureView) {
         this.device = device
         this.targetView = targetView;
+        this._commandEncoder = this.device.createCommandEncoder();
     }
 
     private _commandEncoder: GPUCommandEncoder | null = null;
@@ -45,6 +46,7 @@ export class ScriptableRenderContext {
 
     submit() {
         this.device.queue.submit([this.encoder.finish()]);
+        this._commandEncoder = this.device.createCommandEncoder(); // reset encoder
     }
 
     beginRenderPass(passDescriptor: GPURenderPassDescriptor) {
@@ -61,6 +63,10 @@ export class ScriptableRenderContext {
 
     endComputePass() {
         this.computePassEncoder.end();
+    }
+
+    setupCameraProperties(camera: Camera) {
+
     }
 }
 

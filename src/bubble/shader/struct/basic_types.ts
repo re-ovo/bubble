@@ -79,3 +79,16 @@ export const vec4f: WebGPUBasicType<Float32Array> = {
         return new Float32Array(view.buffer, offset, 4);
     },
 }
+
+export const mat4f: WebGPUBasicType<Float32Array> = {
+    size: 64,
+    alignment: 64,
+    write(view, value, offset) {
+        for (let i = 0; i < 16; i++) {
+            view.setFloat32(offset + i * 4, value[i], true);
+        }
+    },
+    read(view: DataView, offset: number): Float32Array {
+        return new Float32Array(view.buffer, offset, 16);
+    },
+}

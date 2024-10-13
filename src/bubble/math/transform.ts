@@ -14,7 +14,9 @@ export class Transform implements Updatable {
     positionMatrix: Mat4;
     rotationMatrix: Mat4;
     scaleMatrix: Mat4;
+
     transformMatrix: Mat4;
+    transformMatrixInverse: Mat4;
 
     constructor() {
         this.position = vec3.create(0, 0, 0);
@@ -24,6 +26,7 @@ export class Transform implements Updatable {
         this.rotationMatrix = mat4.create();
         this.scaleMatrix = mat4.create();
         this.transformMatrix = mat4.create();
+        this.transformMatrixInverse = mat4.create();
         this.update()
     }
 
@@ -51,6 +54,7 @@ export class Transform implements Updatable {
                 this.transformMatrix,
             );
         }
+        this.transformMatrixInverse = mat4.inverse(this.transformMatrix, this.transformMatrixInverse);
     }
 
     lookAt(target: Vec3) {
@@ -113,19 +117,5 @@ export class Transform implements Updatable {
     scaleBy(scale: Vec3) {
         vec3.mul(this.scale, scale, this.scale);
         this.needsUpdate = true;
-    }
-}
-
-export class CameraTransform extends Transform {
-    viewMatrix: Mat4;
-
-    constructor() {
-        super();
-        this.viewMatrix = mat4.create();
-    }
-
-    update() {
-        super.update();
-        this.viewMatrix = mat4.inverse(this.transformMatrix, this.viewMatrix);
     }
 }

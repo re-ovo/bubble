@@ -6,7 +6,7 @@
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {WebGPURenderer} from "@/bubble/core/renderer";
 import {Object3D} from "@/bubble/core/object3d";
-import {PerspectiveCamera} from "@/bubble/core/camera";
+import {CameraComponent, PerspectiveCamera} from "@/bubble/core/camera";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {BlendMode, Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
@@ -42,6 +42,7 @@ onMounted(async () => {
     },
   })
 
+  // setup scene
   scene = new Scene()
 
   const cubeMaterial = new Material(null)
@@ -54,13 +55,18 @@ onMounted(async () => {
       .addComponent(MeshRenderer)
       .material = cubeMaterial
 
+  // setup camera
   camera = new PerspectiveCamera(
       75,
       canvasRef.value.width / canvasRef.value.height,
       0.1,
       1000,
   )
+  scene.addObject(new Object3D('Camera'))
+      .addComponent(CameraComponent)
+      .camera = camera
 
+  // render loop
   const render = () => {
     if (rendering) renderer?.render(scene!, camera!)
     requestAnimationFrame(render)

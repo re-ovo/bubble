@@ -16,7 +16,8 @@
     "tweakpane": "^4.0.4",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",
-    "wgpu-matrix": "^3.2.0"
+    "wgpu-matrix": "^3.2.0",
+    "wgsl_reflect": "^1.0.13"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
