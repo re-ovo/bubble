@@ -1,4 +1,4 @@
-import type {Camera} from "@/bubble/core/camera";
+import type {Camera} from "@/bubble/node/camera/camera";
 import type {Disposable} from "@/bubble/core/dispose";
 
 /**

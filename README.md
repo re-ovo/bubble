@@ -1,10 +1,28 @@
 # bubble
 
-一个基于WebGPU的渲染引擎
+一个基于WebGPU的渲染引擎, 参考了Unity的Component和SRP设计
+
+> 仍然在开发中，没有实际渲染功能
 
 ## 功能
 
-WIP...
+## 核心特性
+
+- [ ] 内置: Forward+ 渲染管线
+- [ ] 可编程渲染管线(SRP)
+- [ ] TypeScript类型驱动的Buffer
+- [ ] ...
+
+## 渲染功能
+
+- [ ] Mesh
+- [ ] Material
+- [ ] Light
+- [ ] Shadow
+- [ ] Fog
+- [ ] Skybox
+- [ ] IBL
+- [ ] PostProcessing
 
 ## 使用
 
@@ -38,7 +56,7 @@ npm run test:unit
 
 ## Typescript类型安全的Buffer
 
-使用TypeScript类型系统约束Buffer的数据类型，同时自动计算偏移，防止出错
+使用TypeScript类型系统约束Buffer的数据类型，同时自动计算偏移和对齐，防止出错
 
 ```typescript
 let typedBuffer = struct({

@@ -1,5 +1,5 @@
 import {Object3D} from "@/bubble/core/object3d";
-import type {Camera} from "@/bubble/core/camera";
+import type {Camera} from "@/bubble/node/camera/camera";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import type {Scene} from "@/bubble/core/scene";

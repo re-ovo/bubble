@@ -1,5 +1,5 @@
 import {ScriptablePipeline, ScriptableRenderContext} from "@/bubble/pipeline/pipeline";
-import type {Camera} from "@/bubble/core/camera";
+import type {Camera} from "@/bubble/node/camera/camera";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     render(context: ScriptableRenderContext, cameras: Camera[]): void {
