@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {basic, struct} from "@/bubble/shader/struct/struct";
 import {f32, u32, vec2f, vec3f, vec4f} from "@/bubble/shader/struct/basic_types";
+import {vec3, vec4} from "wgpu-matrix";
 
 describe('TypedBuffer', () => {
     it('should calculate size and offsets for basic types', () => {
@@ -54,4 +55,58 @@ describe('TypedBuffer', () => {
             bbb: 32,
         });
     });
+
+    it('ensure write and read correctly',async  () => {
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter!.requestDevice()
+
+        const bufferType = struct({
+            position: vec3f,
+            color: vec4f,
+            nested: {
+                aaa: f32,
+                bbb: u32,
+            },
+        });
+
+        const buffer0 = device.createBuffer({
+            size: bufferType.size,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+        })
+        bufferType.write(device, buffer0, {
+            position: vec3.create(1, 2, 3),
+            color: vec4.create(0.1, 0.2, 0.3, 0.4),
+            nested: {
+                aaa: 0.5,
+                bbb: 2333,
+            },
+        })
+
+        const buffer1 = device.createBuffer({
+            size: bufferType.size,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+        })
+
+        // copy data
+        const encoder = device.createCommandEncoder();
+        encoder.copyBufferToBuffer(buffer0, 0, buffer1, 0, bufferType.size);
+        device.queue.submit([encoder.finish()]);
+
+        // read data
+        await buffer1.mapAsync(GPUMapMode.READ);
+        expect(buffer1.mapState).toBe('mapped');
+
+        const data = bufferType.read(buffer1.getMappedRange());
+        expect(data.position).toStrictEqual(vec3.create(1, 2, 3));
+        expect(data.color).toStrictEqual(vec4.create(0.1, 0.2, 0.3, 0.4));
+        expect(data.nested).toStrictEqual({
+            aaa: 0.5,
+            bbb: 2333,
+        });
+
+        buffer0.destroy();
+        buffer1.unmap();
+        buffer1.destroy();
+        device.destroy();
+    })
 });

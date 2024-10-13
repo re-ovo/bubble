@@ -6,7 +6,18 @@ export default mergeConfig(
     viteConfig,
     defineConfig({
         test: {
-            environment: 'jsdom',
+            browser: {
+                enabled: true,
+                provider: 'playwright',
+                name: 'chromium',
+                headless: true,
+                providerOptions: {
+                    launch: {
+                        args: ["--enable-gpu", "--enable-unsafe-webgpu",]
+                    }
+                }
+            },
+            // environment: 'jsdom',
             exclude: [...configDefaults.exclude, 'e2e/**'],
             root: fileURLToPath(new URL('./', import.meta.url)),
         }
