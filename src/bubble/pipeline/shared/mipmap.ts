@@ -98,12 +98,16 @@ export function generateMipmap(device: GPUDevice, texture: GPUTexture) {
             ],
         });
 
+        // 自增，设置输出的mip level
         ++baseMipLevel;
 
         const pass = commandEncoder.beginRenderPass({
             label: 'mipmap renderPass',
             colorAttachments: [{
-                view: texture.createView({baseMipLevel, mipLevelCount: 1}),
+                view: texture.createView({
+                    baseMipLevel,
+                    mipLevelCount: 1,
+                }),
                 loadOp: 'clear',
                 storeOp: 'store',
             }]

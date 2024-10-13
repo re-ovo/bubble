@@ -2,23 +2,28 @@ import {Object3D} from "@/bubble/core/object3d";
 import type {Camera} from "@/bubble/core/camera";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
-import {wgsl} from "@/bubble/shader/processor";
 import type {Scene} from "@/bubble/core/scene";
-import {loadTexture} from "@/bubble/loader/texture_loader";
-import {struct} from "@/bubble/shader/struct/struct";
-import {f32, u32, vec3f} from "@/bubble/shader/struct/basic_types";
-import {vec3} from "wgpu-matrix";
-import {bestMipLevelOfTexture, generateMipmap} from "@/bubble/pipeline/shared/mipmap";
+import {ScriptablePipeline, ScriptableRenderContext} from "@/bubble/pipeline/pipeline";
+import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 
-let texture: ImageBitmap
-loadTexture('/test.png').then((res) => {
-    texture = res
-})
+export interface WebGPURendererInitOptions {
+    // RequestAdapter options
+    adapterOptions?: GPURequestAdapterOptions;
 
+    // Pipeline Provider
+    pipelineProvider?: () => ScriptablePipeline;
+}
 
 export class WebGPURenderer {
+    // WebGPU device and canvas context
     private _device: GPUDevice | null = null;
-    private _context: GPUCanvasContext | null = null;
+    private _canvasContext: GPUCanvasContext | null = null;
+
+    // SRP
+    private _renderContext: ScriptableRenderContext | null = null;
+    private _renderPipeline: ScriptablePipeline | null = null;
+
+    // misc
     private readonly preferredFormat: GPUTextureFormat;
     private readonly clock = new Clock();
 
@@ -31,33 +36,45 @@ export class WebGPURenderer {
         return this._device;
     }
 
-    private get context(): GPUCanvasContext {
-        if (!this._context) throw new Error("WebGPU context not initialized.");
-        return this._context;
+    private get canvasContext(): GPUCanvasContext {
+        if (!this._canvasContext) throw new Error("WebGPU context not initialized.");
+        return this._canvasContext;
     }
 
-    async init(canvas: HTMLCanvasElement) {
-        this._device = await this.getDevice();
-        this._context = canvas.getContext("webgpu");
-        this.context.configure({
+    async init(
+        canvas: HTMLCanvasElement,
+        options: WebGPURendererInitOptions
+    ) {
+        this._device = await this.getDevice(options.adapterOptions);
+        this._canvasContext = canvas.getContext("webgpu");
+        this.canvasContext.configure({
             device: this._device!,
             format: this.preferredFormat,
             alphaMode: 'opaque',
         })
+        this._renderContext = new ScriptableRenderContext(
+            this.device,
+            this.canvasContext.getCurrentTexture().createView()
+        );
+        this._renderPipeline = options.pipelineProvider?.() ?? new ForwardPlusPipeline();
         console.log("WebGPU initialized.");
     }
 
-    async getDevice() {
+    async getDevice(options?: GPURequestAdapterOptions) {
         if (!navigator.gpu) throw new Error("WebGPU not supported on this browser.");
-        const adapter = await navigator.gpu.requestAdapter();
+        const adapter = await navigator.gpu.requestAdapter(options);
         if (!adapter) throw new Error("No appropriate GPUAdapter found.");
         return await adapter.requestDevice();
     }
 
     // 执行渲染
-    render(scene: Scene, camera: Camera) {
+    render(scene: Scene, camera: Camera | Camera[]) {
         this.updateScene(scene);
-        this.drawScene(scene, camera);
+        if (Array.isArray(camera)) {
+            this._renderPipeline?.render(this._renderContext!, camera);
+        } else {
+            this._renderPipeline?.render(this._renderContext!, [camera]);
+        }
     }
 
     // 更新场景
@@ -79,276 +96,6 @@ export class WebGPURenderer {
                 scene.getChildren(object, true).forEach(child => child.transform.update());
             }
         }
-    }
-
-    // 绘制场景
-    private drawScene(scene: Scene, camera: Camera) {
-        const drawables = this.getSortedDrawables(scene);
-        const commandEncoder = this.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginRenderPass({
-            colorAttachments: [{
-                view: this.context.getCurrentTexture().createView(),
-                loadOp: 'clear',
-                clearValue: {r: 0, g: 0, b: 0, a: 1},
-                storeOp: 'store',
-            }],
-        });
-        for (let [object, renderer] of drawables) {
-            if (renderer instanceof MeshRenderer) {
-                this.drawMesh(object, renderer, camera, passEncoder);
-            }
-        }
-        if (texture) this.drawTexture(passEncoder)
-        passEncoder.end()
-        this.device.queue.submit([commandEncoder.finish()])
-    }
-
-    private drawTexture(passEncoder: GPURenderPassEncoder) {
-        const shaderModule = this.device.createShaderModule({
-            code: wgsl`
-                struct OurVertexShaderOutput  {
-                    @builtin(position) pos: vec4f,
-                    @location(0) vPos: vec2f,
-                }
-                
-                @vertex
-                fn vs(@location(0) position: vec2f) -> OurVertexShaderOutput  {
-                    var out: OurVertexShaderOutput ;
-                    out.pos = vec4f(position, 0.0, 1.0);
-                    out.vPos = position;
-                    return out;
-                }
-                
-                @group(0) @binding(0) var tex: texture_2d<f32>;
-                @group(0) @binding(1) var samp: sampler;
-                // @group(0) @binding(2) var<uniform> color: vec4f;
-                
-                @fragment
-                fn fs(input: OurVertexShaderOutput) -> @location(0) vec4f {
-                    let s = textureSample(tex, samp, input.vPos.xy + vec2f(0.5));
-                    return s;
-                }
-            `
-        })
-
-        const positionBufferData = new Float32Array([
-            // first triangle
-            -0.5, -0.5,
-            0.5, -0.5,
-            -0.5, 0.5,
-            // second triangle
-            -0.5, 0.5,
-            0.5, -0.5,
-            0.5, 0.5,
-        ])
-        const vertexBuffer = this.device.createBuffer({
-            size: positionBufferData.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-        })
-        this.device.queue.writeBuffer(vertexBuffer, 0, positionBufferData.buffer)
-
-        const myTexture = this.device.createTexture({
-            format: 'rgba8unorm',
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-            size: {
-                width: texture.width,
-                height: texture.height,
-            },
-            mipLevelCount: bestMipLevelOfTexture(texture),
-        })
-
-        this.device.queue.copyExternalImageToTexture(
-            {source: texture, flipY: true},
-            {texture: myTexture},
-            {width: texture.width, height: texture.height}
-        )
-
-        generateMipmap(this.device, myTexture)
-
-        const sampler = this.device.createSampler({
-            magFilter: 'linear',
-            minFilter: 'linear',
-        })
-
-        const bindingGroupLayout0 = this.device.createBindGroupLayout({
-            entries: [
-                {
-                    binding: 0,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
-                },
-                {
-                    binding: 1,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    sampler: {}
-                }
-            ]
-        })
-
-        const pipeline = this.device.createRenderPipeline({
-            vertex: {
-                module: shaderModule,
-                buffers: [{
-                    arrayStride: 2 * 4,
-                    attributes: [{
-                        shaderLocation: 0,
-                        offset: 0,
-                        format: 'float32x2'
-                    }]
-                }]
-            },
-            fragment: {
-                module: shaderModule,
-                targets: [{
-                    format: this.preferredFormat,
-                }]
-            },
-            layout: this.device.createPipelineLayout({
-                bindGroupLayouts: [bindingGroupLayout0,], // [group0, group1, ...]
-            })
-        })
-
-        const bindGroup = this.device.createBindGroup({
-            layout: pipeline.getBindGroupLayout(0),
-            entries: [
-                {
-                    binding: 0,
-                    resource: myTexture.createView({
-                        baseMipLevel: 5
-                    })
-                },
-                {
-                    binding: 1,
-                    resource: sampler
-                }
-            ]
-        })
-
-        passEncoder.setPipeline(pipeline)
-        passEncoder.setVertexBuffer(0, vertexBuffer)
-        passEncoder.setBindGroup(0, bindGroup)
-        passEncoder.draw(6)
-    }
-
-    private drawMesh(object: Object3D, renderer: MeshRenderer, camera: Camera, passEncoder: GPURenderPassEncoder) {
-        // Vertex Buffer
-        const rnd = (min: number = 0.0, max: number = 1.0) => Math.random() * (max - min) + min
-        const counts = Math.floor(rnd(512, 1024))
-        const vertexData = new Float32Array(counts * 3)
-        for (let i = 0; i < counts; i += 9) {
-            let centerX = rnd(-1, 1)
-            let centerY = rnd(-1, 1)
-
-            vertexData[i] = centerX + rnd(-0.1, 0.1)
-            vertexData[i + 1] = centerY + rnd(-0.1, 0.1)
-            vertexData[i + 2] = 0.0
-
-            vertexData[i + 3] = centerX + rnd(-0.1, 0.1)
-            vertexData[i + 4] = centerY + rnd(-0.1, 0.1)
-            vertexData[i + 5] = 0.0
-
-            vertexData[i + 6] = centerX + rnd(-0.1, 0.1)
-            vertexData[i + 7] = centerY + rnd(-0.1, 0.1)
-            vertexData[i + 8] = 0.0
-        }
-        const vertexBuffer = this.device.createBuffer({
-            size: vertexData.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-        })
-        this.device.queue.writeBuffer(vertexBuffer, 0, vertexData.buffer)
-
-        // Uniform Buffer
-        const uniformBufferData = new Float32Array([
-            rnd(), rnd(), rnd(), 1.0,
-        ])
-        const uniformBuffer = this.device.createBuffer({
-            size: uniformBufferData.byteLength,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        })
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformBufferData.buffer)
-
-        // Shader
-        const shaderModule = this.device.createShaderModule({
-            code: wgsl`
-                struct Shared {
-                  @builtin(position) position: vec4f,
-                }
-                
-                struct TestUniform {
-                    color: vec4f
-                }
-                
-                @group(0) @binding(0) var<uniform> test: TestUniform;
-
-                @vertex
-                fn vs(
-                   @location(0) position: vec3<f32>,
-                ) -> Shared {
-                    var res: Shared;
-                    res.position = vec4f(position, 1.0);
-                    return res;
-                }
-                
-                @fragment
-                fn fs(data: Shared) -> @location(0) vec4f {
-                    return test.color;
-                }
-            `
-        })
-
-        const bindingGroupLayout = this.device.createBindGroupLayout({
-            entries: [{
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: 'uniform'
-                }
-            }]
-        })
-
-        const pipeline = this.device.createRenderPipeline({
-            layout: this.device.createPipelineLayout({
-                bindGroupLayouts: [bindingGroupLayout]
-            }),
-            label: 'Pipeline',
-            vertex: {
-                module: shaderModule,
-                buffers: [
-                    {
-                        arrayStride: 12,
-                        attributes: [
-                            {
-                                shaderLocation: 0,
-                                offset: 0,
-                                format: 'float32x3',
-                            }
-                        ]
-                    }
-                ]
-            },
-            fragment: {
-                module: shaderModule,
-                targets: [{
-                    format: this.preferredFormat,
-                }]
-            },
-        })
-
-        const bindingGroup = this.device.createBindGroup({
-            label: 'uniforms',
-            layout: bindingGroupLayout,
-            entries: [{
-                binding: 0,
-                resource: {
-                    buffer: uniformBuffer,
-                }
-            }]
-        })
-
-        passEncoder.setPipeline(pipeline)
-        passEncoder.setVertexBuffer(0, vertexBuffer)
-        passEncoder.setBindGroup(0, bindingGroup)
-        passEncoder.draw(counts)
     }
 
     private _drawableSortCache: [Object3D, RendererComponent][] = [];
@@ -386,7 +133,7 @@ export class WebGPURenderer {
     }
 
     destroy() {
-        this._context?.unconfigure();
+        this._canvasContext?.unconfigure();
         this.device.destroy();
     }
 }

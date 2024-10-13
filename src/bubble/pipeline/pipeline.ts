@@ -1,9 +1,11 @@
 import type {Camera} from "@/bubble/core/camera";
+import type {Disposable} from "@/bubble/core/dispose";
 
-export interface ScriptableRenderPass {
-    execute(context: ScriptableRenderContext, commandEncoder: GPUCommandEncoder): void;
-}
-
+/**
+ * 可编程渲染上下文
+ *
+ * 提供了一系列的方法来操作渲染流程
+ */
 export class ScriptableRenderContext {
     device: GPUDevice;
     targetView: GPUTextureView;
@@ -66,10 +68,24 @@ export class ScriptableRenderContext {
  * 可编程渲染管线
  *
  * 可以在管线中自定义渲染流程, 类似于Unity的SRP
+ *
+ * @example
+ * ```typescript
+ * class MyPipeline extends ScriptablePipeline {
+ *   constructor() {
+ *      super();
+ *      // some initialization
+ *   }
+ *
+ *   render(context: ScriptableRenderContext, cameras: Camera[]) {
+ *     // render logic
+ *     context.submit();
+ *   }
+ *  }
+ *  ```
  */
-export class ScriptablePipeline {
-    render(context: ScriptableRenderContext, cameras: Camera[]) {
-        // Dummy implementation
-        throw new Error("Not implemented");
-    }
+export abstract class ScriptablePipeline implements Disposable {
+    abstract render(context: ScriptableRenderContext, cameras: Camera[]): void
+
+    abstract dispose(): void;
 }

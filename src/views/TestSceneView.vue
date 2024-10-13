@@ -11,6 +11,7 @@ import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {BlendMode, Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
 import {Scene} from "@/bubble/core/scene";
+import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -29,7 +30,17 @@ onMounted(async () => {
   canvasRef.value.height = canvasRef.value.clientHeight
 
   renderer = new WebGPURenderer()
-  await renderer.init(canvasRef.value)
+
+  await renderer.init(canvasRef.value, {
+    // 自定义渲染管线
+    pipelineProvider() {
+      return new ForwardPlusPipeline()
+    },
+    // 适配器选项
+    adapterOptions: {
+      powerPreference: 'high-performance',
+    },
+  })
 
   scene = new Scene()
 
