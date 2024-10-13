@@ -10,10 +10,14 @@ WIP...
 git clone
 
 # 安装依赖
-npm install
+npm install # 安装项目依赖
+npx playwright install # 安装浏览器驱动用于单元测试
 
 # 运行
 npm run dev
+
+# 测试
+npm run test:unit
 ```
 
 ## 项目结构
