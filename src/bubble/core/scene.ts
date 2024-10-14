@@ -1,10 +1,12 @@
 import {Object3D} from "@/bubble/core/object3d";
 import type {Disposable} from "@/bubble/core/dispose";
+import {ComponentHolder} from "@/bubble/core/component";
 
-export class Scene implements Disposable {
+export class Scene extends ComponentHolder implements Disposable {
     readonly objects: Object3D[];
 
     constructor() {
+        super();
         this.objects = [];
     }
 
