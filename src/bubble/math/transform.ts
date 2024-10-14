@@ -30,6 +30,12 @@ export class Transform implements Updatable {
         this.update()
     }
 
+    static fromPosition(position: Vec3) {
+        const transform = new Transform();
+        transform.setPosition(position);
+        return transform;
+    }
+
     update() {
         this.needsUpdate = false;
 
@@ -57,23 +63,32 @@ export class Transform implements Updatable {
         this.transformMatrixInverse = mat4.inverse(this.transformMatrix, this.transformMatrixInverse);
     }
 
-    lookAt(target: Vec3) {
+    lookAt(target: Vec3): Transform {
         const matrix = mat4.lookAt(this.position, target, vec3.create(0, 1, 0));
         quat.fromMat(matrix, this.rotation)
         this.needsUpdate = true;
+        return this;
     }
 
-    setPosition(position: Vec3) {
+    setPosition(position: Vec3): Transform {
         vec3.copy(position, this.position);
         this.needsUpdate = true;
+        return this;
     }
 
-    setRotation(rotation: Quat) {
+    setRotation(rotation: Quat): Transform {
         quat.copy(rotation, this.rotation);
         this.needsUpdate = true;
+        return this;
     }
 
-    setEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz") {
+    setScale(scale: Vec3): Transform {
+        vec3.copy(scale, this.scale);
+        this.needsUpdate = true;
+        return this;
+    }
+
+    setEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz"): Transform {
         quat.fromEuler(
             angleToRadians(eulerAngles[0]),
             angleToRadians(eulerAngles[1]),
@@ -82,9 +97,10 @@ export class Transform implements Updatable {
             this.rotation
         );
         this.needsUpdate = true;
+        return this;
     }
 
-    rotateEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz") {
+    rotateEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz"): Transform {
         quat.mul(
             this.rotation,
             quat.fromEuler(
@@ -97,25 +113,24 @@ export class Transform implements Updatable {
             this.rotation
         );
         this.needsUpdate = true;
+        return this;
     }
 
-    setScale(scale: Vec3) {
-        vec3.copy(scale, this.scale);
-        this.needsUpdate = true;
-    }
-
-    translate(translation: Vec3) {
+    translate(translation: Vec3): Transform {
         vec3.add(this.position, translation, this.position);
         this.needsUpdate = true;
+        return this;
     }
 
-    rotate(rotation: Quat) {
+    rotate(rotation: Quat): Transform {
         quat.mul(this.rotation, rotation, this.rotation);
         this.needsUpdate = true;
+        return this;
     }
 
-    scaleBy(scale: Vec3) {
+    scaleBy(scale: Vec3): Transform {
         vec3.mul(this.scale, scale, this.scale);
         this.needsUpdate = true;
+        return this;
     }
 }
