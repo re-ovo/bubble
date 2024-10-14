@@ -1,14 +1,14 @@
 import {ResourceStreamer} from "@/bubble/resource/streamer";
 import {Shader} from "@/bubble/shader/shader";
 
-export class ShaderStreamer extends ResourceStreamer<Shader<any>, GPUShaderModule> {
-    protected create(resource: Shader<any>): GPUShaderModule {
+export class ShaderStreamer extends ResourceStreamer<Shader, GPUShaderModule> {
+    protected create(resource: Shader): GPUShaderModule {
         return this.context.device.createShaderModule({
             code: resource.code
         })
     }
 
-    protected update(resource: Shader<any>): GPUShaderModule {
+    protected update(resource: Shader): GPUShaderModule {
         let cache = this.getCache(resource)
         if (cache) {
             this.disposeResource(cache)

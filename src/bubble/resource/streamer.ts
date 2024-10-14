@@ -1,7 +1,5 @@
 import type {Disposable} from "@/bubble/core/dispose";
-import type {ScriptableRenderContext} from "@/bubble/pipeline/pipeline";
-import {Shader} from "@/bubble/shader/shader";
-import {ShaderStreamer} from "@/bubble/resource/shader_streamer";
+import type {RenderContext} from "@/bubble/pipeline/context";
 
 /**
  * 代表一个可以被流送到GPU的对象
@@ -21,9 +19,9 @@ export interface Streamable {
  */
 export abstract class ResourceStreamer<T extends Streamable, R> implements Disposable {
     protected readonly resources: Map<T, R> = new Map<T, R>()
-    protected readonly context: ScriptableRenderContext
+    protected readonly context: RenderContext
 
-    constructor(ctx: ScriptableRenderContext) {
+    constructor(ctx: RenderContext) {
         this.context = ctx
     }
 

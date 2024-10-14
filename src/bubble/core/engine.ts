@@ -3,8 +3,9 @@ import type {Camera} from "@/bubble/node/camera/camera";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import type {Scene} from "@/bubble/core/scene";
-import {ScriptablePipeline, ScriptableRenderContext} from "@/bubble/pipeline/pipeline";
+import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
+import {RenderContext} from "@/bubble/pipeline/context";
 
 export interface EngineOptions {
     // RequestAdapter options
@@ -20,7 +21,7 @@ export class RenderEngine {
     private _canvasContext: GPUCanvasContext | null = null;
 
     // SRP
-    private _renderContext: ScriptableRenderContext | null = null;
+    private _renderContext: RenderContext | null = null;
     private _renderPipeline: ScriptablePipeline | null = null;
 
     // misc
@@ -52,7 +53,7 @@ export class RenderEngine {
             format: this.preferredFormat,
             alphaMode: 'opaque',
         })
-        this._renderContext = new ScriptableRenderContext(
+        this._renderContext = new RenderContext(
             this.device,
             this.canvasContext.getCurrentTexture().createView()
         );
