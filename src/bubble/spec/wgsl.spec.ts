@@ -21,6 +21,7 @@ describe("WGSL Shader Processor", () => {
             .contains("struct TestInterpolation {")
             .and.contains("fn main(input: TestInterpolation) -> TestInterpolation {");
     })
+
     it("test conditional marco", () => {
         let condition = false;
 
