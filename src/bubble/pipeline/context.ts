@@ -1,19 +1,26 @@
+import {ResourceManager} from "@/bubble/resource/resource_manager";
+
 /**
  * 可编程渲染上下文
  *
  * 提供了一系列的方法来操作渲染流程
  */
 export class RenderContext {
-    device: GPUDevice;
-    targetView: GPUTextureView;
+    public readonly device: GPUDevice;
+    public readonly targetView: GPUTextureView;
+    public readonly resourceManager: ResourceManager;
+
+    private _commandEncoder: GPUCommandEncoder | null = null;
+    private _renderPassEncoder: GPURenderPassEncoder | null = null;
+    private _computePassEncoder: GPUComputePassEncoder | null = null;
 
     constructor(device: GPUDevice, targetView: GPUTextureView) {
         this.device = device
         this.targetView = targetView;
+        this.resourceManager = new ResourceManager(this);
         this._commandEncoder = this.device.createCommandEncoder();
     }
 
-    private _commandEncoder: GPUCommandEncoder | null = null;
     get encoder() {
         if (!this._commandEncoder) {
             throw new Error("No encoder");
@@ -21,7 +28,6 @@ export class RenderContext {
         return this._commandEncoder;
     }
 
-    private _renderPassEncoder: GPURenderPassEncoder | null = null;
     get renderPassEncoder() {
         if (!this._renderPassEncoder) {
             throw new Error("No render pass encoder");
@@ -29,16 +35,11 @@ export class RenderContext {
         return this._renderPassEncoder;
     }
 
-    private _computePassEncoder: GPUComputePassEncoder | null = null;
     get computePassEncoder() {
         if (!this._computePassEncoder) {
             throw new Error("No compute pass encoder");
         }
         return this._computePassEncoder;
-    }
-
-    prepareEncoder() {
-        this._commandEncoder = this.device.createCommandEncoder();
     }
 
     submit() {
