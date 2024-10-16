@@ -42,6 +42,17 @@ class ConditionalState {
 // Template literal tag that handles simple preprocessor symbols for WGSL
 // shaders. Supports #if/elif/else/endif statements.
 export function wgsl(strings: TemplateStringsArray, ...values: any[]) {
+    // check values
+    if (values.length > 0) {
+        for (let i = 0; i < values.length; i++) {
+            // 如果是function，直接调用
+            if (typeof values[i] === 'function') {
+                console.warn('You are using a function as a value in the shader template, this is not recommended');
+                values[i] = values[i]();
+            }
+        }
+    }
+
     const stateStack = [];
     let state = new ConditionalState(true);
     state.elseIsValid = false;

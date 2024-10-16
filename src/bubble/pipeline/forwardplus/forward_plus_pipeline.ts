@@ -15,6 +15,6 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderCamera(context: RenderContext, camera: Camera): void {
-
+        context.resourceManager.syncCamera(camera);
     }
 }

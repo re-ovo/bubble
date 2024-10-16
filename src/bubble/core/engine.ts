@@ -83,7 +83,7 @@ export class RenderEngine {
         // 更新Clock
         this.clock.tick();
 
-        // 更新Objects
+        // 更新Objects & Components
         for (let object of scene.objects) {
             // 更新Object的所有Component
             for (let [_, component] of object.components) {
@@ -92,9 +92,9 @@ export class RenderEngine {
 
             // 更新Object的Transform
             if (object.transform.needsUpdate) {
-                object.transform.update();
+                object.transform.updateMatrix()
                 // 同时还需要更新其子节点
-                scene.getChildren(object, true).forEach(child => child.transform.update());
+                scene.getChildren(object, true).forEach(child => child.transform.updateMatrix());
             }
         }
     }

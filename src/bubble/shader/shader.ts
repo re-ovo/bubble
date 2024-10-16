@@ -1,8 +1,13 @@
 import {WgslReflect} from "wgsl_reflect";
-import type {Streamable} from "@/bubble/resource/streamer";
+import type {ResourceHolder} from "@/bubble/resource/resource_holder";
 
-export class Shader implements Streamable {
-    needSync = false;
+/**
+ * Shader source provider
+ */
+export type ShaderSourceProvider = string | ((params: Record<any, any>) => string);
+
+export class Shader implements ResourceHolder {
+    needsUpdate: boolean = false;
 
     private readonly provider: ShaderSourceProvider;
     private _code: string = '';
@@ -12,7 +17,7 @@ export class Shader implements Streamable {
         this.provider = sourceProvider;
     }
 
-    compile(params: any) {
+    compile(params: Record<string, any>) {
         const source = typeof this.provider === 'function' ? this.provider(params) : this.provider;
         this._code = source;
         this._metadata = new WgslReflect(source);
@@ -31,6 +36,8 @@ export class Shader implements Streamable {
         }
         return this._metadata
     }
-}
 
-export type ShaderSourceProvider = string | ((params: any) => string);
+    update(): void {
+        this.needsUpdate = false;
+    }
+}

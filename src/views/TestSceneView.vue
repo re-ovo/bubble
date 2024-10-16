@@ -8,10 +8,12 @@ import {RenderEngine} from "@/bubble/core/engine";
 import {Object3D} from "@/bubble/core/object3d";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
-import {BlendMode, Material} from "@/bubble/node/material/material";
+import {Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
 import {Scene} from "@/bubble/core/scene";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
+import {Shader} from "@/bubble/shader/shader";
+import mesh_shader from "@/bubble/shader/mesh/mesh_shader";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -45,15 +47,11 @@ onMounted(async () => {
   // setup scene
   scene = new Scene()
 
-  const cubeMaterial = new Material(null)
-  const glass = new Object3D('Glass')
-  const meshRenderer = glass.addComponent(MeshRenderer)
-  meshRenderer.material = new Material(null)
-  meshRenderer.material.blendMode = BlendMode.Multiply
-
   scene.addObject(new Object3D('Cube'))
       .addComponent(MeshRenderer)
-      .material = cubeMaterial
+      .material = new Material(
+      new Shader(mesh_shader),
+  )
 
   // setup camera
   camera = new PerspectiveCamera(

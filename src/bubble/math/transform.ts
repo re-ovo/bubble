@@ -1,8 +1,8 @@
-import type {Updatable} from "@/bubble/core/updatable";
+import type {ResourceHolder} from "@/bubble/resource/resource_holder";
 import {mat4, type Mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
 
-export class Transform implements Updatable {
+export class Transform implements ResourceHolder {
     needsUpdate: boolean = true;
 
     parent: Transform | null = null;
@@ -27,7 +27,7 @@ export class Transform implements Updatable {
         this.scaleMatrix = mat4.create();
         this.transformMatrix = mat4.create();
         this.transformMatrixInverse = mat4.create();
-        this.update()
+        this.updateMatrix();
     }
 
     static fromPosition(position: Vec3) {
@@ -38,7 +38,11 @@ export class Transform implements Updatable {
 
     update() {
         this.needsUpdate = false;
+        this.updateMatrix();
+    }
 
+    updateMatrix() {
+        console.log('update transform matrix of', this);
         this.positionMatrix = mat4.translation(this.position, this.positionMatrix);
         this.rotationMatrix = mat4.fromQuat(this.rotation, this.rotationMatrix);
         this.scaleMatrix = mat4.scaling(this.scale, this.scaleMatrix);

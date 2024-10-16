@@ -1,31 +1,26 @@
 /**
  * 用于标记需要更新的对象
  */
-export interface Updatable {
+export interface ResourceHolder {
     needsUpdate: boolean;
 
     update(): void;
 }
 
-const updatableSymbol = Symbol('updatable'); // 用于标记已经添加代理的对象
+// 用于标记已经添加代理的对象
+const resourceHolderSymbol = Symbol('resourceHolder');
 
-/**
- * 为Updatable对象添加代理，当对象的属性被修改时，自动标记为需要更新
- *
- * @param delegate 要添加代理的对象
- * @param recursive 是否递归代理对象的属性
- */
-export function updatable<T extends Updatable>(delegate: T, recursive = false): T {
-    if (updatableSymbol in delegate) {
+export function resourceHolderOf<T extends ResourceHolder>(delegate: T, recursive = false): T {
+    if (resourceHolderSymbol in delegate) {
         // 已经添加过代理
         return delegate;
     }
 
     const makeProxy = (target: any): any => {
-        if(target === null || typeof target !== 'object' || updatableSymbol in target) {
+        if (target === null || typeof target !== 'object' || resourceHolderSymbol in target) {
             return target;
         }
-        const proxied =  new Proxy(target, {
+        const proxied = new Proxy(target, {
             set(target, p, value, receiver) {
                 delegate.needsUpdate = true;
                 return Reflect.set(target, p, value, receiver);
@@ -42,7 +37,7 @@ export function updatable<T extends Updatable>(delegate: T, recursive = false): 
         });
 
         // 标记已经添加代理
-        Object.defineProperty(proxied, updatableSymbol, {
+        Object.defineProperty(proxied, resourceHolderSymbol, {
             value: true
         });
 
