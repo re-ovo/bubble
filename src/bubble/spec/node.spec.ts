@@ -60,12 +60,18 @@ describe("Component and ComponentHolder", () => {
 
         expect(object3d1.getChildren(false)).toEqual([object3d2])
         expect(object3d1.getChildren(true)).toEqual([object3d2, object3d3])
-
         expect(object3d2.getChildren(false)).toEqual([object3d3])
         expect(object3d2.getChildren(true)).toEqual([object3d3])
-
         expect(object3d3.getChildren(false)).toEqual([])
         expect(object3d3.getChildren(true)).toEqual([])
+
+        expect(object3d1.transform.scene).toBe(scene)
+        expect(object3d2.transform.scene).toBe(scene)
+        expect(object3d3.transform.scene).toBe(scene)
+
+        expect(object3d1.transform.entity).toBe(object3d1)
+        expect(object3d2.transform.entity).toBe(object3d2)
+        expect(object3d3.transform.entity).toBe(object3d3)
     })
 })
 
