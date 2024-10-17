@@ -1,3 +1,6 @@
+import {Scene} from "@/bubble/core/scene";
+import {Object3D} from "@/bubble/core/object3d";
+
 /**
  * 组件接口
  */
@@ -6,6 +9,24 @@ export class Component {
 
     constructor(parent: ComponentHolder) {
         this.parent = parent;
+    }
+
+    get scene(): Scene {
+        if (this.parent instanceof Scene) {
+            return this.parent;
+        } else {
+            // maybe object3d
+            let parent = this.parent as Object3D;
+            return parent.scene!;
+        }
+    }
+
+    get object3d(): Object3D | null {
+        if (this.parent instanceof Object3D) {
+            return this.parent;
+        } else {
+            return null;
+        }
     }
 
     /**
