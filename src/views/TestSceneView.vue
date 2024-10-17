@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
-import {Object3D} from "@/bubble/core/object3d";
+import {Entity} from "@/bubble/core/entity";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
@@ -47,7 +47,7 @@ onMounted(async () => {
   // setup scene
   scene = new Scene()
 
-  scene.addObject(new Object3D('Cube'))
+  scene.addObject(new Entity('Cube'))
       .addComponent(MeshRenderer)
       .material = new Material(
       new Shader(mesh_shader),
@@ -60,7 +60,7 @@ onMounted(async () => {
       0.1,
       1000,
   )
-  scene.addObject(new Object3D('Camera'))
+  scene.addObject(new Entity('Camera'))
       .addComponent(CameraComponent)
       .camera = camera
 

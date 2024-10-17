@@ -1,10 +1,11 @@
 import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
-import type {ResourceHolder} from "@/bubble/resource/resource_holder";
+import type {Versioned} from "@/bubble/resource/resource_holder";
 import {Component} from "@/bubble/core/component";
 
 export class CameraComponent extends Component {
     private _camera: Camera | null = null;
+    private _previousVersion: number = -1;
 
     get camera(): Camera | null {
         return this._camera;
@@ -17,27 +18,30 @@ export class CameraComponent extends Component {
 
     update(deltaTime: number) {
         if (!this.camera) throw new Error("Camera not set in CameraComponent, did you forget to add?");
-        if (this.camera.needsUpdate) {
-            this.camera.update()
+
+        // Automatically update the projection matrix if the camera has changed
+        if(this._previousVersion !== this.camera.version) {
+            console.log("Updating camera projection matrix");
+            this.camera.updateProjectionMatrix();
+            this._previousVersion = this.camera.version;
         }
     }
 }
 
-export abstract class Camera implements ResourceHolder {
+export abstract class Camera implements Versioned {
+    version: number = 0;
     parent: CameraComponent | null = null;
 
     abstract projectionMatrix: Mat4;
 
     abstract updateProjectionMatrix(): void;
 
-    abstract needsUpdate: boolean;
-
-    abstract update(): void;
+    setNeedsUpdate() {
+        this.version++;
+    }
 }
 
 export class PerspectiveCamera extends Camera {
-    needsUpdate: boolean = true;
-
     fov: number;
     aspect: number;
     near: number;
@@ -62,11 +66,6 @@ export class PerspectiveCamera extends Camera {
         this.updateProjectionMatrix();
     }
 
-    update() {
-        this.needsUpdate = false;
-        this.updateProjectionMatrix();
-    }
-
     updateProjectionMatrix() {
         this.projectionMatrix = mat4.perspective(
             angleToRadians(this.fov),
@@ -79,8 +78,6 @@ export class PerspectiveCamera extends Camera {
 }
 
 export class OrthographicCamera extends Camera {
-    needsUpdate: boolean = true;
-
     left: number;
     right: number;
     top: number;
@@ -109,11 +106,6 @@ export class OrthographicCamera extends Camera {
 
         this.projectionMatrix = mat4.create();
         this.updateProjectionMatrix();
-    }
-
-    update() {
-        this.needsUpdate = false;
-        this.updateProjectionMatrix()
     }
 
     updateProjectionMatrix() {

@@ -1,17 +1,20 @@
 import {WgslReflect} from "wgsl_reflect";
-import type {ResourceHolder} from "@/bubble/resource/resource_holder";
+import type {Versioned} from "@/bubble/resource/resource_holder";
 
 /**
  * Shader source provider
  */
 export type ShaderSourceProvider = string | ((params: Record<any, any>) => string);
 
-export class Shader implements ResourceHolder {
-    needsUpdate: boolean = false;
-
+export class Shader implements Versioned {
     private readonly provider: ShaderSourceProvider;
     private _code: string = '';
     private _metadata: WgslReflect | null = null;
+
+    version: number = 0;
+    setNeedsUpdate() {
+        this.version++;
+    }
 
     constructor(sourceProvider: ShaderSourceProvider) {
         this.provider = sourceProvider;
@@ -35,9 +38,5 @@ export class Shader implements ResourceHolder {
             throw new Error('Shader metadata not compiled');
         }
         return this._metadata
-    }
-
-    update(): void {
-        this.needsUpdate = false;
     }
 }

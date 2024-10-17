@@ -1,5 +1,6 @@
 import {Scene} from "@/bubble/core/scene";
-import {Object3D} from "@/bubble/core/object3d";
+import {Entity} from "@/bubble/core/entity";
+import {Transform} from "@/bubble/math/transform";
 
 /**
  * 组件接口
@@ -11,18 +12,20 @@ export class Component {
         this.parent = parent;
     }
 
+    // get scene parent
     get scene(): Scene {
         if (this.parent instanceof Scene) {
             return this.parent;
         } else {
             // maybe object3d
-            let parent = this.parent as Object3D;
+            let parent = this.parent as Entity;
             return parent.scene!;
         }
     }
 
-    get object3d(): Object3D | null {
-        if (this.parent instanceof Object3D) {
+    // get entity parent
+    get entity(): Entity | null {
+        if (this.parent instanceof Entity) {
             return this.parent;
         } else {
             return null;
@@ -37,36 +40,17 @@ export class Component {
     update?(deltaTime: number): void;
 }
 
-/**
- * 组件构造器
- *
- * @param T 组件类型
- * @param P 组件持有者类型
- */
 export type ComponentConstructor<T extends Component> = { new(holder: ComponentHolder): T };
 
-export abstract class ComponentHolder {
-    readonly components: Map<ComponentConstructor<any>, Component> = new Map();
+export type NotTransformComponent<T extends Component> = T extends Transform ? never : ComponentConstructor<T>;
 
-    addComponent<T extends Component>(type: ComponentConstructor<T>): T {
-        if (this.getComponent(type)) {
-            throw new Error(`Component of type ${type.name} already exists.`);
-        }
-        const component = new type(this);
-        this.components.set(type, component);
-        return component;
-    }
+export interface ComponentHolder {
+    readonly transform: Transform
+    readonly components: Map<ComponentConstructor<any>, Component>
 
-    removeComponent<T extends Component>(type: ComponentConstructor<T>) {
-        this.components.delete(type);
-    }
+    addComponent<T extends Component>(type: NotTransformComponent<T>): T
 
-    getComponent<T extends Component>(type: ComponentConstructor<T>): T | null {
-        for (let [key, value] of this.components) {
-            if (key === type || key.prototype instanceof type) {
-                return value as T;
-            }
-        }
-        return null;
-    }
+    removeComponent<T extends Component>(type: ComponentConstructor<T>): void
+
+    getComponent<T extends Component>(type: NotTransformComponent<T>): T | null
 }

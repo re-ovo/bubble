@@ -1,4 +1,4 @@
-import {Object3D} from "@/bubble/core/object3d";
+import {Entity} from "@/bubble/core/entity";
 import type {Camera} from "@/bubble/node/camera/camera";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
@@ -6,6 +6,8 @@ import type {Scene} from "@/bubble/core/scene";
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {RenderContext} from "@/bubble/pipeline/context";
+import {VersionedCache} from "@/bubble/resource/resource_holder";
+import type {Transform} from "@/bubble/math/transform";
 
 export interface EngineOptions {
     // RequestAdapter options
@@ -78,6 +80,7 @@ export class RenderEngine {
         }
     }
 
+    private transformVersionMap = new VersionedCache<Transform, void>()
     // 更新场景
     private updateScene(scene: Scene) {
         // 更新Clock
@@ -91,7 +94,8 @@ export class RenderEngine {
             }
 
             // 更新Object的Transform
-            if (object.transform.needsUpdate) {
+            if (this.transformVersionMap.get(object.transform)?.version !== object.transform.version) {
+                this.transformVersionMap.set(object.transform, undefined); // mark as updated
                 object.transform.updateMatrix()
                 // 同时还需要更新其子节点
                 scene.getChildren(object, true).forEach(child => child.transform.updateMatrix());
@@ -99,7 +103,7 @@ export class RenderEngine {
         }
     }
 
-    private _drawableSortCache: [Object3D, RendererComponent][] = [];
+    private _drawableSortCache: [Entity, RendererComponent][] = [];
 
     // 获取所有有RendererComponent的Object，并按照Material的BlendMode排序
     private getSortedDrawables(scene: Scene) {
