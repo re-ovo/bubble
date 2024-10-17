@@ -1,6 +1,6 @@
 import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
-import type {Versioned} from "@/bubble/resource/resource_holder";
+import type {Versioned} from "@/bubble/resource/versioned";
 import {Component} from "@/bubble/core/component";
 
 export class CameraComponent extends Component {

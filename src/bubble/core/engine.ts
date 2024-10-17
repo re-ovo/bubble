@@ -1,12 +1,9 @@
-import {Entity} from "@/bubble/core/entity";
 import type {Camera} from "@/bubble/node/camera/camera";
-import {RendererComponent} from "@/bubble/node/renderer/renderer";
-import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
 import type {Scene} from "@/bubble/core/scene";
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {RenderContext} from "@/bubble/pipeline/context";
-import {VersionedCache} from "@/bubble/resource/resource_holder";
+import {VersionedCache} from "@/bubble/resource/versioned";
 import type {Transform} from "@/bubble/math/transform";
 
 export interface EngineOptions {
@@ -81,60 +78,27 @@ export class RenderEngine {
     }
 
     private transformVersionMap = new VersionedCache<Transform, void>()
+
     // 更新场景
     private updateScene(scene: Scene) {
         // 更新Clock
         this.clock.tick();
 
-        // 更新Objects & Components
-        for (let object of scene.objects) {
+        // 更新Entity / Component
+        for (let entity of scene.objects) {
             // 更新Object的所有Component
-            for (let [_, component] of object.components) {
+            for (let [_, component] of entity.components) {
                 component.update?.(this.clock.deltaTime);
             }
 
-            // 更新Object的Transform
-            if (this.transformVersionMap.get(object.transform)?.version !== object.transform.version) {
-                this.transformVersionMap.set(object.transform, undefined); // mark as updated
-                object.transform.updateMatrix()
+            // 更新Object的Transform(Component), 特殊Component
+            if (this.transformVersionMap.get(entity.transform)?.version !== entity.transform.version) {
+                this.transformVersionMap.set(entity.transform, undefined); // mark as updated
+                entity.transform.updateMatrix()
                 // 同时还需要更新其子节点
-                scene.getChildren(object, true).forEach(child => child.transform.updateMatrix());
+                scene.getChildren(entity, true).forEach(child => child.transform.updateMatrix());
             }
         }
-    }
-
-    private _drawableSortCache: [Entity, RendererComponent][] = [];
-
-    // 获取所有有RendererComponent的Object，并按照Material的BlendMode排序
-    private getSortedDrawables(scene: Scene) {
-        this._drawableSortCache.length = 0; // clear
-
-        // filter objects with renderer component
-        for (let object of scene.objects) {
-            const renderComponent = object.getComponent(RendererComponent);
-            if (renderComponent) {
-                this._drawableSortCache.push([object, renderComponent]);
-            }
-        }
-
-        // sort by material blend mode
-        this._drawableSortCache.sort((a, b) => {
-            const [, aRenderer] = a
-            const [, bRenderer] = b
-
-            if (aRenderer instanceof MeshRenderer && bRenderer instanceof MeshRenderer) {
-                const aMaterial = aRenderer.material
-                const bMaterial = bRenderer.material
-
-                if (aMaterial && bMaterial) {
-                    return aMaterial.blendMode - bMaterial.blendMode
-                }
-            }
-
-            return 0;
-        })
-
-        return this._drawableSortCache;
     }
 
     destroy() {

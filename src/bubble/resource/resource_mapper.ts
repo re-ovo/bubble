@@ -1,4 +1,6 @@
-export interface ResourceMapper<T, R> {
+import type {Versioned} from "@/bubble/resource/versioned";
+
+export interface ResourceMapper<T extends Versioned, R> {
     sync(resource: T): R;
 
     create(resource: T): R;

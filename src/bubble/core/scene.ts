@@ -13,25 +13,25 @@ export class Scene implements ComponentHolder, Disposable {
         this.objects = [];
     }
 
-    addObject(object: Entity) {
-        this.objects.push(object);
-        object.scene = this;
-        object.transform.parentTransform = this.transform;
-        return object;
+    addEntity(entity: Entity) {
+        this.objects.push(entity);
+        entity.scene = this;
+        entity.transform.parentTransform = this.transform;
+        return entity;
     }
 
-    removeObject(object: Entity) {
-        const index = this.objects.indexOf(object);
+    removeEntity(entity: Entity) {
+        const index = this.objects.indexOf(entity);
         if (index > -1) {
             this.objects.splice(index, 1);
-            object.scene = null;
+            entity.scene = null;
         }
     }
 
-    getChildren(object: Entity, recursive: boolean = false, dst?: Entity[]): Entity[] {
+    getChildren(entity: Entity, recursive: boolean = false, dst?: Entity[]): Entity[] {
         const newDst = dst || [];
         for (let child of this.objects) {
-            if (child.transform.parentTransform === object.transform) {
+            if (child.transform.parentTransform === entity.transform) {
                 newDst.push(child);
                 if (recursive) {
                     this.getChildren(child, recursive, newDst);

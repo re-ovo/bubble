@@ -49,7 +49,7 @@ export class Entity implements ComponentHolder, Disposable {
 
     dispose() {
         if (this.scene) {
-            this.scene.removeObject(this);
+            this.scene.removeEntity(this);
         }
     }
 }

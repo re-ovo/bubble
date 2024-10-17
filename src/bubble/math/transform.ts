@@ -1,4 +1,4 @@
-import type {Versioned} from "@/bubble/resource/resource_holder";
+import type {Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
 import {Component, type ComponentHolder} from "@/bubble/core/component";

@@ -51,9 +51,9 @@ describe("Component and ComponentHolder", () => {
         let object3d2 = new Entity('object3d2')
         let object3d3 = new Entity('object3d3')
 
-        scene.addObject(object3d1)
-        scene.addObject(object3d2).setParent(object3d1)
-        scene.addObject(object3d3).setParent(object3d2)
+        scene.addEntity(object3d1)
+        scene.addEntity(object3d2).setParent(object3d1)
+        scene.addEntity(object3d3).setParent(object3d2)
 
         // check if the getChildren method works
         expect(scene.objects.length).toBe(3)

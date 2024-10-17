@@ -47,7 +47,7 @@ onMounted(async () => {
   // setup scene
   scene = new Scene()
 
-  scene.addObject(new Entity('Cube'))
+  scene.addEntity(new Entity('Cube'))
       .addComponent(MeshRenderer)
       .material = new Material(
       new Shader(mesh_shader),
@@ -60,7 +60,7 @@ onMounted(async () => {
       0.1,
       1000,
   )
-  scene.addObject(new Entity('Camera'))
+  scene.addEntity(new Entity('Camera'))
       .addComponent(CameraComponent)
       .camera = camera
 

@@ -1,6 +1,7 @@
 import type {ResourceMapper} from "@/bubble/resource/resource_mapper";
-import  {type Shader} from "@/bubble/shader/shader";
-import  {type RenderContext} from "@/bubble/pipeline/context";
+import {type Shader} from "@/bubble/shader/shader";
+import {type RenderContext} from "@/bubble/pipeline/context";
+import {VersionedCache} from "@/bubble/resource/versioned";
 
 export interface ShaderGPUResources {
     module: GPUShaderModule;
@@ -11,20 +12,27 @@ export interface ShaderGPUResources {
 export class ShaderResourceMapper implements ResourceMapper<Shader, ShaderGPUResources> {
     private context: RenderContext;
 
-    private shaders = new WeakMap<Shader, ShaderGPUResources>();
+    private cache = new VersionedCache<Shader, ShaderGPUResources>()
 
     constructor(context: RenderContext) {
         this.context = context
     }
 
     sync(resource: Shader): ShaderGPUResources {
-        let resources = this.shaders.get(resource)
-        if (!resources) {
-            resources = this.create(resource)
-            this.shaders.set(resource, resources)
+        let cacheValue = this.cache.get(resource)
+        if (!cacheValue) {
+            const newValue = this.create(resource)
+            cacheValue = {
+                version: resource.version,
+                value: newValue
+            }
+            this.cache.set(resource, newValue)
         }
-        // TODO: update shader resources if it's changed(dirty flag)
-        return resources
+        if(resource.version !== cacheValue.version) {
+            cacheValue.value = this.update(resource, cacheValue.value)
+            cacheValue.version = resource.version
+        }
+        return cacheValue.value
     }
 
     create(resource: Shader): ShaderGPUResources {

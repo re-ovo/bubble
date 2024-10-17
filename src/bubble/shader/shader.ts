@@ -1,5 +1,5 @@
 import {WgslReflect} from "wgsl_reflect";
-import type {Versioned} from "@/bubble/resource/resource_holder";
+import type {Versioned} from "@/bubble/resource/versioned";
 
 /**
  * Shader source provider
