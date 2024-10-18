@@ -1,5 +1,5 @@
 import {ResourceManager} from "@/bubble/resource/resource_manager";
-import type {Scene} from "@/bubble/core/scene";
+import type {Scene} from "@/bubble/core/system";
 
 /**
  * 可编程渲染上下文

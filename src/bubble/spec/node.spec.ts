@@ -1,7 +1,5 @@
-import {Entity} from "@/bubble/core/entity";
 import {describe, expect, it, vi} from "vitest";
-import {Component} from "@/bubble/core/component";
-import {Scene} from "@/bubble/core/scene";
+import {Component, Entity, Scene, Transform} from "@/bubble/core/system";
 
 describe("Component and ComponentHolder", () => {
     const object3d = new Entity('object3d')
@@ -20,7 +18,7 @@ describe("Component and ComponentHolder", () => {
         object3d.addComponent(TestComponent1)
 
         // check if the component is added
-        expect(object3d.components.size).toBe(1)
+        expect(object3d.components.size).toBe(2) // TransformComponent is added by default
 
         // check if the component1 is added
         expect(object3d.getComponent(TestComponent1)).not.toBeNull()
@@ -41,7 +39,7 @@ describe("Component and ComponentHolder", () => {
     it('test component remove', () => {
         // test removeComponent
         object3d.removeComponent(TestComponent1)
-        expect(object3d.components.size).toBe(0)
+        expect(object3d.getComponent(TestComponent1)).toBeNull()
     })
 
     it('test component tree', () => {
@@ -65,13 +63,21 @@ describe("Component and ComponentHolder", () => {
         expect(object3d3.getChildren(false)).toEqual([])
         expect(object3d3.getChildren(true)).toEqual([])
 
-        expect(object3d1.transform.scene).toBe(scene)
-        expect(object3d2.transform.scene).toBe(scene)
-        expect(object3d3.transform.scene).toBe(scene)
+        expect(object3d1.getComponent(Transform)!.scene).toBe(scene)
+        expect(object3d2.getComponent(Transform)!.scene).toBe(scene)
+        expect(object3d3.getComponent(Transform)!.scene).toBe(scene)
 
-        expect(object3d1.transform.entity).toBe(object3d1)
-        expect(object3d2.transform.entity).toBe(object3d2)
-        expect(object3d3.transform.entity).toBe(object3d3)
+        expect(object3d1.getComponent(Transform)!.entity).toBe(object3d1)
+        expect(object3d2.getComponent(Transform)!.entity).toBe(object3d2)
+        expect(object3d3.getComponent(Transform)!.entity).toBe(object3d3)
+
+        scene.removeEntity(object3d1)
+        scene.removeEntity(object3d2)
+        scene.removeEntity(object3d3)
+        expect(scene.objects.length).toBe(0)
+        expect(object3d1.getComponent(Transform)!.parentTransform).toBeNull()
+        expect(object3d2.getComponent(Transform)!.parentTransform).toBeNull()
+        expect(object3d3.getComponent(Transform)!.parentTransform).toBeNull()
     })
 
     it('test recursive parent', () => {

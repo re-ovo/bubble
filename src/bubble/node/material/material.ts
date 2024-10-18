@@ -9,10 +9,6 @@ export class Material {
         this.shader = shader;
         this.blendMode = BlendMode.Opaque;
     }
-
-    test() {
-        tgpu.write
-    }
 }
 
 export enum BlendMode {

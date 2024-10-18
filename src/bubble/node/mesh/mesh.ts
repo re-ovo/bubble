@@ -1,5 +1,5 @@
 import type {BufferAttribute} from "@/bubble/resource/primitive/buffer_attribute";
-import {Component} from "@/bubble/core/component";
+import {Component} from "@/bubble/core/system";
 
 export class Mesh extends Component {
     readonly attributes: Map<string, BufferAttribute<any>> = new Map();

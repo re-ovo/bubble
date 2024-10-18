@@ -5,12 +5,11 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
-import {Entity} from "@/bubble/core/entity";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
-import {Scene} from "@/bubble/core/scene";
+import {Entity, Scene} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {Shader} from "@/bubble/shader/shader";
 import mesh_shader from "@/bubble/shader/mesh/mesh_shader";

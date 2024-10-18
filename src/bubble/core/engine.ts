@@ -1,10 +1,9 @@
 import type {Camera} from "@/bubble/node/camera/camera";
-import type {Scene} from "@/bubble/core/scene";
+import {type Scene, Transform} from "@/bubble/core/system";
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {RenderContext} from "@/bubble/pipeline/context";
 import {VersionedCache} from "@/bubble/resource/versioned";
-import type {Transform} from "@/bubble/math/transform";
 
 export interface EngineOptions {
     // RequestAdapter options
@@ -99,11 +98,11 @@ export class RenderEngine {
             }
 
             // 更新Object的Transform(Component), 特殊Component
-            if (this.transformVersionMap.get(entity.transform)?.version !== entity.transform.version) {
-                this.transformVersionMap.set(entity.transform, undefined); // mark as updated
-                entity.transform.updateMatrix()
+            if (this.transformVersionMap.get(entity.getComponent(Transform)!)?.version !== entity.getComponent(Transform)!.version) {
+                this.transformVersionMap.set(entity.getComponent(Transform)!, undefined); // mark as updated
+                entity.getComponent(Transform)!.updateMatrix()
                 // 同时还需要更新其子节点
-                scene.getChildren(entity, true).forEach(child => child.transform.updateMatrix());
+                scene.getChildren(entity, true).forEach(child => child.getComponent(Transform)!.updateMatrix());
             }
         }
     }

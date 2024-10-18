@@ -1,4 +1,4 @@
-import {Component} from "@/bubble/core/component";
+import {Component} from "@/bubble/core/system";
 
 export class RendererComponent extends Component {
 
