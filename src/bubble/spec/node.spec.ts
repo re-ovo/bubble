@@ -73,5 +73,19 @@ describe("Component and ComponentHolder", () => {
         expect(object3d2.transform.entity).toBe(object3d2)
         expect(object3d3.transform.entity).toBe(object3d3)
     })
+
+    it('test recursive parent', () => {
+        let object1 = new Entity('object1')
+        let object2 = new Entity('object2')
+        let object3 = new Entity('object3')
+
+        object1.setParent(object2)
+        object2.setParent(object3)
+
+        expect(object1.parent).toBe(object2)
+        expect(object2.parent).toBe(object3)
+
+        expect(() => object3.setParent(object1)).toThrowError('Cannot set parent: would create a circular dependency.')
+    })
 })
 

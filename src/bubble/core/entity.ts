@@ -15,7 +15,19 @@ export class Entity implements ComponentHolder, Disposable {
     }
 
     setParent(parent: Entity) {
+        let currentParent: Entity | null = parent;
+        while (currentParent) {
+            if (currentParent === this) {
+                throw new Error("Cannot set parent: would create a circular dependency.");
+            }
+            currentParent = currentParent.parent;
+        }
+
         this.transform.parentTransform = parent.transform;
+    }
+
+    get parent(): Entity | null {
+        return this.transform.parentTransform?.entity || null;
     }
 
     getChildren(recursive: boolean = false, dst?: Entity[]): Entity[] {
