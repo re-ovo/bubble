@@ -18,6 +18,7 @@ export class RenderEngine {
     // WebGPU device and canvas context
     private _device: GPUDevice | null = null;
     private _canvasContext: GPUCanvasContext | null = null;
+    private _canvasSize: GPUExtent3D | null = null;
 
     // SRP
     private _renderContext: RenderContext | null = null;
@@ -47,17 +48,17 @@ export class RenderEngine {
     ) {
         this._device = await this.getDevice(options.adapterOptions);
         this._canvasContext = canvas.getContext("webgpu");
+        this._canvasSize = {width: canvas.width, height: canvas.height};
         this.canvasContext.configure({
             device: this._device!,
             format: this.preferredFormat,
             alphaMode: 'opaque',
         })
-        this._renderContext = new RenderContext(
-            this.device,
-            this.canvasContext.getCurrentTexture().createView()
-        );
+        this._renderContext = new RenderContext(this.device,);
         this._renderPipeline = options.pipelineProvider?.() ?? new ForwardPlusPipeline();
         console.log("WebGPU initialized.");
+        console.log("Preferred format: ", this.preferredFormat);
+        console.log(this.device.limits)
     }
 
     async getDevice(options?: GPURequestAdapterOptions) {
@@ -70,6 +71,12 @@ export class RenderEngine {
     // 执行渲染
     render(scene: Scene, camera: Camera | Camera[]) {
         this.updateScene(scene);
+        this._renderContext?.setup(
+            this.canvasContext.getCurrentTexture().createView(),
+            this.preferredFormat,
+            this._canvasSize!,
+            scene
+        )
         if (Array.isArray(camera)) {
             this._renderPipeline?.render(this._renderContext!, camera);
         } else {

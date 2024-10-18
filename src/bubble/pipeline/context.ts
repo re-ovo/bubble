@@ -1,4 +1,5 @@
 import {ResourceManager} from "@/bubble/resource/resource_manager";
+import type {Scene} from "@/bubble/core/scene";
 
 /**
  * 可编程渲染上下文
@@ -7,18 +8,33 @@ import {ResourceManager} from "@/bubble/resource/resource_manager";
  */
 export class RenderContext {
     public readonly device: GPUDevice;
-    public readonly targetView: GPUTextureView;
     public readonly resourceManager: ResourceManager;
+
+    private _targetView: GPUTextureView | null = null;
+    private _targetFormat: GPUTextureFormat | null = null;
+    private _targetSize: GPUExtent3D | null = null;
+    private _scene: Scene | null = null;
 
     private _commandEncoder: GPUCommandEncoder | null = null;
     private _renderPassEncoder: GPURenderPassEncoder | null = null;
     private _computePassEncoder: GPUComputePassEncoder | null = null;
 
-    constructor(device: GPUDevice, targetView: GPUTextureView) {
+    constructor(device: GPUDevice) {
         this.device = device
-        this.targetView = targetView;
         this.resourceManager = new ResourceManager(this);
         this._commandEncoder = this.device.createCommandEncoder();
+    }
+
+    setup(
+        view: GPUTextureView,
+        format: GPUTextureFormat,
+        size: GPUExtent3D,
+        scene: Scene
+    ) {
+        this._targetView = view;
+        this._targetFormat = format;
+        this._targetSize = size;
+        this._scene = scene;
     }
 
     get encoder() {
@@ -42,13 +58,41 @@ export class RenderContext {
         return this._computePassEncoder;
     }
 
+    get target(): GPUTextureView {
+        if (!this._targetView) {
+            throw new Error("No target view");
+        }
+        return this._targetView;
+    }
+
+    get targetFormat(): GPUTextureFormat {
+        if (!this._targetFormat) {
+            throw new Error("No target format");
+        }
+        return this._targetFormat;
+    }
+
+    get targetSize(): GPUExtent3D {
+        if (!this._targetSize) {
+            throw new Error("No target size");
+        }
+        return this._targetSize;
+    }
+
+    get scene(): Scene {
+        if (!this._scene) {
+            throw new Error("No scene");
+        }
+        return this._scene;
+    }
+
     submit() {
         this.device.queue.submit([this.encoder.finish()]);
         this._commandEncoder = this.device.createCommandEncoder(); // reset encoder
     }
 
     beginRenderPass(passDescriptor: GPURenderPassDescriptor) {
-        this.encoder.beginRenderPass(passDescriptor);
+        this._renderPassEncoder = this.encoder.beginRenderPass(passDescriptor);
     }
 
     endRenderPass() {

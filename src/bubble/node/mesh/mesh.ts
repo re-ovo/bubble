@@ -1,28 +1,30 @@
-import type {Attribute} from "@/bubble/node/mesh/attribute";
+import type {BufferAttribute} from "@/bubble/resource/primitive/buffer_attribute";
+import {Component} from "@/bubble/core/component";
 
-export class Mesh {
-    attributes: Attribute[];
-    indices?: Uint16Array;
+export class Mesh extends Component {
+    readonly attributes: Map<string, BufferAttribute<any>> = new Map();
+    indices: BufferAttribute<Uint16Array> | null = null;
 
-    constructor(
-        vertices: Attribute,
-        normals: Attribute,
-        uvs: Attribute,
-        indices?: Uint16Array
-    ) {
-        this.attributes = [vertices, normals, uvs];
-        this.indices = indices
+    addAttribute<T extends BufferAttribute<any>>(name: string, attribute: T) {
+        if (this.attributes.has(name)) {
+            throw new Error(`Attribute ${name} already exists.`);
+        }
+        this.attributes.set(name, attribute);
     }
 
-    get vertices() {
-        return this.attributes[0];
+    removeAttribute(name: string) {
+        this.attributes.delete(name);
     }
 
-    get normals() {
-        return this.attributes[1];
+    getAttribute<T extends BufferAttribute<any>>(name: string): T | null {
+        return this.attributes.get(name) as T;
     }
 
-    get uvs() {
-        return this.attributes[2];
+    hasAttribute(name: string): boolean {
+        return this.attributes.has(name);
+    }
+
+    setIndices(indices: BufferAttribute<Uint16Array>) {
+        this.indices = indices;
     }
 }

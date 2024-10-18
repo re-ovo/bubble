@@ -7,7 +7,7 @@ import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
 import {Entity} from "@/bubble/core/entity";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
-import {MeshRenderer} from "@/bubble/node/renderer/mesh_renderer";
+import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
 import {Scene} from "@/bubble/core/scene";
@@ -48,7 +48,7 @@ onMounted(async () => {
   scene = new Scene()
 
   scene.addEntity(new Entity('Cube'))
-      .addComponent(MeshRenderer)
+      .addComponent(MeshRendererComponent)
       .material = new Material(
       new Shader(mesh_shader),
   )
