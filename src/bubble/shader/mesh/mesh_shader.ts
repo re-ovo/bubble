@@ -1,9 +1,11 @@
 import {wgsl} from "@/bubble/shader/processor";
 import camera_input from "@/bubble/shader/common/camera_input";
 import {autoBinding, autoLocation} from "@/bubble/shader/counter";
+import material_standard from "@/bubble/shader/common/material_standard";
 
 export default () => wgsl`
 ${camera_input()}
+${material_standard()}
 
 struct VertexInput {
   @location(${autoLocation()}) position: vec3f,

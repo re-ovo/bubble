@@ -1,5 +1,5 @@
 import type {Disposable} from "@/bubble/core/dispose";
-import type {Versioned} from "@/bubble/resource/versioned";
+import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
 
@@ -218,6 +218,7 @@ export class Transform extends Component implements Versioned {
 
     setNeedsUpdate() {
         this.version++;
+        notifyUpdate(this);
     }
 
     lookAt(target: Vec3): Transform {

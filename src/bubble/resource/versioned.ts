@@ -47,3 +47,21 @@ export interface VersionedCacheValue<T> {
     version: number;
     value: T;
 }
+
+const updateListener: WeakMap<Versioned, (() => void)[]> = new WeakMap();
+
+export function addUpdateListener<T extends Versioned>(it: T, listener: () => void) {
+    let listeners = updateListener.get(it);
+    if (!listeners) {
+        listeners = [];
+        updateListener.set(it, listeners);
+    }
+    listeners.push(listener);
+}
+
+export function notifyUpdate<T extends Versioned>(it: T) {
+    const listener = updateListener.get(it);
+    if (listener) {
+        listener.forEach(it => it());
+    }
+}

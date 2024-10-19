@@ -1,27 +1,56 @@
-import {WgslReflect} from "wgsl_reflect";
+import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
+import type {Shader} from "@/bubble/shader/shader";
 
-export class Buffer {
-    readonly definition: string;
+// BufferResource -> GPUBuffer/GPUBufferView
+export class BufferResource implements Versioned {
     readonly structName: string;
     readonly usage: GPUBufferUsageFlags;
-    readonly bufferSize: number;
-    readonly data: ArrayBuffer;
+    shader: Shader | null;
+    bufferSize: number;
+    data: ArrayBuffer;
+    dataView: DataView;
+
+    version: number = 0;
 
     constructor(
-        definition: string,
         structName: string,
         usage: GPUBufferUsageFlags
     ) {
-        this.definition = definition;
         this.structName = structName
-        this.usage = usage;
+        this.usage = usage | GPUBufferUsage.COPY_DST; // Add COPY_DST flag to all usages
+        this.bufferSize = 0;
+        this.data = new ArrayBuffer(0);
+        this.shader = null;
+        this.dataView = new DataView(this.data);
+    }
 
-        const meta = new WgslReflect(definition);
-        const entryStruct = meta.structs.find(s => s.name === structName);
-        if (!entryStruct) {
-            throw new Error(`Entry point ${structName} not found in buffer definition`);
+    setNeedsUpdate() {
+        this.version++;
+        notifyUpdate(this);
+    }
+
+    setShader(shader: Shader) {
+        this.shader = shader;
+        this.computeBufferSize()
+    }
+
+    computeBufferSize() {
+        let struct = this.shader?.metadata.structs?.find((struct) => struct.name === this.structName)
+        if(!struct) {
+            throw new Error(`Struct ${this.structName} not found in shader`)
         }
-        this.bufferSize = entryStruct.size;
-        this.data = new ArrayBuffer(this.bufferSize);
+        this.bufferSize = struct.size
+        this.data = new ArrayBuffer(this.bufferSize)
+        this.dataView = new DataView(this.data)
+        this.setNeedsUpdate()
+    }
+
+    setData(data: ArrayBuffer) {
+        if(data.byteLength !== this.bufferSize) {
+            throw new Error(`Data size ${data.byteLength} does not match buffer size ${this.bufferSize}`)
+        }
+        this.data = data
+        this.dataView = new DataView(this.data)
+        this.setNeedsUpdate()
     }
 }
