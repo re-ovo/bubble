@@ -16,12 +16,23 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderCamera(context: RenderContext, camera: Camera): void {
+        const depthTexture = context.device.createTexture({
+            size: context.targetSize,
+            format: 'depth24plus',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT
+        })
         context.beginRenderPass({
             colorAttachments: [{
                 view: context.target,
                 loadOp: 'clear',
                 storeOp: 'store',
             }],
+            depthStencilAttachment: {
+                view: depthTexture.createView(),
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+                depthClearValue: 1.0
+            }
         });
 
         context.scene.objects.forEach((object) => {
@@ -33,6 +44,8 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
 
         context.endRenderPass();
         context.submit();
+
+        depthTexture.destroy()
     }
 
     renderEntity(context: RenderContext, renderer: RendererComponent) {
@@ -72,6 +85,15 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     format: context.targetFormat,
                 }]
             },
+            primitive: {
+                topology: 'triangle-list',
+                cullMode: 'back',
+            },
+            depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'less',
+                format: 'depth24plus',
+            }
         })
 
         // setup pipeline
