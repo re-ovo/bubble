@@ -4,7 +4,6 @@ import {autoBinding, autoLocation} from "@/bubble/shader/counter";
 import material_standard from "@/bubble/shader/common/material_standard";
 
 export default () => wgsl`
-${camera_input()}
 ${material_standard()}
 
 struct VertexInput {
@@ -19,7 +18,7 @@ struct VertexOutput {
 fn vs(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     
-    output.position = camera.projectionMatrix * camera.viewMatrixInverse * vec4(input.position, 1.0);
+    output.position = vec4(input.position, 1.0);
     
     return output;
 }

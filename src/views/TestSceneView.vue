@@ -12,7 +12,7 @@ import {Entity, Scene} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
-import {Mesh} from "@/bubble/node/mesh/mesh";
+import {createBasicMesh, Mesh} from "@/bubble/node/mesh/mesh";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -48,7 +48,7 @@ onMounted(async () => {
 
   let material = new StandardMaterial()
   material.color = colors.newColor4f(1, 0, 0, 1)
-  let cube = new Mesh()
+  let cube = createBasicMesh()
 
   let meshRenderer = scene.addEntity(new Entity('Cube'))
       .addComponent(MeshRendererComponent)
@@ -75,6 +75,21 @@ onMounted(async () => {
 
   render()
 
+  let positionAttr = cube.getAttribute('position')!
+  let positionDel = {
+    get x(): number {
+      return (positionAttr.data as Float32Array)[0]
+    },
+    set x(value: number) {
+      (positionAttr.data as Float32Array)[0] = value
+      positionAttr.setNeedsUpdate()
+    }
+  }
+  pane.addBinding(positionDel, 'x')
+
+  let materialPanel = pane.addFolder({
+    title: 'Material',
+  })
   const proxiedMaterialColor = {
     get color(): number {
       return colors.color4fToHex(material.color)
@@ -83,14 +98,14 @@ onMounted(async () => {
       material.color = colors.newColor4fFromHex(value)
     },
   }
-  pane.addBinding(proxiedMaterialColor, 'color', {
+  materialPanel.addBinding(proxiedMaterialColor, 'color', {
     view: 'color'
   })
-  pane.addBinding(material, 'roughness', {
+  materialPanel.addBinding(material, 'roughness', {
     min: 0,
     max: 1,
   })
-  pane.addBinding(material, 'metallic', {
+  materialPanel.addBinding(material, 'metallic', {
     min: 0,
     max: 1,
   })

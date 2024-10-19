@@ -44,6 +44,51 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
         let material = renderer.material!;
-        // console.log("Render MeshRendererComponent", mesh, material);
+        let passEncoder = context.renderPassEncoder;
+
+        const {module: shaderModule} = context.resourceManager.syncShader(material.shader);
+
+        const vertexBufferLayouts: GPUVertexBufferLayout[] = material.shader.attributes.map((attribute) => {
+            return {
+                arrayStride: attribute.type.size,
+                attributes: [{
+                    format: attribute.attributeDesc.format,
+                    shaderLocation: attribute.location,
+                    offset: 0,
+                }],
+            }
+        })
+
+        const pipeline = context.device.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+                module: shaderModule,
+                buffers: vertexBufferLayouts,
+            },
+            fragment: {
+                module: shaderModule,
+                targets: [{
+                    format: context.targetFormat,
+                }]
+            },
+        })
+
+        passEncoder.setPipeline(pipeline);
+        mesh.attributes.forEach((bufferAttribute, name) => {
+            const {buffer} = context.resourceManager.syncBuffer(bufferAttribute);
+            const location = material.shader.attributes
+                .find((attribute) => attribute.name === name)?.location;
+            if (location !== undefined) {
+                passEncoder.setVertexBuffer(location, buffer);
+            } else {
+                console.warn(`Attribute ${name} not found in shader`);
+            }
+        })
+
+        if (mesh.indices) {
+            // TODO: draw indexed
+        } else {
+            passEncoder.draw(3)
+        }
     }
 }

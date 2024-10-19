@@ -1,4 +1,4 @@
-import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
+import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 
 export class Mesh {
     readonly attributes: Map<string, BufferAttribute<any>> = new Map();
@@ -26,4 +26,17 @@ export class Mesh {
     setIndices(indices: BufferAttribute<Uint16Array>) {
         this.indices = indices;
     }
+}
+
+export function createBasicMesh(): Mesh {
+    const mesh = new Mesh();
+    mesh.addAttribute('position', new BufferAttribute(
+        new Float32Array([
+            -0.5, -0.5, 0.0,
+            0.5, -0.5, 0.0,
+            0.0, 0.5, 0.0
+        ]),
+        'float32x3'
+    ));
+    return mesh;
 }

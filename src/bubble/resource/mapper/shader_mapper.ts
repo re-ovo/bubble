@@ -5,8 +5,6 @@ import {VersionedCache} from "@/bubble/resource/versioned";
 
 export interface ShaderGPUResources {
     module: GPUShaderModule;
-    pipelineLayout: GPUPipelineLayout;
-    bindGroupLayouts: GPUBindGroupLayout[];
 }
 
 export class ShaderResourceMapper implements ResourceMapper<Shader, ShaderGPUResources> {
@@ -40,16 +38,8 @@ export class ShaderResourceMapper implements ResourceMapper<Shader, ShaderGPURes
         let module = this.context.device.createShaderModule({
             code: resource.code
         })
-        // TODO: create bind group layouts via reflection wgsl
-        let bindGroupLayouts: GPUBindGroupLayout[] = []
-        // create pipeline layout
-        let pipelineLayout = this.context.device.createPipelineLayout({
-            bindGroupLayouts: bindGroupLayouts
-        })
         return {
             module,
-            pipelineLayout,
-            bindGroupLayouts
         }
     }
 

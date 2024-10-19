@@ -145,6 +145,12 @@ function assumeGPUVertexFormat(type: TemplateInfo | TypeInfo): GPUVertexFormat {
             return 'float32x3';
         case 'vec4<f32>':
             return 'float32x4';
+        case 'vec2f':
+            return 'float32x2';
+        case 'vec3f':
+            return 'float32x3';
+        case 'vec4f':
+            return 'float32x4';
         case 'u32':
             return 'uint32';
         case 'vec2<u32>':
@@ -153,6 +159,12 @@ function assumeGPUVertexFormat(type: TemplateInfo | TypeInfo): GPUVertexFormat {
             return 'uint32x3';
         case 'vec4<u32>':
             return 'uint32x4';
+        case 'vec2u':
+            return 'uint32x2';
+        case 'vec3u':
+            return 'uint32x3';
+        case 'vec4u':
+            return 'uint32x4';
         case 'i32':
             return 'sint32';
         case 'vec2<i32>':
@@ -160,6 +172,12 @@ function assumeGPUVertexFormat(type: TemplateInfo | TypeInfo): GPUVertexFormat {
         case 'vec3<i32>':
             return 'sint32x3';
         case 'vec4<i32>':
+            return 'sint32x4';
+        case 'vec2i':
+            return 'sint32x2';
+        case 'vec3i':
+            return 'sint32x3';
+        case 'vec4i':
             return 'sint32x4';
         default:
             throw new Error(`Unsupported type ${typeHint}`);

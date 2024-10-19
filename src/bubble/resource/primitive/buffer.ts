@@ -29,6 +29,11 @@ export class BufferResource implements Versioned {
         return this._dataView;
     }
 
+    get data(): ArrayBuffer {
+        if(this.bufferSize === 0) throw new Error("BufferResource is not initialized yet (shader: " + this.shader + ")");
+        return this._data;
+    }
+
     setNeedsUpdate() {
         this.version++;
         notifyUpdate(this);
