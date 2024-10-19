@@ -8,12 +8,19 @@ export function usePane(options: PaneConfig): Pane {
 
     // fps frame
     const fps = useFps()
-    pane.addBinding(fps, 'value', {
-        label: 'FPS',
+    const folder = pane.addFolder({
+        title: 'Statistics',
+    })
+    folder.addBinding(fps, 'value', {
+        label: 'FPS Graph',
         view: 'graph',
         min: 0,
         max: 300,
         readonly: true,
+    })
+    folder.addBinding(fps, 'value', {
+        readonly: true,
+        label: 'FPS',
     })
 
     // dispose
