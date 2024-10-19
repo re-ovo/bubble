@@ -1,9 +1,8 @@
 import {wgsl} from "@/bubble/shader/processor";
 import {describe, expect, it} from "vitest";
-import {WgslReflect} from "wgsl_reflect";
 import {autoBinding, autoLocation, providerWGSLCounterScope} from "@/bubble/shader/counter";
 import camera_input from "@/bubble/shader/common/camera_input";
-import exp from "node:constants";
+import {Shader} from "@/bubble/shader/shader";
 
 describe("WGSL Shader Processor", () => {
     it("test shader interpolation", () => {
@@ -76,5 +75,53 @@ describe("WGSL Shader Processor", () => {
         expect(ws).contains('@group(0) @binding(2) struct TestInterpolation5 {}')
 
         expect(ws).contains('@group(0) @binding(3) var<uniform> camera: CameraInput;')
+    })
+
+    it("test shader metadata reflection", () => {
+        let shader = new Shader(() => wgsl`
+        struct VertexInput {
+           @builtin(vertex_index) index: u32,
+           @builtin(instance_index) instance: u32,
+           @location(0) position: vec4<f32>,
+           @location(1) normal: vec3<f32>,
+           @location(2) uv: vec2<f32>,
+        }
+        
+        struct VertexOutput {
+           @builtin(position) position: vec4<f32>,
+        }
+        
+        @vertex
+        fn main(input: VertexInput) -> VertexInput {
+            return input;
+        }
+      `)
+        shader.compile({})
+        expect(shader.attributes).toStrictEqual([
+            {
+                "location": 0,
+                "name": "position",
+                "type": {
+                    "name": "vec4",
+                    "size": 16,
+                },
+            },
+            {
+                "location": 1,
+                "name": "normal",
+                "type": {
+                    "name": "vec3",
+                    "size": 12,
+                },
+            },
+            {
+                "location": 2,
+                "name": "uv",
+                "type": {
+                    "name": "vec2",
+                    "size": 8,
+                },
+            },
+        ])
     })
 })

@@ -26,7 +26,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
 
         context.scene.objects.forEach((object) => {
             let renderer = object.getComponent(RendererComponent);
-            if(renderer) {
+            if (renderer) {
                 this.renderEntity(context, renderer);
             }
         })
@@ -36,12 +36,14 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderEntity(context: RenderContext, renderer: RendererComponent) {
-        if(renderer instanceof MeshRendererComponent) {
+        if (renderer instanceof MeshRendererComponent) {
             this.renderMeshRenderer(context, renderer);
         }
     }
 
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
-        console.log("Render MeshRendererComponent");
+        let mesh = renderer.mesh!;
+        let material = renderer.material!;
+        console.log("Render MeshRendererComponent", mesh, material);
     }
 }
