@@ -3,12 +3,14 @@ import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 export class Mesh {
     readonly attributes: Map<string, BufferAttribute<any>> = new Map();
     indices: BufferAttribute<Uint16Array> | null = null;
+    drawCount: number = 0;
 
     addAttribute<T extends BufferAttribute<any>>(name: string, attribute: T) {
         if (this.attributes.has(name)) {
             throw new Error(`Attribute ${name} already exists.`);
         }
         this.attributes.set(name, attribute);
+        this.computeDrawCount();
     }
 
     removeAttribute(name: string) {
@@ -25,6 +27,16 @@ export class Mesh {
 
     setIndices(indices: BufferAttribute<Uint16Array>) {
         this.indices = indices;
+        this.computeDrawCount();
+    }
+
+    computeDrawCount() {
+        if (this.indices) {
+            this.drawCount = this.indices.data.length;
+        } else {
+            const firstAttribute = this.attributes.values().next().value
+            this.drawCount = firstAttribute.data.length / firstAttribute.itemSize;
+        }
     }
 }
 
@@ -34,9 +46,13 @@ export function createBasicMesh(): Mesh {
         new Float32Array([
             -0.5, -0.5, 0.0,
             0.5, -0.5, 0.0,
-            0.0, 0.5, 0.0
+            0.0, 0.5, 0.0,
+
+            0.5, -0.5, 0.0,
+            0.5, 0.5, 0.0,
+            0.0, 0.5, 0.0,
         ]),
-        'float32x3'
+        3
     ));
     return mesh;
 }

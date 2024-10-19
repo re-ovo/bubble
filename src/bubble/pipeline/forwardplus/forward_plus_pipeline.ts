@@ -88,7 +88,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         if (mesh.indices) {
             // TODO: draw indexed
         } else {
-            passEncoder.draw(3)
+            passEncoder.draw(mesh.drawCount)
         }
     }
 }
