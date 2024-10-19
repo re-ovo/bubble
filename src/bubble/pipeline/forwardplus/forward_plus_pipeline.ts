@@ -48,16 +48,17 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
 
         const {module: shaderModule} = context.resourceManager.syncShader(material.shader);
 
-        const vertexBufferLayouts: GPUVertexBufferLayout[] = material.shader.attributes.map((attribute) => {
-            return {
-                arrayStride: attribute.type.size,
-                attributes: [{
-                    format: attribute.attributeDesc.format,
-                    shaderLocation: attribute.location,
-                    offset: 0,
-                }],
-            }
-        })
+        const vertexBufferLayouts: GPUVertexBufferLayout[] = material.shader.attributes
+            .map((attribute) => {
+                return {
+                    arrayStride: attribute.type.size,
+                    attributes: [{
+                        format: attribute.attributeDesc.format,
+                        shaderLocation: attribute.location,
+                        offset: 0,
+                    }],
+                }
+            })
 
         const pipeline = context.device.createRenderPipeline({
             layout: 'auto',
@@ -73,7 +74,10 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             },
         })
 
+        // setup pipeline
         passEncoder.setPipeline(pipeline);
+
+        // setup attributes
         mesh.attributes.forEach((bufferAttribute, name) => {
             const {buffer} = context.resourceManager.syncBuffer(bufferAttribute);
             const location = material.shader.attributes
@@ -85,6 +89,26 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             }
         })
 
+        // setup binding resource
+        material.shader.bindingGroups.forEach((bindingGroup, index) => {
+            const bindGroup = context.device.createBindGroup({
+                layout: pipeline.getBindGroupLayout(index),
+                entries: bindingGroup.bindings.map((bindingMeta) => {
+                    // 其实这里也可能是贴图/Sampler之类的
+                    const bufferResource = material.buffers.get(bindingMeta.name)
+                    if (!bufferResource) {
+                        throw new Error(`Buffer ${bindingMeta.name} not found in material`);
+                    }
+                    return {
+                        binding: bindingMeta.binding,
+                        resource: context.resourceManager.syncBuffer(bufferResource),
+                    }
+                })
+            })
+            passEncoder.setBindGroup(index, bindGroup);
+        })
+
+        // draw
         if (mesh.indices) {
             // TODO: draw indexed
         } else {

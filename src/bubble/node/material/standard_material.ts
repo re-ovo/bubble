@@ -9,6 +9,7 @@ export class StandardMaterial extends Material {
         super(new Shader(mesh_shader));
 
         this.addBuffer("material", new BufferResource("MaterialInfo", GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST))
+        this.color = colors.newColor4fFromHex('#FFFFFF')
     }
 
     get color(): Color4f {
@@ -17,13 +18,15 @@ export class StandardMaterial extends Material {
     }
 
     set color(value: Color4f) {
-        let view = this.getBufferView("material");
-        let linear = colors.srgbToLinear(value);
-        view.setFloat32(0, linear[0]);
-        view.setFloat32(4, linear[1]);
-        view.setFloat32(8, linear[2]);
-        view.setFloat32(12, linear[3]);
-        this.setNeedsUpdate();
+        console.log('set color', value)
+        const buffer = this.getBuffer("material");
+        const view = buffer.view;
+        const linear = colors.srgbToLinear(value);
+        view.setFloat32(0, linear[0], true);
+        view.setFloat32(4, linear[1], true);
+        view.setFloat32(8, linear[2], true);
+        view.setFloat32(12, linear[3], true);
+        buffer.setNeedsUpdate()
     }
 
     get roughness(): number {
@@ -31,8 +34,10 @@ export class StandardMaterial extends Material {
     }
 
     set roughness(value: number) {
-        this.setNeedsUpdate();
-        this.getBufferView("material").setFloat32(16, value);
+        const buffer = this.getBuffer("material");
+        const view = buffer.view;
+        view.setFloat32(16, value, true);
+        buffer.setNeedsUpdate()
     }
 
     get metallic(): number {
@@ -40,7 +45,9 @@ export class StandardMaterial extends Material {
     }
 
     set metallic(value: number) {
-        this.setNeedsUpdate();
-        this.getBufferView("material").setFloat32(20, value);
+        const buffer = this.getBuffer("material");
+        const view = buffer.view;
+        view.setFloat32(20, value, true);
+        buffer.setNeedsUpdate()
     }
 }

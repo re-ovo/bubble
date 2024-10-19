@@ -1,7 +1,7 @@
 import {wgsl} from "@/bubble/shader/processor";
-import camera_input from "@/bubble/shader/common/camera_input";
-import {autoBinding, autoLocation} from "@/bubble/shader/counter";
-import material_standard from "@/bubble/shader/common/material_standard";
+import {autoLocation} from "@/bubble/shader/counter";
+import material_standard from "@/bubble/shader/material/material_standard";
+import gamma_correct from "@/bubble/shader/common/gamma_correct";
 
 export default () => wgsl`
 ${material_standard()}
@@ -23,8 +23,10 @@ fn vs(input: VertexInput) -> VertexOutput {
     return output;
 }
 
+${gamma_correct()}
+
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    return vec4(0.7, 0.7, 0.7, 1.0);
+    return gamma_correct(material.color);
 }
 `
