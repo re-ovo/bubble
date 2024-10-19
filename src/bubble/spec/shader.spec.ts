@@ -77,7 +77,7 @@ describe("WGSL Shader Processor", () => {
         expect(ws).contains('@group(0) @binding(3) var<uniform> camera: CameraInput;')
     })
 
-    it("test shader metadata reflection", () => {
+    it("test shader attribute reflection", () => {
         let shader = new Shader(() => wgsl`
         struct VertexInput {
            @builtin(vertex_index) index: u32,
@@ -90,6 +90,20 @@ describe("WGSL Shader Processor", () => {
         struct VertexOutput {
            @builtin(position) position: vec4<f32>,
         }
+        
+        struct NestTest {
+            test: vec4<f32>,
+        }
+        
+        struct CameraInput {
+              view: mat4x4<f32>,
+              projection: mat4x4<f32>,
+              viewProjection: mat4x4<f32>,
+              cameraPosition: vec3<f32>,
+              nested: NestTest,
+        }
+        
+        @group(0) @binding(0) var<uniform> camera: CameraInput; 
         
         @vertex
         fn main(input: VertexInput) -> VertexInput {
@@ -123,5 +137,35 @@ describe("WGSL Shader Processor", () => {
                 },
             },
         ])
+    })
+
+    it("test shader uniform reflection", () => {
+        const shader = new Shader(() => wgsl`
+        struct CameraInput {
+              view: mat4x4<f32>,
+              projection: mat4x4<f32>,
+              viewProjection: mat4x4<f32>,
+              cameraPosition: vec3<f32>,
+        }
+        
+        struct PointLight {
+                position: vec3<f32>,
+                color: vec3<f32>,
+                intensity: f32,
+        }
+        
+        struct PointLightArray {
+               num: u32,
+               lights: array<PointLight>,
+        }
+        
+        @group(0) @binding(0) var<uniform> camera: CameraInput;
+        @group(0) @binding(1) var<storage> pointLights: PointLightArray;
+            
+        @vertex
+        fn main() {}
+        `)
+        shader.compile({})
+        console.log(shader.metadata.storage[0])
     })
 })

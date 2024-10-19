@@ -1,4 +1,4 @@
-import type {BufferAttribute} from "@/bubble/resource/primitive/buffer_attribute";
+import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 import {Component} from "@/bubble/core/system";
 
 export class Mesh extends Component {
