@@ -1,5 +1,6 @@
 import {WgslReflect} from "wgsl_reflect";
 import type {Versioned} from "@/bubble/resource/versioned";
+import {providerWGSLCounterScope} from "@/bubble/shader/counter";
 
 /**
  * Shader source provider
@@ -24,7 +25,7 @@ export class Shader implements Versioned {
     }
 
     compile(params: Record<string, any>) {
-        const source = typeof this.provider === 'function' ? this.provider(params) : this.provider;
+        const source = providerWGSLCounterScope(() => typeof this.provider === 'function' ? this.provider(params) : this.provider);
         this._code = source;
         this._metadata = new WgslReflect(source);
         this._attributes = computeShaderAttribute(this._metadata);

@@ -7,17 +7,17 @@ import colors, {type Color4f} from "@/bubble/math/colors";
 export class StandardMaterial extends Material {
     constructor() {
         super(new Shader(mesh_shader));
-
+        this.shader?.compile({})
         this.addBuffer("material", new BufferResource("MaterialInfo", GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST))
     }
 
     get color(): Color4f {
-        let view = this.getBuffer("material")!.dataView;
+        let view = this.getBufferView("material");
         return colors.fromLinear([view.getFloat32(0), view.getFloat32(4), view.getFloat32(8), view.getFloat32(12)]);
     }
 
     set color(value: Color4f) {
-        let view = this.getBufferView("material")!;
+        let view = this.getBufferView("material");
         let linear = colors.srgbToLinear(value);
         view.setFloat32(0, linear[0]);
         view.setFloat32(4, linear[1]);

@@ -7,12 +7,12 @@ import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
-import {Material} from "@/bubble/node/material/material";
 import {usePane} from "@/hooks/usePane";
 import {Entity, Scene} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
-import {Shader} from "@/bubble/shader/shader";
-import mesh_shader from "@/bubble/shader/mesh/mesh_shader";
+import {StandardMaterial} from "@/bubble/node/material/standard_material";
+import colors from "@/bubble/math/colors";
+import {Mesh} from "@/bubble/node/mesh/mesh";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -46,11 +46,15 @@ onMounted(async () => {
   // setup scene
   scene = new Scene()
 
-  scene.addEntity(new Entity('Cube'))
+  let material = new StandardMaterial()
+  material.color = colors.newColor4f(1, 0, 0, 1)
+  let cube = new Mesh()
+
+  let meshRenderer = scene.addEntity(new Entity('Cube'))
       .addComponent(MeshRendererComponent)
-      .material = new Material(
-      new Shader(mesh_shader),
-  )
+  meshRenderer.material = material
+  meshRenderer.mesh = cube
+
 
   // setup camera
   camera = new PerspectiveCamera(
@@ -70,6 +74,26 @@ onMounted(async () => {
   }
 
   render()
+
+  const proxiedMaterialColor = {
+    get color(): number {
+      return colors.color4fToHex(material.color)
+    },
+    set color(value: number) {
+      material.color = colors.newColor4fFromHex(value)
+    },
+  }
+  pane.addBinding(proxiedMaterialColor, 'color', {
+    view: 'color'
+  })
+  pane.addBinding(material, 'roughness', {
+    min: 0,
+    max: 1,
+  })
+  pane.addBinding(material, 'metallic', {
+    min: 0,
+    max: 1,
+  })
 
   pane.addButton({
     title: 'Pause/Play',

@@ -6,6 +6,7 @@ import {useFps} from "@vueuse/core";
 export function usePane(options: PaneConfig): Pane {
     const pane = new Pane(options);
 
+    // fps frame
     const fps = useFps()
     pane.addBinding(fps, 'value', {
         label: 'FPS',
@@ -15,8 +16,10 @@ export function usePane(options: PaneConfig): Pane {
         readonly: true,
     })
 
+    // dispose
     onUnmounted(() => {
         pane.dispose();
     });
+
     return pane;
 }

@@ -7,8 +7,8 @@ export class BufferResource implements Versioned {
     readonly usage: GPUBufferUsageFlags;
     shader: Shader | null;
     bufferSize: number;
-    data: ArrayBuffer;
-    dataView: DataView;
+    _data: ArrayBuffer;
+    _dataView: DataView;
 
     version: number = 0;
 
@@ -19,9 +19,14 @@ export class BufferResource implements Versioned {
         this.structName = structName
         this.usage = usage | GPUBufferUsage.COPY_DST; // Add COPY_DST flag to all usages
         this.bufferSize = 0;
-        this.data = new ArrayBuffer(0);
         this.shader = null;
-        this.dataView = new DataView(this.data);
+        this._data = new ArrayBuffer(0);
+        this._dataView = new DataView(this._data);
+    }
+
+    get view(): DataView {
+        if(this.bufferSize === 0) throw new Error("BufferResource is not initialized yet (shader: " + this.shader + ")");
+        return this._dataView;
     }
 
     setNeedsUpdate() {
@@ -40,17 +45,8 @@ export class BufferResource implements Versioned {
             throw new Error(`Struct ${this.structName} not found in shader`)
         }
         this.bufferSize = struct.size
-        this.data = new ArrayBuffer(this.bufferSize)
-        this.dataView = new DataView(this.data)
-        this.setNeedsUpdate()
-    }
-
-    setData(data: ArrayBuffer) {
-        if(data.byteLength !== this.bufferSize) {
-            throw new Error(`Data size ${data.byteLength} does not match buffer size ${this.bufferSize}`)
-        }
-        this.data = data
-        this.dataView = new DataView(this.data)
+        this._data = new ArrayBuffer(this.bufferSize)
+        this._dataView = new DataView(this._data)
         this.setNeedsUpdate()
     }
 }

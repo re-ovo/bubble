@@ -44,6 +44,6 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
         let material = renderer.material!;
-        console.log("Render MeshRendererComponent", mesh, material);
+        // console.log("Render MeshRendererComponent", mesh, material);
     }
 }

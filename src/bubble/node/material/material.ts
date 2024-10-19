@@ -38,6 +38,6 @@ export class Material implements Versioned {
 
     getBufferView(name: string): DataView {
         let buffer = this.getBuffer(name);
-        return buffer.dataView;
+        return buffer.view;
     }
 }
