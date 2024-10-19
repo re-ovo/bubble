@@ -110,7 +110,7 @@ describe("WGSL Shader Processor", () => {
             return input;
         }
       `)
-        shader.compile({})
+        shader.evaluate()
         expect(shader.attributes).toStrictEqual([
             {
                 "location": 0,
@@ -165,7 +165,7 @@ describe("WGSL Shader Processor", () => {
         @vertex
         fn main() {}
         `)
-        shader.compile({})
+        shader.evaluate()
         console.log(shader.metadata.storage[0])
     })
 })

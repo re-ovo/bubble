@@ -7,7 +7,6 @@ import colors, {type Color4f} from "@/bubble/math/colors";
 export class StandardMaterial extends Material {
     constructor() {
         super(new Shader(mesh_shader));
-        this.shader?.compile({})
         this.addBuffer("material", new BufferResource("MaterialInfo", GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST))
     }
 

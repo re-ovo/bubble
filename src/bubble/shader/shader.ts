@@ -8,9 +8,10 @@ import {providerWGSLCounterScope} from "@/bubble/shader/counter";
 export type ShaderSourceProvider = string | ((params: Record<any, any>) => string);
 
 export class Shader implements Versioned {
-    private readonly provider: ShaderSourceProvider;
-    private _code: string = '';
+    private provider: ShaderSourceProvider;
+    private params: Record<string, any> = {};
 
+    private _code: string = '';
     private _metadata: WgslReflect | null = null;
     private _attributes: ShaderAttribute[] = [];
 
@@ -20,15 +21,39 @@ export class Shader implements Versioned {
         this.version++;
     }
 
-    constructor(sourceProvider: ShaderSourceProvider) {
+    constructor(sourceProvider: ShaderSourceProvider, params: Record<string, any> = {}) {
         this.provider = sourceProvider;
+        this.params = params;
+        this.evaluate();
     }
 
-    compile(params: Record<string, any>) {
-        const source = providerWGSLCounterScope(() => typeof this.provider === 'function' ? this.provider(params) : this.provider);
+    addParams(params: Record<string, any>) {
+        this.params = {...this.params, ...params};
+        this.evaluate();
+    }
+
+    addParam(key: string, value: any) {
+        this.params[key] = value;
+        this.evaluate();
+    }
+
+    getParam(key: string): any {
+        return this.params[key];
+    }
+
+    setShaderSourceProvider(provider: ShaderSourceProvider) {
+        this.provider = provider;
+        this.evaluate();
+    }
+
+    evaluate() {
+        const source = providerWGSLCounterScope(() => {
+            return typeof this.provider === 'function' ? this.provider(this.params) : this.provider;
+        });
         this._code = source;
         this._metadata = new WgslReflect(source);
         this._attributes = computeShaderAttribute(this._metadata);
+        this.setNeedsUpdate(); // need to recompile shader module
     }
 
     get code(): string {

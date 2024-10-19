@@ -6,7 +6,7 @@ import {BufferResource} from "@/bubble/resource/primitive/buffer";
 export class Material implements Versioned {
     version: number = 0;
 
-    shader: Shader | null;
+    shader: Shader;
     buffers: Map<string, BufferResource>;
 
     constructor(shader: Shader) {
