@@ -6,23 +6,19 @@
 
 ## 功能
 
-## 核心特性
-
-- [ ] 内置: Forward+ 渲染管线
-- [ ] 可编程渲染管线(SRP)
-- [ ] TypeScript类型驱动的Buffer
-- [ ] ...
-
-## 渲染功能
-
-- [ ] Mesh
-- [ ] Material
-- [ ] Light
-- [ ] Shadow
-- [ ] Fog
-- [ ] Skybox
+- [ ] Forward+ 渲染管线 (Clustered Forward Rendering)
+- [ ] 类Unity Component组件系统 (GameObject->Entity, Component->Component)
+- [x] 支持可编程渲染管线 (SRP)
+- [ ] 全局光照系统 (Voxel Cone Tracing GI)
+- [ ] 骨骼网格体和动画 (Skeletal Animation)
+- [ ] 材质系统 (PBR, Lambert, Phong, Custom)
+- [ ] 剔除 (Culling)
+- [ ] 阴影 (ShadowMap/Cascaded ShadowMap)
+- [ ] 灯光 (Point/Spot/Directional/Ambient Light)
+- [ ] 雾/体积雾 (Fog, Volumetric Fog)
+- [ ] 天空盒 (Skybox)
 - [ ] IBL
-- [ ] PostProcessing
+- [ ] PostProcessing (Bloom)
 
 ## 使用
 
@@ -53,28 +49,6 @@ npm run test:unit
     - `loader`: 资源/模型加载器
     - `helper`: 一些辅助实现 (如Controller以及一些VisualHelper)
     - `spec`: 基于Vitest的测试用例
-
-## Typescript类型安全的Buffer
-
-使用TypeScript类型系统约束Buffer的数据类型，同时自动计算偏移和对齐，防止出错
-
-```typescript
-let typedBuffer = struct({
-    position: vec3f,
-    normal: vec3f,
-    nested: struct({
-        uv: vec2f
-    })
-});
-
-typedBuffer.write(device, buffer, {
-    position: vec3.create(1, 2, 3),
-    normal: vec3.create(1, 2, 3),
-    nested: {
-        uv: vec2.create(1, 2)
-    }
-})
-```
 
 ## Shader
 
