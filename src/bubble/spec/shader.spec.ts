@@ -85,6 +85,7 @@ describe("WGSL Shader Processor", () => {
            @location(0) position: vec4<f32>,
            @location(1) normal: vec3<f32>,
            @location(2) uv: vec2<f32>,
+           @location(3) awa: i32,
         }
         
         struct VertexOutput {
@@ -104,15 +105,28 @@ describe("WGSL Shader Processor", () => {
         }
         
         @group(0) @binding(0) var<uniform> camera: CameraInput; 
+        @group(1) @binding(1) var<storage> pointLights: array<u32, 233>;
+        @group(2) @binding(0) var alb: texture_2d<f32>;
+        @group(3) @binding(0) var alb2: sampler;
         
         @vertex
         fn main(input: VertexInput) -> VertexInput {
             return input;
         }
+        
+        @fragment
+        fn fs(input: VertexOutput) -> @location(0) vec4<f32> {
+            let v = camera.view;
+            
+        }
       `)
-        shader.evaluate()
         expect(shader.attributes).toStrictEqual([
             {
+                "attributeDesc": {
+                    "format": "float32x4",
+                    "offset": 0,
+                    "shaderLocation": 0,
+                },
                 "location": 0,
                 "name": "position",
                 "type": {
@@ -121,6 +135,11 @@ describe("WGSL Shader Processor", () => {
                 },
             },
             {
+                "attributeDesc": {
+                    "format": "float32x3",
+                    "offset": 0,
+                    "shaderLocation": 1,
+                },
                 "location": 1,
                 "name": "normal",
                 "type": {
@@ -129,11 +148,29 @@ describe("WGSL Shader Processor", () => {
                 },
             },
             {
+                "attributeDesc": {
+                    "format": "float32x2",
+                    "offset": 0,
+                    "shaderLocation": 2,
+                },
                 "location": 2,
                 "name": "uv",
                 "type": {
                     "name": "vec2",
                     "size": 8,
+                },
+            },
+            {
+                "attributeDesc": {
+                    "format": "sint32",
+                    "offset": 0,
+                    "shaderLocation": 3,
+                },
+                "location": 3,
+                "name": "awa",
+                "type": {
+                    "name": "i32",
+                    "size": 4,
                 },
             },
         ])
@@ -165,7 +202,5 @@ describe("WGSL Shader Processor", () => {
         @vertex
         fn main() {}
         `)
-        shader.evaluate()
-        console.log(shader.metadata.storage[0])
     })
 })
