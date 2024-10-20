@@ -34,7 +34,7 @@ ${gamma_correct()}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    let lightDirection = normalize(vec3<f32>(0.0, 0.0, 1.0));
+    let lightDirection = normalize(vec3<f32>(0.5, 0.5, 0.5));
         
     let normal = normalize(input.normal);
     
@@ -42,7 +42,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     
     let lightColor = vec3<f32>(1.0, 1.0, 1.0);
     
-    let color = material.color.rgb * lightColor * max(NdotL, 0.0);
+    let color = material.color.rgb * lightColor * max(NdotL, 0.1);
     return gamma_correct(vec4<f32>(color, material.color.a));
 }
 `

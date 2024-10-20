@@ -1,6 +1,6 @@
 import type {Disposable} from "@/bubble/core/dispose";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
-import {mat4, type Mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
+import {mat4, type Mat4, quat, vec3, type Vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
 
 export class Scene implements ComponentHolder, Disposable {
@@ -167,7 +167,7 @@ export class Transform extends Component implements Versioned {
     parentTransform: Transform | null = null;
 
     position: Vec3; // this is local position
-    rotation: Quat;
+    rotation: Vec3;
     scale: Vec3;
 
     positionMatrix: Mat4;
@@ -180,7 +180,7 @@ export class Transform extends Component implements Versioned {
     constructor(parent: ComponentHolder) {
         super(parent);
         this.position = vec3.create(0, 0, 0);
-        this.rotation = quat.create(0, 0, 0, 1);
+        this.rotation = vec3.create(0, 0, 0);
         this.scale = vec3.create(1, 1, 1);
         this.positionMatrix = mat4.create();
         this.rotationMatrix = mat4.create();
@@ -190,10 +190,21 @@ export class Transform extends Component implements Versioned {
         this.updateMatrix();
     }
 
+    private _rotationCache = quat.create();
+
     updateMatrix() {
-        // console.log('update transform matrix of ', this.holder);
         this.positionMatrix = mat4.translation(this.position, this.positionMatrix);
-        this.rotationMatrix = mat4.fromQuat(this.rotation, this.rotationMatrix);
+
+        quat.fromEuler(
+            angleToRadians(this.rotation[0]),
+            angleToRadians(this.rotation[1]),
+            angleToRadians(this.rotation[2]),
+            'yxz',
+            this._rotationCache
+        );
+        quat.normalize(this._rotationCache, this._rotationCache);
+        this.rotationMatrix = mat4.fromQuat(this._rotationCache, this.rotationMatrix);
+
         this.scaleMatrix = mat4.scaling(this.scale, this.scaleMatrix);
 
         this.transformMatrix = mat4.mul(
@@ -221,6 +232,18 @@ export class Transform extends Component implements Versioned {
         notifyUpdate(this);
     }
 
+    get forwardDirection(): Vec3 {
+        return vec3.transformMat4(vec3.create(0, 0, -1), this.rotationMatrix);
+    }
+
+    get rightDirection(): Vec3 {
+        return vec3.transformMat4(vec3.create(1, 0, 0), this.rotationMatrix);
+    }
+
+    get upDirection(): Vec3 {
+        return vec3.transformMat4(vec3.create(0, 1, 0), this.rotationMatrix);
+    }
+
     lookAt(target: Vec3): Transform {
         const matrix = mat4.lookAt(this.position, target, vec3.create(0, 1, 0));
         quat.fromMat(matrix, this.rotation)
@@ -234,8 +257,8 @@ export class Transform extends Component implements Versioned {
         return this;
     }
 
-    setRotation(rotation: Quat): Transform {
-        quat.copy(rotation, this.rotation);
+    setRotation(rotation: Vec3): Transform {
+        vec3.copy(rotation, this.rotation);
         this.setNeedsUpdate()
         return this;
     }
@@ -246,48 +269,22 @@ export class Transform extends Component implements Versioned {
         return this;
     }
 
-    setEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz"): Transform {
-        quat.fromEuler(
-            angleToRadians(eulerAngles[0]),
-            angleToRadians(eulerAngles[1]),
-            angleToRadians(eulerAngles[2]),
-            order,
-            this.rotation
-        );
+    rotateEulerAngles(eulerAngles: Vec3): Transform {
+        vec3.add(this.rotation, eulerAngles, this.rotation);
         this.setNeedsUpdate()
+        this.updateMatrix()
         return this;
     }
 
-    rotateEulerAngles(eulerAngles: Vec3, order: RotationOrder = "xyz"): Transform {
-        quat.mul(
-            this.rotation,
-            quat.fromEuler(
-                angleToRadians(eulerAngles[0]),
-                angleToRadians(eulerAngles[1]),
-                angleToRadians(eulerAngles[2]),
-                order,
-                quat.create()
-            ),
-            this.rotation
-        );
+    // yaw/pitch is in radians
+    rotateYawPitch(yaw: number, pitch: number) {
+        this.rotation[1] += yaw;
+        this.rotation[0] += pitch;
         this.setNeedsUpdate()
-        return this;
     }
 
     translate(translation: Vec3): Transform {
         vec3.add(this.position, translation, this.position);
-        this.setNeedsUpdate()
-        return this;
-    }
-
-    rotate(rotation: Quat): Transform {
-        quat.mul(this.rotation, rotation, this.rotation);
-        this.setNeedsUpdate()
-        return this;
-    }
-
-    scaleBy(scale: Vec3): Transform {
-        vec3.mul(this.scale, scale, this.scale);
         this.setNeedsUpdate()
         return this;
     }
@@ -314,6 +311,7 @@ function getComponentScene(component: Component): Scene {
         return parent.scene!;
     }
 }
+
 function getComponentEntity(component: Component): Entity | null {
     if (component.holder instanceof Entity) {
         return component.holder;

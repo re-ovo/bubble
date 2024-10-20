@@ -16,6 +16,7 @@ import {createCubeMesh, Mesh} from "@/bubble/node/mesh/mesh";
 import {vec3} from "wgpu-matrix";
 import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
 import {loadGltfExample} from "@/bubble/loader/gltf_loader";
+import {FPSController} from "@/bubble/helper/controller";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -65,12 +66,13 @@ onMounted(async () => {
       75,
       canvasRef.value.width / canvasRef.value.height,
       0.1,
-      1000,
+      3000,
   )
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
   cameraTransform.translate(vec3.fromValues(0, 0, 3))
+  cameraEntity.addComponent(FPSController).init(canvasRef.value)
 
   // GLTF
   loadGltfExample('Sponza').then((gltf) => {
@@ -82,7 +84,11 @@ onMounted(async () => {
   // render loop
   const render = () => {
     if (rendering) {
-      renderer?.render(scene!, camera!)
+      try {
+        renderer!.render(scene!, camera!)
+      } catch (e) {
+        console.error(e)
+      }
     }
     requestAnimationFrame(render)
   }
@@ -103,28 +109,28 @@ onMounted(async () => {
     max: 10,
   })
 
-  let materialPanel = pane.addFolder({
-    title: 'Material',
-  })
-  const proxiedMaterialColor = {
-    get color(): number {
-      return colors.color4fToHex(material.color)
-    },
-    set color(value: number) {
-      material.color = colors.newColor4fFromHex(value)
-    },
-  }
-  materialPanel.addBinding(proxiedMaterialColor, 'color', {
-    view: 'color'
-  })
-  materialPanel.addBinding(material, 'roughness', {
-    min: 0,
-    max: 1,
-  })
-  materialPanel.addBinding(material, 'metallic', {
-    min: 0,
-    max: 1,
-  })
+  // let materialPanel = pane.addFolder({
+  //   title: 'Material',
+  // })
+  // const proxiedMaterialColor = {
+  //   get color(): number {
+  //     return colors.color4fToHex(material.color)
+  //   },
+  //   set color(value: number) {
+  //     material.color = colors.newColor4fFromHex(value)
+  //   },
+  // }
+  // materialPanel.addBinding(proxiedMaterialColor, 'color', {
+  //   view: 'color'
+  // })
+  // materialPanel.addBinding(material, 'roughness', {
+  //   min: 0,
+  //   max: 1,
+  // })
+  // materialPanel.addBinding(material, 'metallic', {
+  //   min: 0,
+  //   max: 1,
+  // })
 
   pane.addButton({
     title: 'Pause/Play',

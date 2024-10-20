@@ -19,11 +19,14 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     renderCamera(context: RenderContext, camera: Camera): void {
         context.setupCamera(camera);
 
-        this.depthTexture = context.device.createTexture({
-            size: context.targetSize,
-            format: 'depth24plus',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
-        })
+        if(!this.depthTexture) {
+            this.depthTexture = context.device.createTexture({
+                size: context.targetSize,
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            })
+        }
+
         context.beginRenderPass({
             colorAttachments: [{
                 view: context.target,
