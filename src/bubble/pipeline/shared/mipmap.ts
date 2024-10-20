@@ -11,6 +11,9 @@ let _pipelineCache: Map<GPUTextureFormat, GPURenderPipeline> = new Map();
  * @returns 最适合的mip level
  */
 export function bestMipLevelOfTexture(size: {width: number, height: number}): number {
+    if(size.width <= 1 && size.height <= 1) {
+        return 1;
+    }
     return Math.log2(Math.max(size.width, size.height)) | 0;
 }
 

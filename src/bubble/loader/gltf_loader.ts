@@ -8,6 +8,7 @@ import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
 import {mat3, mat4, quat} from "wgpu-matrix";
 import {Texture2D} from "@/bubble/resource/primitive/texture";
+import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
 
 export async function loadGltfModel(url: string) {
     const gltf = await load(url, GLTFLoader)
@@ -79,20 +80,30 @@ async function convertToEntities(gltf: GLTFPostprocessed): Promise<Entity[]> {
                 material.roughness = primitive.material.pbrMetallicRoughness.roughnessFactor || 1.0
                 material.metallic = primitive.material.pbrMetallicRoughness.metallicFactor || 1.0
                 if (primitive.material.pbrMetallicRoughness.baseColorTexture) {
-
-                    const imageBitmap = await createImageBitmap(
-                        new Blob(
-                            [primitive.material.pbrMetallicRoughness.baseColorTexture.texture.source!.bufferView!.data],
-                            {type: primitive.material.pbrMetallicRoughness.baseColorTexture.texture.source?.mimeType}
-                        ), {
-                            colorSpaceConversion: 'none'
-                        }
+                    const imageBitmap = await convertUint8ArrayToImageBitmap(
+                        primitive.material.pbrMetallicRoughness.baseColorTexture.texture.source!.bufferView!.data
                     )
-
                     material.addTexture('baseColorTexture', new Texture2D(
                         imageBitmap,
                         primitive.material.pbrMetallicRoughness.baseColorTexture.texture.source!.image.width!,
                         primitive.material.pbrMetallicRoughness.baseColorTexture.texture.source!.image.height!
+                    ))
+                }
+                if (primitive.material.normalTexture) {
+                    const imageBitmap = await convertUint8ArrayToImageBitmap(
+                        primitive.material.normalTexture.texture.source!.bufferView!.data
+                    )
+                    material.addTexture('normalTexture', new Texture2D(
+                        imageBitmap,
+                        primitive.material.normalTexture.texture.source!.image.width!,
+                        primitive.material.normalTexture.texture.source!.image.height!
+                    ))
+                } else {
+                    const imageBitmap = await createImageBitmapOfColor(1, 1, '#8080ff')
+                    material.addTexture('normalTexture', new Texture2D(
+                        imageBitmap,
+                        1,
+                        1
                     ))
                 }
             }

@@ -36,6 +36,7 @@ fn vs(input: VertexInput) -> VertexOutput {
 ${gamma_correct()}
 
 ${textureAndSampler('baseColorTexture', 'texture_2d<f32>')}
+${textureAndSampler('normalTexture', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
@@ -48,6 +49,8 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let H = normalize(V + L);
     
     let aa = material.metallic;
+    let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
+    
     let metallic = 0.0;
     let roughness = 0.3;
     
