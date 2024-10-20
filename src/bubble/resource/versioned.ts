@@ -31,9 +31,9 @@ export class VersionedCache<K extends Versioned, V> {
         return undefined;
     }
 
-    set(key: K, value: V) {
+    set(key: K, value: V, version?: number | number[]) {
         this.cache.set(key, {
-            version: key.version,
+            version: version ?? key.version,
             value,
         });
     }
@@ -44,7 +44,7 @@ export class VersionedCache<K extends Versioned, V> {
 }
 
 export interface VersionedCacheValue<T> {
-    version: number;
+    version: number | number[];
     value: T;
 }
 

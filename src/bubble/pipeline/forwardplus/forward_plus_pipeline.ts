@@ -16,6 +16,8 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     renderCamera(context: RenderContext, camera: Camera): void {
+        context.setupCamera(camera);
+
         const depthTexture = context.device.createTexture({
             size: context.targetSize,
             format: 'depth24plus',
@@ -48,7 +50,10 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         depthTexture.destroy()
     }
 
-    renderEntity(context: RenderContext, renderer: RendererComponent) {
+    renderEntity(
+        context: RenderContext,
+        renderer: RendererComponent,
+    ) {
         if (renderer instanceof MeshRendererComponent) {
             this.renderMeshRenderer(context, renderer);
         }
@@ -116,6 +121,19 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             const bindGroup = context.device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(index),
                 entries: bindingGroup.bindings.map((bindingMeta) => {
+                    if(bindingMeta.name == 'camera') {
+                        return {
+                            binding: bindingMeta.binding,
+                            resource: context.resourceManager.syncBuffer(context.cameraBuffer),
+                        }
+                    }
+                    if(bindingMeta.name == "modelInfo") {
+                        return {
+                            binding: bindingMeta.binding,
+                            resource: context.resourceManager.syncBuffer(context.setupModel(renderer.entity!)),
+                        }
+                    }
+
                     // 其实这里也可能是贴图/Sampler之类的
                     const bufferResource = material.buffers.get(bindingMeta.name)
                     if (!bufferResource) {

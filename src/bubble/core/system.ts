@@ -180,7 +180,7 @@ export class Transform extends Component implements Versioned {
     constructor(parent: ComponentHolder) {
         super(parent);
         this.position = vec3.create(0, 0, 0);
-        this.rotation = quat.create(0, 0, 0);
+        this.rotation = quat.create(0, 0, 0, 1);
         this.scale = vec3.create(1, 1, 1);
         this.positionMatrix = mat4.create();
         this.rotationMatrix = mat4.create();
@@ -191,7 +191,7 @@ export class Transform extends Component implements Versioned {
     }
 
     updateMatrix() {
-        console.log('update transform matrix of ', this.holder);
+        // console.log('update transform matrix of ', this.holder);
         this.positionMatrix = mat4.translation(this.position, this.positionMatrix);
         this.rotationMatrix = mat4.fromQuat(this.rotation, this.rotationMatrix);
         this.scaleMatrix = mat4.scaling(this.scale, this.scaleMatrix);

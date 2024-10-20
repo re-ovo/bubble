@@ -58,7 +58,7 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
     }
 
     update(resource: BufferAttribute<any> | BufferResource, gpu: BufferResources): BufferResources {
-        console.log('update buffer for', resource)
+        // console.log('update buffer for', resource)
         this.context.device.queue.writeBuffer(gpu.buffer, 0, resource instanceof BufferResource ? resource.view : resource.data);
         return gpu;
     }

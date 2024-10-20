@@ -8,11 +8,13 @@ import {RenderEngine} from "@/bubble/core/engine";
 import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {usePane} from "@/hooks/usePane";
-import {Entity, Scene} from "@/bubble/core/system";
+import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
-import {createBasicMesh, Mesh} from "@/bubble/node/mesh/mesh";
+import {createCubeMesh, Mesh} from "@/bubble/node/mesh/mesh";
+import {vec3} from "wgpu-matrix";
+import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -48,12 +50,13 @@ onMounted(async () => {
 
   let material = new StandardMaterial()
   material.color = colors.newColor4f(1, 0, 0, 1)
-  let cube = createBasicMesh()
-
-  let meshRenderer = scene.addEntity(new Entity('Cube'))
+  let cube = createCubeMesh()
+  const cubeEntity = scene.addEntity(new Entity('Cube'))
+  let meshRenderer = cubeEntity
       .addComponent(MeshRendererComponent)
   meshRenderer.material = material
   meshRenderer.mesh = cube
+  cubeEntity.addComponent(RotateSelf)
 
 
   // setup camera
@@ -63,29 +66,34 @@ onMounted(async () => {
       0.1,
       1000,
   )
-  scene.addEntity(new Entity('Camera'))
-      .addComponent(CameraComponent)
-      .camera = camera
+  const cameraEntity = scene.addEntity(new Entity('Camera'))
+  cameraEntity.addComponent(CameraComponent).camera = camera
+  const cameraTransform = cameraEntity.getComponent(Transform)!
+  cameraTransform.translate(vec3.fromValues(0, 0, 3))
 
   // render loop
   const render = () => {
-    if (rendering) renderer?.render(scene!, camera!)
+    if (rendering) {
+      renderer?.render(scene!, camera!)
+    }
     requestAnimationFrame(render)
   }
 
   render()
 
-  let positionAttr = cube.getAttribute('position')!
-  let positionDel = {
-    get x(): number {
-      return (positionAttr.data as Float32Array)[0]
+  const positionProxy = {
+    get x() {
+      return cameraTransform.position[0]
     },
     set x(value: number) {
-      (positionAttr.data as Float32Array)[0] = value
-      positionAttr.setNeedsUpdate()
-    }
+      cameraTransform.setNeedsUpdate()
+      cameraTransform.position[0] = value
+    },
   }
-  pane.addBinding(positionDel, 'x')
+  pane.addBinding(positionProxy, 'x', {
+    min: -10,
+    max: 10,
+  })
 
   let materialPanel = pane.addFolder({
     title: 'Material',

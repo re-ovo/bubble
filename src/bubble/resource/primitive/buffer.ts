@@ -44,6 +44,13 @@ export class BufferResource implements Versioned {
         this.computeBufferSize()
     }
 
+    setSize(size: number) {
+        this.bufferSize = size
+        this._data = new ArrayBuffer(this.bufferSize)
+        this._dataView = new DataView(this._data)
+        this.setNeedsUpdate()
+    }
+
     computeBufferSize() {
         let struct = this.shader?.metadata.structs?.find((struct) => struct.name === this.structName)
         if(!struct) {
@@ -52,6 +59,12 @@ export class BufferResource implements Versioned {
         this.bufferSize = struct.size
         this._data = new ArrayBuffer(this.bufferSize)
         this._dataView = new DataView(this._data)
+        this.setNeedsUpdate()
+    }
+
+    setFloat32Array(offset: number, data: Float32Array) {
+        const view = new Float32Array(this._data, offset, data.length)
+        view.set(data)
         this.setNeedsUpdate()
     }
 }

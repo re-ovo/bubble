@@ -2,8 +2,12 @@ import {wgsl} from "@/bubble/shader/processor";
 import {autoLocation} from "@/bubble/shader/counter";
 import material_standard from "@/bubble/shader/material/material_standard";
 import gamma_correct from "@/bubble/shader/common/gamma_correct";
+import camera_input from "@/bubble/shader/common/camera_input";
+import model_info from "@/bubble/shader/common/model_info";
 
 export default () => wgsl`
+${camera_input()}
+${model_info()}
 ${material_standard()}
 
 struct VertexInput {
@@ -18,7 +22,7 @@ struct VertexOutput {
 fn vs(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     
-    output.position = vec4(input.position, 1.0);
+    output.position = camera.projectionMatrix * camera.viewMatrixInverse * modelInfo.modelMatrix * vec4<f32>(input.position, 1.0);
     
     return output;
 }
