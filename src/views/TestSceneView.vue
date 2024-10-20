@@ -84,11 +84,7 @@ onMounted(async () => {
   // render loop
   const render = () => {
     if (rendering) {
-      try {
-        renderer!.render(scene!, camera!)
-      } catch (e) {
-        console.error(e)
-      }
+      renderer!.render(scene!, camera!)
     }
     requestAnimationFrame(render)
   }
@@ -141,6 +137,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   renderer?.destroy()
+  renderer = null
   console.log('destroyed renderer')
 })
 </script>
