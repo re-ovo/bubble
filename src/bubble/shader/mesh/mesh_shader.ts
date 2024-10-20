@@ -41,11 +41,24 @@ ${gamma_correct()}
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
     let lightDirection = normalize(vec3<f32>(0.5, 0.5, 0.5));
-    let normal = normalize(input.normal);
-    let NdotL = dot(normal, lightDirection);
-    let lightColor = vec3<f32>(1.0, 1.0, 1.0);
-    let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).rgb;
-    let color = albedo * lightColor * max(NdotL, 0.05);
-    return gamma_correct(vec4<f32>(color, material.color.a));
+    let lightRadiance = vec3<f32>(1.0) * 5.0;
+    
+    let N = normalize(input.normal);
+    let V = normalize(camera.cameraPosition - input.position.xyz);
+    let L = lightDirection;
+    let H = normalize(V + L);
+    
+    let aa = material.metallic;
+    let metallic = 0.0;
+    let roughness = 0.3;
+    
+    let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
+    let F0 = mix(vec3<f32>(0.04), albedo, metallic);
+    let Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo) * lightRadiance;
+    
+    let ambient = vec3<f32>(0.03) * albedo;
+    let color = ambient + Lo;
+    
+    return vec4<f32>(gamma_correct(color), 1.0);
 }
 `
