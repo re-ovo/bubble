@@ -16,10 +16,11 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     depthTexture: GPUTexture | null = null;
+
     renderCamera(context: RenderContext, camera: Camera): void {
         context.setupCamera(camera);
 
-        if(!this.depthTexture) {
+        if (!this.depthTexture) {
             this.depthTexture = context.device.createTexture({
                 size: context.targetSize,
                 format: 'depth24plus',
@@ -62,6 +63,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     pipeline: GPURenderPipeline | null = null;
+
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
         let material = renderer.material!;
@@ -81,7 +83,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 }
             })
 
-        if(!this.pipeline) {
+        if (!this.pipeline) {
             this.pipeline = context.device.createRenderPipeline({
                 layout: 'auto',
                 vertex: {
@@ -123,13 +125,13 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             const bindGroup = context.device.createBindGroup({
                 layout: this.pipeline!.getBindGroupLayout(index),
                 entries: bindingGroup.bindings.map((bindingMeta) => {
-                    if(bindingMeta.name == 'camera') {
+                    if (bindingMeta.name == 'camera') {
                         return {
                             binding: bindingMeta.binding,
                             resource: context.resourceManager.syncBuffer(context.cameraBuffer),
                         }
                     }
-                    if(bindingMeta.name == "modelInfo") {
+                    if (bindingMeta.name == "modelInfo") {
                         return {
                             binding: bindingMeta.binding,
                             resource: context.resourceManager.syncBuffer(context.setupModel(renderer.entity!)),
@@ -137,13 +139,40 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     }
 
                     // 其实这里也可能是贴图/Sampler之类的
-                    const bufferResource = material.buffers.get(bindingMeta.name)
-                    if (!bufferResource) {
-                        throw new Error(`Buffer ${bindingMeta.name} not found in material`);
-                    }
-                    return {
-                        binding: bindingMeta.binding,
-                        resource: context.resourceManager.syncBuffer(bufferResource),
+                    const type = bindingMeta.type
+                    switch (type) {
+                        case 'sampler': {
+                            const sampleName = bindingMeta.name.slice(0, -7) // remove 'Sampler'
+                            const textureResource = material.textures.get(sampleName)
+                            if (!textureResource) {
+                                throw new Error(`Texture ${sampleName} not found in material`);
+                            }
+                            return {
+                                binding: bindingMeta.binding,
+                                resource: context.resourceManager.syncTexture(textureResource).sampler,
+                            }
+                        }
+
+                        case 'texture_2d': {
+                            const textureResource = material.textures.get(bindingMeta.name)
+                            if (!textureResource) {
+                                throw new Error(`Texture ${bindingMeta.name} not found in material`);
+                            }
+                            return {
+                                binding: bindingMeta.binding,
+                                resource: context.resourceManager.syncTexture(textureResource).view,
+                            }
+                        }
+                        default: {
+                            const bufferResource = material.buffers.get(bindingMeta.name)
+                            if (!bufferResource) {
+                                throw new Error(`Buffer ${bindingMeta.name} not found in material`);
+                            }
+                            return {
+                                binding: bindingMeta.binding,
+                                resource: context.resourceManager.syncBuffer(bufferResource),
+                            }
+                        }
                     }
                 })
             })

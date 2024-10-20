@@ -79,7 +79,7 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.translate(vec3.fromValues(0, 2000, 300))
+  cameraTransform.translate(vec3.fromValues(0, 10, 300))
   cameraTransform.lookAt(vec3.fromValues(0, 0, -1))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
 

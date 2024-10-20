@@ -1,6 +1,7 @@
 import type {Shader} from "@/bubble/shader/shader";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {BufferResource} from "@/bubble/resource/primitive/buffer";
+import type {Texture} from "@/bubble/resource/primitive/texture";
 
 // Material -> ShaderModule/Pipeline/BindingGroups
 export class Material implements Versioned {
@@ -8,10 +9,12 @@ export class Material implements Versioned {
 
     shader: Shader;
     buffers: Map<string, BufferResource>;
+    textures: Map<string, Texture>;
 
     constructor(shader: Shader) {
         this.shader = shader;
         this.buffers = new Map();
+        this.textures = new Map();
     }
 
     setNeedsUpdate() {
@@ -39,5 +42,21 @@ export class Material implements Versioned {
     getBufferView(name: string): DataView {
         let buffer = this.getBuffer(name);
         return buffer.view;
+    }
+
+    addTexture(variableName: string, texture: Texture) {
+        this.textures.set(variableName, texture);
+    }
+
+    getTexture(name: string): Texture {
+        let tex = this.textures.get(name);
+        if (tex) {
+            return tex;
+        }
+        throw new Error(`Texture ${name} not found.`);
+    }
+
+    removeTexture(name: string) {
+        this.textures.delete(name);
     }
 }

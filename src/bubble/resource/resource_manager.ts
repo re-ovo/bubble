@@ -5,18 +5,18 @@ import type {Shader} from "@/bubble/shader/shader";
 import type {BufferResource} from "@/bubble/resource/primitive/buffer";
 import {BufferResourceMapper} from "@/bubble/resource/mapper/buffer_mapper";
 import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
+import {TextureResourceMapper} from "@/bubble/resource/mapper/texture_mapper";
+import type {Texture} from "@/bubble/resource/primitive/texture";
 
 export class ResourceManager implements Disposable {
-    private context: RenderContext;
-
     private shaderMapper: ShaderResourceMapper;
     private bufferMapper: BufferResourceMapper;
+    private textureMapper: TextureResourceMapper;
 
     constructor(context: RenderContext) {
-        this.context = context;
-
         this.shaderMapper = new ShaderResourceMapper(context);
         this.bufferMapper = new BufferResourceMapper(context);
+        this.textureMapper = new TextureResourceMapper(context);
     }
 
     syncShader(shader: Shader) {
@@ -25,6 +25,10 @@ export class ResourceManager implements Disposable {
 
     syncBuffer(buffer: BufferAttribute<any> | BufferResource) {
         return this.bufferMapper.sync(buffer);
+    }
+
+    syncTexture(texture: Texture) {
+        return this.textureMapper.sync(texture);
     }
 
     dispose() {}

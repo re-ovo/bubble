@@ -44,10 +44,13 @@ export class FPSController extends Component {
                 window.removeEventListener('beforeunload', preventCloseWindow)
             }
         })
+        document.addEventListener('pointerlockerror', () => {
+            console.error('Pointer lock failed')
+        })
     }
 
     onMouseMove(e: MouseEvent) {
-        const sensitivity = 10;
+        const sensitivity = 0.1;
 
         const yaw = e.movementX * sensitivity;
         const pitch = e.movementY * sensitivity;
@@ -86,6 +89,7 @@ export class FPSController extends Component {
                 this.transform.translate(vec3.create(0, speed, 0))
                 break;
             case 'Shift':
+            case 'q':
                 this.transform.translate(vec3.create(0, -speed, 0))
                 break;
         }

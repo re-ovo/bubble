@@ -196,9 +196,9 @@ export class Transform extends Component implements Versioned {
         this.positionMatrix = mat4.translation(this.position, this.positionMatrix);
 
         quat.fromEuler(
-            angleToRadians(this.rotation[0]),
-            angleToRadians(this.rotation[1]),
-            angleToRadians(this.rotation[2]),
+            this.rotation[0],
+            this.rotation[1],
+            this.rotation[2],
             'yxz',
             this._rotationCache
         );
@@ -280,6 +280,7 @@ export class Transform extends Component implements Versioned {
     rotateYawPitch(yaw: number, pitch: number) {
         this.rotation[1] += yaw;
         this.rotation[0] += pitch;
+        this.rotation[0] = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation[0]));
         this.setNeedsUpdate()
     }
 

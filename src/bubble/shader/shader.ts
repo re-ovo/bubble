@@ -99,6 +99,7 @@ export interface BindingGroupMetadata {
 export interface BindingGroupEntryMetadata {
     name: string;
     binding: number;
+    type: string;
     // layout: GPUBindGroupLayoutEntry;
 }
 
@@ -198,9 +199,11 @@ function computeBindingGroups(metadata: WgslReflect): BindingGroupMetadata[] {
             // generate binding entry metadata
             let groupMetadata = result[groupIndex]
             let bindingIndex = entry.binding
+            let type = entry.type.name
             groupMetadata.bindings[bindingIndex] = {
                 name: entry.name,
                 binding: bindingIndex,
+                type: type,
             }
             // TODO: Maybe reflect more layout information?
         })
