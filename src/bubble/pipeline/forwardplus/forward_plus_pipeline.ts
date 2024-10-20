@@ -15,10 +15,11 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     dispose(): void {
     }
 
+    depthTexture: GPUTexture | null = null;
     renderCamera(context: RenderContext, camera: Camera): void {
         context.setupCamera(camera);
 
-        const depthTexture = context.device.createTexture({
+        this.depthTexture = context.device.createTexture({
             size: context.targetSize,
             format: 'depth24plus',
             usage: GPUTextureUsage.RENDER_ATTACHMENT
@@ -30,7 +31,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 storeOp: 'store',
             }],
             depthStencilAttachment: {
-                view: depthTexture.createView(),
+                view: this.depthTexture.createView(),
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
                 depthClearValue: 1.0
@@ -46,8 +47,6 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
 
         context.endRenderPass();
         context.submit();
-
-        depthTexture.destroy()
     }
 
     renderEntity(
@@ -59,6 +58,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         }
     }
 
+    pipeline: GPURenderPipeline | null = null;
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
         let material = renderer.material!;
@@ -78,48 +78,47 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 }
             })
 
-        const pipeline = context.device.createRenderPipeline({
-            layout: 'auto',
-            vertex: {
-                module: shaderModule,
-                buffers: vertexBufferLayouts,
-            },
-            fragment: {
-                module: shaderModule,
-                targets: [{
-                    format: context.targetFormat,
-                }]
-            },
-            primitive: {
-                topology: 'triangle-list',
-                cullMode: 'back',
-            },
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-                format: 'depth24plus',
-            }
-        })
+        if(!this.pipeline) {
+            this.pipeline = context.device.createRenderPipeline({
+                layout: 'auto',
+                vertex: {
+                    module: shaderModule,
+                    buffers: vertexBufferLayouts,
+                },
+                fragment: {
+                    module: shaderModule,
+                    targets: [{
+                        format: context.targetFormat,
+                    }]
+                },
+                primitive: {
+                    topology: 'triangle-list',
+                    cullMode: 'back',
+                },
+                depthStencil: {
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                    format: 'depth24plus',
+                }
+            })
+        }
 
         // setup pipeline
-        passEncoder.setPipeline(pipeline);
+        passEncoder.setPipeline(this.pipeline);
 
         // setup attributes
-        mesh.attributes.forEach((bufferAttribute, name) => {
-            const {buffer} = context.resourceManager.syncBuffer(bufferAttribute);
-            const location = material.shader.attributes
-                .find((attribute) => attribute.name === name)?.location;
-            if (location !== undefined) {
-                passEncoder.setVertexBuffer(location, buffer);
-            } else {
-                console.warn(`Attribute ${name} not found in shader`);
+        material.shader.attributes.forEach((attributeMeta) => {
+            if (!mesh.attributes.has(attributeMeta.name)) {
+                console.warn(`Attribute ${attributeMeta.name} not found in mesh`);
             }
+            const buffer = context.resourceManager.syncBuffer(mesh.attributes.get(attributeMeta.name)!)
+            passEncoder.setVertexBuffer(attributeMeta.location, buffer.buffer)
         })
 
         // setup binding resource
         material.shader.bindingGroups.forEach((bindingGroup, index) => {
             const bindGroup = context.device.createBindGroup({
-                layout: pipeline.getBindGroupLayout(index),
+                layout: this.pipeline!.getBindGroupLayout(index),
                 entries: bindingGroup.bindings.map((bindingMeta) => {
                     if(bindingMeta.name == 'camera') {
                         return {
@@ -150,7 +149,9 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
 
         // draw
         if (mesh.indices) {
-            // TODO: draw indexed
+            const buffer = context.resourceManager.syncBuffer(mesh.indices).buffer
+            passEncoder.setIndexBuffer(buffer, 'uint32')
+            passEncoder.drawIndexed(mesh.drawCount)
         } else {
             passEncoder.draw(mesh.drawCount)
         }

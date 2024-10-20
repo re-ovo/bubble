@@ -15,6 +15,7 @@ import colors from "@/bubble/math/colors";
 import {createCubeMesh, Mesh} from "@/bubble/node/mesh/mesh";
 import {vec3} from "wgpu-matrix";
 import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
+import {loadGltfExample} from "@/bubble/loader/gltf_loader";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -48,15 +49,15 @@ onMounted(async () => {
   // setup scene
   scene = new Scene()
 
-  let material = new StandardMaterial()
-  material.color = colors.newColor4f(1, 0, 0, 1)
-  let cube = createCubeMesh()
-  const cubeEntity = scene.addEntity(new Entity('Cube'))
-  let meshRenderer = cubeEntity
-      .addComponent(MeshRendererComponent)
-  meshRenderer.material = material
-  meshRenderer.mesh = cube
-  cubeEntity.addComponent(RotateSelf)
+  // let material = new StandardMaterial()
+  // material.color = colors.newColor4f(1, 0, 0, 1)
+  // let cube = createCubeMesh()
+  // const cubeEntity = scene.addEntity(new Entity('Cube'))
+  // let meshRenderer = cubeEntity
+  //     .addComponent(MeshRendererComponent)
+  // meshRenderer.material = material
+  // meshRenderer.mesh = cube
+  // cubeEntity.addComponent(RotateSelf)
 
 
   // setup camera
@@ -70,6 +71,13 @@ onMounted(async () => {
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
   cameraTransform.translate(vec3.fromValues(0, 0, 3))
+
+  // GLTF
+  loadGltfExample('Sponza').then((gltf) => {
+    gltf.forEach((entity) => {
+      scene?.addEntity(entity)
+    })
+  })
 
   // render loop
   const render = () => {

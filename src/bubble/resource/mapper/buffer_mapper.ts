@@ -35,7 +35,7 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
 
 
     create(resource: BufferAttribute<any> | BufferResource): BufferResources {
-        console.log('create buffer for', resource)
+        // console.log('create buffer for', resource)
         if (resource instanceof BufferResource) {
             let buffer = this.context.device.createBuffer({
                 size: resource.bufferSize,
@@ -48,7 +48,7 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
         } else {
             let buffer = this.context.device.createBuffer({
                 size: resource.data.byteLength,
-                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                usage: resource.usage,
             })
             this.context.device.queue.writeBuffer(buffer, 0, resource.data)
             return {

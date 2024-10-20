@@ -2,7 +2,7 @@ import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 
 export class Mesh {
     readonly attributes: Map<string, BufferAttribute<any>> = new Map();
-    indices: BufferAttribute<Uint16Array> | null = null;
+    indices: BufferAttribute<Uint16Array|Uint32Array> | null = null;
     drawCount: number = 0;
 
     addAttribute<T extends BufferAttribute<any>>(name: string, attribute: T) {
@@ -25,8 +25,11 @@ export class Mesh {
         return this.attributes.has(name);
     }
 
-    setIndices(indices: BufferAttribute<Uint16Array>) {
-        this.indices = indices;
+    setIndices(indices: Uint16Array | Uint32Array) {
+        if(indices instanceof Uint16Array) {
+            indices = new Uint32Array(indices);
+        }
+        this.indices = new BufferAttribute(indices, 1, GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST);
         this.computeDrawCount();
     }
 

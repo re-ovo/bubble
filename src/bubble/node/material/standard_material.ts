@@ -18,7 +18,7 @@ export class StandardMaterial extends Material {
     }
 
     set color(value: Color4f) {
-        console.log('set color', value)
+        // console.log('set color', value)
         const buffer = this.getBuffer("material");
         const view = buffer.view;
         const linear = colors.srgbToLinear(value);

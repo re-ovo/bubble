@@ -12,10 +12,12 @@ ${material_standard()}
 
 struct VertexInput {
   @location(${autoLocation()}) position: vec3f,
+  @location(${autoLocation()}) normal: vec3f,
 }
 
 struct VertexOutput {
   @builtin(position) position: vec4f,
+  @location(0) normal: vec3f,
 }
 
 @vertex
@@ -23,6 +25,7 @@ fn vs(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     
     output.position = camera.projectionMatrix * camera.viewMatrixInverse * modelInfo.modelMatrix * vec4<f32>(input.position, 1.0);
+    output.normal = normalize((modelInfo.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz);
     
     return output;
 }
@@ -31,6 +34,15 @@ ${gamma_correct()}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    return gamma_correct(material.color);
+    let lightDirection = normalize(vec3<f32>(0.0, 0.0, 1.0));
+        
+    let normal = normalize(input.normal);
+    
+    let NdotL = dot(normal, lightDirection);
+    
+    let lightColor = vec3<f32>(1.0, 1.0, 1.0);
+    
+    let color = material.color.rgb * lightColor * max(NdotL, 0.0);
+    return gamma_correct(vec4<f32>(color, material.color.a));
 }
 `
