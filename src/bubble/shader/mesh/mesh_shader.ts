@@ -1,5 +1,5 @@
 import {wgsl} from "@/bubble/shader/processor";
-import {autoBinding, autoLocation} from "@/bubble/shader/counter";
+import {autoBinding, autoLocation, textureAndSampler} from "@/bubble/shader/counter";
 import material_standard from "@/bubble/shader/material/material_standard";
 import gamma_correct from "@/bubble/shader/common/gamma_correct";
 import camera_input from "@/bubble/shader/common/camera_input";
@@ -35,8 +35,7 @@ fn vs(input: VertexInput) -> VertexOutput {
 
 ${gamma_correct()}
 
-@group(1) @binding(${autoBinding(1)}) var baseColorTexture: texture_2d<f32>;
-@group(2) @binding(${autoBinding(2)}) var baseColorTextureSampler: sampler;
+${textureAndSampler('baseColorTexture', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
