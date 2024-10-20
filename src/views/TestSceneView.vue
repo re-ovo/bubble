@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
-import {CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
+import {Camera, CameraComponent, OrthographicCamera, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {usePane} from "@/hooks/usePane";
 import {Entity, Scene, Transform} from "@/bubble/core/system";
@@ -26,7 +26,7 @@ const pane = usePane({
 
 let renderer: RenderEngine | null = null
 let scene: Scene | null = null
-let camera: PerspectiveCamera | null = null
+let camera: Camera | null = null
 let rendering = true
 
 onMounted(async () => {
@@ -66,12 +66,21 @@ onMounted(async () => {
       75,
       canvasRef.value.width / canvasRef.value.height,
       0.1,
-      3000,
+      10000,
   )
+  // camera = new OrthographicCamera(
+  //   -1000,
+  //   1000,
+  //   -1000,
+  //   1000,
+  //   0.1,
+  //   10000,
+  // )
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.translate(vec3.fromValues(0, 0, 3))
+  cameraTransform.translate(vec3.fromValues(0, 2000, 300))
+  cameraTransform.lookAt(vec3.fromValues(0, 0, -1))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
 
   // GLTF

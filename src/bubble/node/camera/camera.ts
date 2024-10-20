@@ -81,8 +81,8 @@ export class PerspectiveCamera extends Camera {
 export class OrthographicCamera extends Camera {
     left: number;
     right: number;
-    top: number;
     bottom: number;
+    top: number;
     near: number;
     far: number;
 
@@ -91,8 +91,8 @@ export class OrthographicCamera extends Camera {
     constructor(
         left: number,
         right: number,
-        top: number,
         bottom: number,
+        top: number,
         near: number,
         far: number
     ) {
@@ -100,8 +100,8 @@ export class OrthographicCamera extends Camera {
 
         this.left = left;
         this.right = right;
-        this.top = top;
         this.bottom = bottom;
+        this.top = top;
         this.near = near;
         this.far = far;
 
@@ -113,8 +113,8 @@ export class OrthographicCamera extends Camera {
         this.projectionMatrix = mat4.ortho(
             this.left,
             this.right,
-            this.top,
             this.bottom,
+            this.top,
             this.near,
             this.far,
             this.projectionMatrix, // avoid memory allocation

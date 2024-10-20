@@ -17,28 +17,36 @@ export class FPSController extends Component {
         })
 
         const moveHandler = (e: MouseEvent) => {
-            this.move(e)
+            this.onMouseMove(e)
+            e.preventDefault()
         }
         const keydownHandler = (e: KeyboardEvent) => {
-            this.keyEvent(e)
+            this.onKeydown(e)
+            e.preventDefault()
         }
         const keyupHandler = (e: KeyboardEvent) => {
             this.pressingKeys.delete(e.key)
+            e.preventDefault()
+        }
+        const preventCloseWindow = (e: BeforeUnloadEvent) => {
+            e.preventDefault()
         }
         document.addEventListener('pointerlockchange', () => {
             if (document.pointerLockElement) {
                 element.addEventListener('mousemove', moveHandler)
                 document.addEventListener('keydown', keydownHandler)
                 document.addEventListener('keyup', keyupHandler)
+                window.addEventListener('beforeunload', preventCloseWindow)
             } else {
                 element.removeEventListener('mousemove', moveHandler)
                 document.removeEventListener('keydown', keydownHandler)
                 document.removeEventListener('keyup', keyupHandler)
+                window.removeEventListener('beforeunload', preventCloseWindow)
             }
         })
     }
 
-    move(e: MouseEvent) {
+    onMouseMove(e: MouseEvent) {
         const sensitivity = 10;
 
         const yaw = e.movementX * sensitivity;
@@ -47,9 +55,8 @@ export class FPSController extends Component {
         this.transform.rotateYawPitch(angleToRadians(-yaw), angleToRadians(-pitch))
     }
 
-    keyEvent(e: KeyboardEvent) {
+    onKeydown(e: KeyboardEvent) {
         this.pressingKeys.add(e.key)
-        e.preventDefault()
     }
 
     update(deltaTime: number) {
@@ -78,7 +85,6 @@ export class FPSController extends Component {
             case ' ': // space
                 this.transform.translate(vec3.create(0, speed, 0))
                 break;
-            case 'Control':
             case 'Shift':
                 this.transform.translate(vec3.create(0, -speed, 0))
                 break;
