@@ -126,5 +126,14 @@ export function wgsl(strings: TemplateStringsArray, ...values: any[]) {
         throw new Error('Mismatched #if/#endif count');
     }
 
-    return state.resolve();
+    return trimIndentation(state.resolve());
+}
+
+function trimIndentation(str: string): string {
+    const lines = str.split('\n');
+    const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+    const indentLengths = nonEmptyLines.map(line => line.match(/^(\s*)/)?.[0].length || 0);
+    const minIndent = Math.min(...indentLengths);
+
+    return lines.map(line => line.slice(minIndent)).join('\n');
 }
