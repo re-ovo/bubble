@@ -17,7 +17,7 @@ export class RenderEngine {
     // WebGPU device and canvas context
     private _device: GPUDevice | null = null;
     private _canvasContext: GPUCanvasContext | null = null;
-    private _canvasSize: GPUExtent3D | null = null;
+    private _canvasSize: GPUExtent3DDict | null = null;
 
     // SRP
     private _renderContext: RenderContext | null = null;
@@ -47,7 +47,11 @@ export class RenderEngine {
     ) {
         this._device = await this.getDevice(options.adapterOptions);
         this._canvasContext = canvas.getContext("webgpu");
-        this._canvasSize = {width: canvas.width, height: canvas.height};
+        this._canvasSize = {
+            width: canvas.width,
+            height: canvas.height,
+            depthOrArrayLayers: 1
+        }
         this.canvasContext.configure({
             device: this._device!,
             format: this.preferredFormat,
@@ -58,6 +62,18 @@ export class RenderEngine {
         console.log("WebGPU initialized.");
         console.log("Preferred format: ", this.preferredFormat);
         console.log(this.device.limits)
+    }
+
+    resize(width: number, height: number) {
+        this._canvasSize = {
+            width: width,
+            height: height,
+            depthOrArrayLayers: 1
+        }
+        this.canvasContext.configure({
+            device: this.device,
+            format: this.preferredFormat,
+        })
     }
 
     async getDevice(options?: GPURequestAdapterOptions) {

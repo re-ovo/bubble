@@ -45,13 +45,12 @@ ${textureAndSampler('normalTexture', 'texture_2d<f32>')}
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
     let lightPosition = vec3<f32>(9.0, 15.0, 1.6);
+    let lightRadiance = vec3<f32>(2.0);
     
     let N = normalize(input.normal);
     let V = normalize(camera.cameraPosition - input.fragPos);
     let L = normalize(lightPosition - input.fragPos);
     let H = normalize(V + L);
-    
-    let lightRadiance = vec3<f32>(5.0);
     
     let aa = material.metallic;
     let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
@@ -64,7 +63,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     var Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo);
     Lo *= lightRadiance;
     
-    let ambient = vec3<f32>(0.1) * albedo;
+    let ambient = vec3<f32>(0.01) * albedo;
     let color = ambient + Lo;
     return vec4<f32>(gamma_correct(color), 1.0);
 }

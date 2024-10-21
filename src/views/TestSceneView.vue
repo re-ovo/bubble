@@ -17,6 +17,7 @@ import {vec3} from "wgpu-matrix";
 import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
 import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
+import {useWindowSize} from "@vueuse/core";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -87,19 +88,18 @@ onMounted(async () => {
   })
 
   // GLTF
-  // loadGltfExample('Sponza').then((gltf) => {
-  //   gltf.forEach((entity) => {
-  //     scene?.addEntity(entity)
-  //   })
-  // })
-  loadGltfModel('/models/toilet/toilet.glb').then((gltf) => {
+  loadGltfExample('Sponza').then((gltf) => {
     gltf.forEach((entity) => {
       scene?.addEntity(entity)
     })
   })
+  // loadGltfModel('/models/toilet/toilet.glb').then((gltf) => {
+  //   gltf.forEach((entity) => {
+  //     scene?.addEntity(entity)
+  //   })
+  // })
   // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
   //   gltf
-  //       .slice(1000)
   //       .forEach((entity) => {
   //         scene?.addEntity(entity)
   //       })
@@ -143,6 +143,17 @@ onMounted(async () => {
   }).on('click', () => {
     rendering = !rendering
   })
+})
+
+window.addEventListener('resize', () => {
+  if (!canvasRef.value) return
+  canvasRef.value.width = canvasRef.value.clientWidth
+  canvasRef.value.height = canvasRef.value.clientHeight
+  renderer?.resize(canvasRef.value.width, canvasRef.value.height)
+  if (camera) {
+    if(camera instanceof PerspectiveCamera) camera.aspect = canvasRef.value.width / canvasRef.value.height
+    camera.updateProjectionMatrix()
+  }
 })
 
 onUnmounted(() => {

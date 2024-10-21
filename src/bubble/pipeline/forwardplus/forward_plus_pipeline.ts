@@ -27,6 +27,14 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             })
         }
+        if(this.depthTexture.width != context.targetSize.width || this.depthTexture.height != context.targetSize.height) {
+            this.depthTexture.destroy();
+            this.depthTexture = context.device.createTexture({
+                size: context.targetSize,
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT
+            })
+        }
 
         context.beginRenderPass({
             colorAttachments: [{

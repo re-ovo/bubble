@@ -75,6 +75,7 @@ export class PerspectiveCamera extends Camera {
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
+        this.setNeedsUpdate()
     }
 }
 
@@ -119,6 +120,7 @@ export class OrthographicCamera extends Camera {
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
+        this.setNeedsUpdate()
     }
 }
 

@@ -63,7 +63,7 @@ async function convertPrimitive(
         transform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
     }
     if(node.rotation){
-        transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+        // transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
     }
     if(node.scale) {
         transform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
@@ -111,6 +111,11 @@ async function convertPrimitive(
     material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
     if (primitive.material && primitive.material.pbrMetallicRoughness) {
         if (primitive.material.pbrMetallicRoughness.baseColorTexture) {
+            const coord = primitive.material.pbrMetallicRoughness.baseColorTexture.texCoord
+            if(coord !== undefined) {
+                throw new Error('Texture coord is not supported yet')
+            }
+
             const texture = await loadTexture(primitive.material.pbrMetallicRoughness.baseColorTexture, textureCache)
             material.addTexture('baseColorTexture', texture)
         }

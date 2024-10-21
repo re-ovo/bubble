@@ -16,7 +16,7 @@ export class RenderContext {
 
     private _targetView: GPUTextureView | null = null;
     private _targetFormat: GPUTextureFormat | null = null;
-    private _targetSize: GPUExtent3D | null = null;
+    private _targetSize: GPUExtent3DDict | null = null;
     private _scene: Scene | null = null;
 
     private _commandEncoder: GPUCommandEncoder | null = null;
@@ -32,7 +32,7 @@ export class RenderContext {
     setup(
         view: GPUTextureView,
         format: GPUTextureFormat,
-        size: GPUExtent3D,
+        size: GPUExtent3DDict,
         scene: Scene
     ) {
         this._targetView = view;
@@ -76,7 +76,7 @@ export class RenderContext {
         return this._targetFormat;
     }
 
-    get targetSize(): GPUExtent3D {
+    get targetSize(): GPUExtent3DDict {
         if (!this._targetSize) {
             throw new Error("No target size");
         }
