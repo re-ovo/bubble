@@ -15,11 +15,18 @@ import colors from "@/bubble/math/colors";
 import {mat3, mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/primitive/texture";
 import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
+import NProgress from "nprogress";
 
 export async function loadGltfModel(url: string) {
-    const gltf = await load(url, GLTFLoader)
-    const gltfPostProcessed = postProcessGLTF(gltf)
-    return await convertToEntities(gltfPostProcessed)
+    try {
+        const gltf = await load(url, GLTFLoader)
+        const gltfPostProcessed = postProcessGLTF(gltf)
+        return await convertToEntities(gltfPostProcessed)
+    } catch (e) {
+        console.error('Failed to load gltf model', e)
+    } finally {
+        NProgress.done()
+    }
 }
 
 export async function loadGltfExample(modelName: string) {
@@ -29,8 +36,10 @@ export async function loadGltfExample(modelName: string) {
 async function convertToEntities(gltf: GLTFPostprocessed): Promise<Entity[]> {
     const entities: Entity[] = []
     const textureCache : Map<number, Texture> = new Map()
+    const nodes = gltf.nodes.length
 
-    for (const node of gltf.nodes) {
+
+    for (const [index, node] of gltf.nodes.entries()) {
         const mesh = node.mesh
         if (!mesh) {
             continue
@@ -42,7 +51,10 @@ async function convertToEntities(gltf: GLTFPostprocessed): Promise<Entity[]> {
                 entities,
                 textureCache
             );
+            await new Promise(resolve => setTimeout(resolve, 0))
         }
+
+        NProgress.set(index / nodes - 1)
     }
 
     console.log('Loaded', entities.length, 'entities')

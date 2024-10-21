@@ -94,22 +94,22 @@ onMounted(async () => {
   })
 
   // GLTF
-  loadGltfExample('Sponza').then((gltf) => {
-    gltf.forEach((entity) => {
-      scene?.addEntity(entity)
-    })
-  })
+  // loadGltfExample('Sponza').then((gltf) => {
+  //   gltf.forEach((entity) => {
+  //     scene?.addEntity(entity)
+  //   })
+  // })
   // loadGltfModel('/models/toilet/toilet.glb').then((gltf) => {
   //   gltf.forEach((entity) => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
-  //   gltf
-  //       .forEach((entity) => {
-  //         scene?.addEntity(entity)
-  //       })
-  // })
+  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
+    gltf
+        .forEach((entity) => {
+          scene?.addEntity(entity)
+        })
+  })
 
   // render loop
   const render = () => {
