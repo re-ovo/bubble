@@ -51,16 +51,15 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let aa = material.metallic;
     let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
     
-    let metallic = 0.0;
-    let roughness = 0.3;
+    let metallic = material.metallic;
+    let roughness = material.roughness;
     
     let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
     let Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo) * lightRadiance;
     
-    let ambient = vec3<f32>(0.03) * albedo;
+    let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
-    
-    return vec4<f32>(gamma_correct(color), 1.0);
+    return vec4<f32>(gamma_correct(ambient), 1.0);
 }
 `

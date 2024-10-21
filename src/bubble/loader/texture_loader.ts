@@ -1,8 +1,26 @@
-export async function convertUint8ArrayToImageBitmap(data: Uint8Array): Promise<ImageBitmap> {
-    return createImageBitmap(
-        new Blob([data]),
-        { colorSpaceConversion: 'none' }
-    );
+export async function convertUint8ArrayToImageBitmap(
+    data: ArrayBuffer | ArrayBufferView,
+    width: number,
+    height: number,
+    mimeType?: string
+): Promise<ImageBitmap> {
+    if(!data) throw new Error('data is required');
+    try {
+        return await createImageBitmap(
+            new Blob([data], {
+                type: mimeType,
+            }),
+            {colorSpaceConversion: 'none'}
+        )
+    } catch (e) {
+        console.error(e)
+        console.log(data, width, height, mimeType)
+        return createImageBitmapOfColor(
+            width,
+            height,
+            '#ff0000'
+        )
+    }
 }
 
 export function createImageBitmapOfColor(

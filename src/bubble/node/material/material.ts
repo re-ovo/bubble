@@ -56,6 +56,10 @@ export class Material implements Versioned {
         throw new Error(`Texture ${name} not found.`);
     }
 
+    hasTexture(name: string): boolean {
+        return this.textures.has(name);
+    }
+
     removeTexture(name: string) {
         this.textures.delete(name);
     }

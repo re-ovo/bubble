@@ -15,7 +15,7 @@ import colors from "@/bubble/math/colors";
 import {createCubeMesh, Mesh} from "@/bubble/node/mesh/mesh";
 import {vec3} from "wgpu-matrix";
 import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
-import {loadGltfExample} from "@/bubble/loader/gltf_loader";
+import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
@@ -40,10 +40,6 @@ onMounted(async () => {
     // 自定义渲染管线
     pipelineProvider() {
       return new ForwardPlusPipeline()
-    },
-    // 适配器选项
-    adapterOptions: {
-      powerPreference: 'high-performance',
     },
   })
 
@@ -79,15 +75,29 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.translate(vec3.fromValues(0, 10, 300))
-  cameraTransform.lookAt(vec3.fromValues(0, 0, -1))
+  cameraTransform.setPosition(vec3.fromValues(-481, 158, -56))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
+  const cameraInfo = {
+    get position() {
+      return `[${cameraTransform.position[0].toFixed(2)}, ${cameraTransform.position[1].toFixed(2)}, ${cameraTransform.position[2].toFixed(2)}]`
+    },
+  }
+  pane.addBinding(cameraInfo, 'position', {
+    readonly: true,
+  })
 
   // GLTF
-  loadGltfExample('Sponza').then((gltf) => {
-    gltf.forEach((entity) => {
-      scene?.addEntity(entity)
-    })
+  // loadGltfExample('Sponza').then((gltf) => {
+  //   gltf.forEach((entity) => {
+  //     scene?.addEntity(entity)
+  //   })
+  // })
+  loadGltfModel('/models/bistro/quit.gltf').then((gltf) => {
+    gltf
+        .slice(1000)
+        .forEach((entity) => {
+          scene?.addEntity(entity)
+        })
   })
 
   // render loop
@@ -99,20 +109,6 @@ onMounted(async () => {
   }
 
   render()
-
-  const positionProxy = {
-    get x() {
-      return cameraTransform.position[0]
-    },
-    set x(value: number) {
-      cameraTransform.setNeedsUpdate()
-      cameraTransform.position[0] = value
-    },
-  }
-  pane.addBinding(positionProxy, 'x', {
-    min: -10,
-    max: 10,
-  })
 
   // let materialPanel = pane.addFolder({
   //   title: 'Material',
