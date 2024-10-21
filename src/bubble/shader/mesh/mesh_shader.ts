@@ -45,7 +45,7 @@ ${textureAndSampler('normalTexture', 'texture_2d<f32>')}
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
     let lightPosition = vec3<f32>(9.0, 15.0, 1.6);
-    let lightRadiance = vec3<f32>(2.0);
+    let lightRadiance = vec3<f32>(5.0);
     
     let N = normalize(input.normal);
     let V = normalize(camera.cameraPosition - input.fragPos);
