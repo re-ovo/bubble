@@ -27,6 +27,7 @@ export async function loadGltfModel(url: string) {
     } finally {
         NProgress.done()
     }
+    return []
 }
 
 export async function loadGltfExample(modelName: string) {
