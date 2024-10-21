@@ -5,28 +5,22 @@ export function angleToRadians(angle: number): number {
 }
 
 
-export function toEulerXYZ(q: Quat, dst: Vec3 | null = null): Vec3 {
-    const newDst = (dst ?? vec3.create());
+export function quatToEuler(q: Quat): Vec3 {
+   const sinr_cosp = 2 * (q[3] * q[0] + q[1] * q[2]);
+    const cosr_cosp = 1 - 2 * (q[0] * q[0] + q[1] * q[1]);
+    const roll = Math.atan2(sinr_cosp, cosr_cosp);
 
-    const x = q[0];
-    const y = q[1];
-    const z = q[2];
-    const w = q[3];
-
-    const sinr_cosp = 2 * (w * x + y * z);
-    const cosr_cosp = 1 - 2 * (x * x + y * y);
-    newDst[0] = Math.atan2(sinr_cosp, cosr_cosp);
-
-    const sinp = 2 * (w * y - z * x);
+    const sinp = 2 * (q[3] * q[1] - q[2] * q[0]);
+    let pitch;
     if (Math.abs(sinp) >= 1) {
-        newDst[1] = Math.sign(sinp) * Math.PI / 2;
+        pitch = Math.sign(sinp) * Math.PI / 2;
     } else {
-        newDst[1] = Math.asin(sinp);
+        pitch = Math.asin(sinp);
     }
 
-    const siny_cosp = 2 * (w * z + x * y);
-    const cosy_cosp = 1 - 2 * (y * y + z * z);
-    newDst[2] = Math.atan2(siny_cosp, cosy_cosp);
+    const siny_cosp = 2 * (q[3] * q[2] + q[0] * q[1]);
+    const cosy_cosp = 1 - 2 * (q[1] * q[1] + q[2] * q[2]);
+    const yaw = Math.atan2(siny_cosp, cosy_cosp);
 
-    return newDst;
+    return vec3.create(roll, pitch, yaw);
 }

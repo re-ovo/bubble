@@ -71,7 +71,7 @@ export class FPSController extends Component {
     handleKey(key: string) {
         const forward = this.transform.forwardDirection
         const right = this.transform.rightDirection
-        const speed = 2.0
+        const speed = 0.1
         switch (key) {
             case 'w':
                 this.transform.translate(vec3.create(forward[0] * speed, 0, forward[2] * speed))

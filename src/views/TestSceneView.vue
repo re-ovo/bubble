@@ -75,7 +75,7 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.setPosition(vec3.fromValues(-481, 158, -56))
+  // cameraTransform.setPosition(vec3.fromValues(-481, 158, -56))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
   const cameraInfo = {
     get position() {
@@ -92,13 +92,18 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/bistro/quit.gltf').then((gltf) => {
-    gltf
-        .slice(1000)
-        .forEach((entity) => {
-          scene?.addEntity(entity)
-        })
+  loadGltfModel('/models/toilet/toilet.glb').then((gltf) => {
+    gltf.forEach((entity) => {
+      scene?.addEntity(entity)
+    })
   })
+  // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
+  //   gltf
+  //       .slice(1000)
+  //       .forEach((entity) => {
+  //         scene?.addEntity(entity)
+  //       })
+  // })
 
   // render loop
   const render = () => {

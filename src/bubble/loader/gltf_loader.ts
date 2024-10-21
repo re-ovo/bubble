@@ -6,13 +6,13 @@ import {
     postProcessGLTF
 } from '@loaders.gl/gltf';
 import {load} from "@loaders.gl/core";
-import {Entity} from "@/bubble/core/system";
+import {Entity, Transform} from "@/bubble/core/system";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Mesh} from "@/bubble/node/mesh/mesh";
 import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
-import {mat3, mat4, quat} from "wgpu-matrix";
+import {mat3, mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/primitive/texture";
 import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
 
@@ -58,11 +58,18 @@ async function convertPrimitive(
 ) {
     const entity = new Entity()
 
+    const transform = entity.getComponent(Transform)!
+    if(node.translation) {
+        transform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
+    }
+    if(node.rotation){
+        transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+    }
+    if(node.scale) {
+        transform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
+    }
+
     if (node.matrix) {
-        // matrix = T * R * S (column-major)
-        // T = translation
-        // R = rotation
-        // S = scale
         const mat = mat4.create(
             node.matrix[0], node.matrix[4], node.matrix[8], node.matrix[12],
             node.matrix[1], node.matrix[5], node.matrix[9], node.matrix[13],
@@ -72,9 +79,7 @@ async function convertPrimitive(
         const translation = mat4.getTranslation(mat)
         const scaling = mat4.getScaling(mat)
         const rotation = quat.fromMat(mat3.fromMat4(mat))
-        console.log('translation', translation)
-        console.log('scaling', scaling)
-        console.log('rotation', rotation)
+        throw new Error('Matrix transformation is not supported')
     }
 
     const renderer = entity.addComponent(MeshRendererComponent)

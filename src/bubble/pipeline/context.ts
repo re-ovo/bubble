@@ -160,8 +160,9 @@ export class RenderContext {
                 "ModelInfo",
                 GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             )
-            buf.setSize(64) // 64(mat4)
-            buf.setFloat32Array(0, transform.transformMatrix)
+            buf.setSize(128)
+            buf.setFloat32Array(0, transform.transformMatrix) // model matrix in MVP
+            buf.setFloat32Array(64, transform.transformMatrixInverse) // model matrix inverse
             buffer = {
                 value: buf,
                 version: transform.version

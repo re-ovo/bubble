@@ -20,6 +20,7 @@ struct VertexOutput {
   @builtin(position) position: vec4f,
   @location(0) normal: vec3f,
   @location(1) uv: vec2f,
+  @location(2) fragPos: vec3f,
 }
 
 @vertex
@@ -27,8 +28,11 @@ fn vs(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     
     output.position = camera.projectionMatrix * camera.viewMatrixInverse * modelInfo.modelMatrix * vec4<f32>(input.position, 1.0);
-    output.normal = normalize((modelInfo.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz);
     output.uv = input.uv;
+    output.fragPos = (modelInfo.modelMatrix * vec4<f32>(input.position, 1.0)).xyz;
+    
+    // normal
+    output.normal = mat4fToMat3f(transpose(modelInfo.modelMatrixInverse)) * input.normal;
     
     return output;
 }
@@ -40,13 +44,14 @@ ${textureAndSampler('normalTexture', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    let lightDirection = normalize(vec3<f32>(0.5, 0.5, 0.5));
-    let lightRadiance = vec3<f32>(1.0) * 5.0;
+    let lightPosition = vec3<f32>(9.0, 15.0, 1.6);
     
     let N = normalize(input.normal);
-    let V = normalize(camera.cameraPosition - input.position.xyz);
-    let L = lightDirection;
+    let V = normalize(camera.cameraPosition - input.fragPos);
+    let L = normalize(lightPosition - input.fragPos);
     let H = normalize(V + L);
+    
+    let lightRadiance = vec3<f32>(5.0);
     
     let aa = material.metallic;
     let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
@@ -56,10 +61,11 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     
     let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
-    let Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo) * lightRadiance;
+    var Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo);
+    Lo *= lightRadiance;
     
     let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
-    return vec4<f32>(gamma_correct(ambient), 1.0);
+    return vec4<f32>(gamma_correct(color), 1.0);
 }
 `
