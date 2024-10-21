@@ -76,7 +76,7 @@ async function convertPrimitive(
         transform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
     }
     if(node.rotation){
-        // transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+        transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
     }
     if(node.scale) {
         transform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))

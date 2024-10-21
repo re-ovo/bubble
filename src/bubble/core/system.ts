@@ -1,7 +1,7 @@
 import type {Disposable} from "@/bubble/core/dispose";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, type Quat, quat, vec3, type Vec3} from "wgpu-matrix";
-import {angleToRadians, quatToEuler} from "@/bubble/math/maths";
+import {quatToEulerYXZ} from "@/bubble/math/maths";
 
 export class Scene implements ComponentHolder, Disposable {
     readonly objects: Entity[];
@@ -264,7 +264,7 @@ export class Transform extends Component implements Versioned {
     }
 
     setRotationByQuaternion(quaternion: Quat): Transform {
-        vec3.copy(quatToEuler(quaternion), this.rotation);
+        vec3.copy(quatToEulerYXZ(quaternion), this.rotation);
         this.setNeedsUpdate()
         return this
     }
