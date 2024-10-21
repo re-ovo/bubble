@@ -5,6 +5,8 @@ import {angleToRadians} from "@/bubble/math/maths";
 export class FPSController extends Component {
     private readonly pressingKeys = new Set<string>()
 
+    moveSpeed = 0.1
+
     get transform(): Transform {
         return this.entity!.getComponent(Transform)!;
     }
@@ -71,7 +73,7 @@ export class FPSController extends Component {
     handleKey(key: string) {
         const forward = this.transform.forwardDirection
         const right = this.transform.rightDirection
-        const speed = 0.1
+        const speed = this.moveSpeed
         switch (key) {
             case 'w':
                 this.transform.translate(vec3.create(forward[0] * speed, 0, forward[2] * speed))

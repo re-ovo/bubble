@@ -85,6 +85,12 @@ onMounted(async () => {
   }
   pane.addBinding(cameraInfo, 'position', {
     readonly: true,
+    label: 'Camera Position',
+  })
+  pane.addBinding(cameraEntity.getComponent(FPSController)!, 'moveSpeed', {
+    min: 0.1,
+    max: 10,
+    step: 0.1,
   })
 
   // GLTF
