@@ -13,8 +13,6 @@ export async function convertUint8ArrayToImageBitmap(
             {colorSpaceConversion: 'none'}
         )
     } catch (e) {
-        console.error(e)
-        console.log(data, width, height, mimeType)
         return createImageBitmapOfColor(
             width,
             height,

@@ -5,19 +5,12 @@
 <script setup lang="ts">
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
-import {Camera, CameraComponent, OrthographicCamera, PerspectiveCamera} from "@/bubble/node/camera/camera";
-import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
+import {Camera, CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {usePane} from "@/hooks/usePane";
 import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
-import {StandardMaterial} from "@/bubble/node/material/standard_material";
-import colors from "@/bubble/math/colors";
-import {createCubeMesh, Mesh} from "@/bubble/node/mesh/mesh";
-import {vec3} from "wgpu-matrix";
-import {RotateSelf} from "@/bubble/node/logic/RotateSelf";
-import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
+import {loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
-import {useWindowSize} from "@vueuse/core";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -99,15 +92,15 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  // loadGltfModel('/models/toilet/toilet.glb').then((gltf) => {
-  //   gltf.forEach((entity) => {
-  //     scene?.addEntity(entity)
-  //   })
-  // })
-  loadGltfModel(
-      '/models/Bistro/bistro.gltf',
-      (e) => scene?.addEntity(e)
-  )
+  loadGltfModel('/models/miyu.glb').then((gltf) => {
+    gltf.forEach((entity) => {
+      scene?.addEntity(entity)
+    })
+  })
+  // loadGltfModel(
+  //     '/models/Bistro/bistro.gltf',
+  //     (e) => scene?.addEntity(e)
+  // )
 
   // render loop
   const render = () => {

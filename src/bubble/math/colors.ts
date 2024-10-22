@@ -4,11 +4,17 @@
 export type Color4f = [number, number, number, number];
 
 function newColor4f(r: number, g: number, b: number, a: number): Color4f {
+    if(r === undefined || g === undefined || b === undefined || a === undefined) {
+        throw new Error('Invalid color: ' + [r, g, b, a]);
+    }
     return [r, g, b, a];
 }
 
 function newColor4fFromHex(hex: string | number): Color4f {
     if (typeof hex === "string") {
+        if (hex.length !== 7 && hex.length !== 9) {
+            throw new Error('Invalid hex color: ' + hex);
+        }
         let start = hex[0] === "#" ? 1 : 0;
         hex = parseInt(hex.slice(start), 16);
     }
@@ -34,10 +40,27 @@ function fromLinear(value: Color4f): Color4f {
     return [linearToSrgb(value[0]), linearToSrgb(value[1]), linearToSrgb(value[2]), value[3]];
 }
 
+const White = newColor4f(1, 1, 1, 1);
+const Black = newColor4f(0, 0, 0, 1);
+const Red = newColor4f(1, 0, 0, 1);
+const Green = newColor4f(0, 1, 0, 1);
+const Blue = newColor4f(0, 0, 1, 1);
+const Yellow = newColor4f(1, 1, 0, 1);
+const Cyan = newColor4f(0, 1, 1, 1);
+const Magenta = newColor4f(1, 0, 1, 1);
+
 export default {
     newColor4f,
     newColor4fFromHex,
     color4fToHex,
     srgbToLinear,
-    fromLinear
+    fromLinear,
+    White,
+    Black,
+    Red,
+    Green,
+    Blue,
+    Yellow,
+    Cyan,
+    Magenta,
 }

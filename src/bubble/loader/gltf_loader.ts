@@ -35,11 +35,17 @@ export async function loadGltfExample(modelName: string, onEntityLoaded: (entity
  */
 export async function loadGltfModel(
     url: string,
-    onEntityLoaded: (entity: Entity) => void = () => {}
+    onEntityLoaded: (entity: Entity) => void = () => {
+    }
 ) {
     try {
         const gltf = await load(url, GLTFLoader)
         console.log('Loaded gltf model, post processing...')
+        console.log('Extensions Required:', gltf.json.extensionsRequired)
+        console.log('Extensions Used:', gltf.json.extensionsUsed)
+        console.log('GLTF Version:', gltf.json.asset.version)
+        console.log('Nodes:', gltf.json.nodes)
+        console.log('Meshes:', gltf.json.meshes)
         const gltfPostProcessed = postProcessGLTF(gltf)
         return await convertToEntities(gltfPostProcessed, onEntityLoaded)
     } catch (e) {
@@ -53,7 +59,7 @@ export async function loadGltfModel(
 // 将 glTF 转换为Entities
 async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entity: Entity) => void): Promise<Entity[]> {
     const entities: Entity[] = []
-    const textureCache : Map<number, Texture> = new Map()
+    const textureCache: Map<number, Texture> = new Map()
     const nodes = gltf.nodes.length
 
     for (const [index, node] of gltf.nodes.entries()) {
@@ -87,7 +93,7 @@ async function convertPrimitive(
     textureCache: Map<number, Texture>,
     onEntityLoaded: (entity: Entity) => void
 ) {
-    if(node.children && node.children.length > 0) {
+    if (node.children && node.children.length > 0) {
         throw new Error('Node children are not supported')
     }
 
@@ -95,13 +101,13 @@ async function convertPrimitive(
 
     // Transform
     const transform = entity.getComponent(Transform)!
-    if(node.translation) {
+    if (node.translation) {
         transform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
     }
-    if(node.rotation){
+    if (node.rotation) {
         transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
     }
-    if(node.scale) {
+    if (node.scale) {
         transform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
     }
 
@@ -124,25 +130,27 @@ async function convertPrimitive(
     // Mesh
     const mesh = new Mesh()
     const positionAttribute = primitive.attributes['POSITION']
-    if(positionAttribute.type !== 'VEC3') throw new Error('Position attribute is not VEC3')
+    if (positionAttribute.type !== 'VEC3') throw new Error('Position attribute is not VEC3')
     mesh.addAttribute('position', new BufferAttribute(
         positionAttribute.value,
         3
     ))
-    if(primitive.attributes['NORMAL'].type !== 'VEC3') throw new Error('Normal attribute is not VEC3')
+    if (primitive.attributes['NORMAL'].type !== 'VEC3') throw new Error('Normal attribute is not VEC3')
     mesh.addAttribute('normal', new BufferAttribute(
         primitive.attributes['NORMAL'].value,
         3
     ))
-    if(primitive.attributes['TEXCOORD_0'].type !== 'VEC2') throw new Error('UV attribute is not VEC2')
+    if (primitive.attributes['TEXCOORD_0'].type !== 'VEC2') throw new Error('UV attribute is not VEC2')
     mesh.addAttribute('uv', new BufferAttribute(
         primitive.attributes['TEXCOORD_0'].value,
         2
     ))
     if (primitive.indices) {
-        if(primitive.indices.type !== 'SCALAR') throw new Error('Indices attribute is not SCALAR')
+        if (primitive.indices.type !== 'SCALAR') throw new Error('Indices attribute is not SCALAR')
         const uint16Array = new Uint16Array(primitive.indices.value)
         mesh.setIndices(uint16Array)
+        // if(mesh.drawCount !== primitive.indices.count) throw new Error('Draw count is not equal to indices count')
+        mesh.setVertexCount(primitive.indices.count)
     } else {
         console.log('No indices found for primitive', primitive)
     }
@@ -150,20 +158,33 @@ async function convertPrimitive(
 
     // Material
     const material = new StandardMaterial()
-    material.color = colors.newColor4fFromHex('#00bb00')
     renderer.material = material
 
+    const baseColorFactor = primitive.material?.pbrMetallicRoughness?.baseColorFactor
+    material.color = baseColorFactor ? colors.newColor4f(
+        baseColorFactor[0],
+        baseColorFactor[1],
+        baseColorFactor[2],
+        baseColorFactor[3]
+    ) : colors.Red
     material.roughness = primitive.material?.pbrMetallicRoughness?.roughnessFactor ?? 1.0
     material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
     if (primitive.material && primitive.material.pbrMetallicRoughness) {
+        // PBR Albedo
         if (primitive.material.pbrMetallicRoughness.baseColorTexture) {
             const coord = primitive.material.pbrMetallicRoughness.baseColorTexture.texCoord
-            if(coord !== undefined) {
+            if (coord !== undefined) {
                 throw new Error('Texture coord is not supported yet')
             }
 
             const texture = await loadTexture(primitive.material.pbrMetallicRoughness.baseColorTexture, textureCache)
             material.addTexture('baseColorTexture', texture)
+        }
+        // PBR Metallic Roughness
+        if (primitive.material.pbrMetallicRoughness.metallicRoughnessTexture) {
+            console.log('Metallic Roughness Texture:', primitive.material.pbrMetallicRoughness.metallicRoughnessTexture)
+            const texture = await loadTexture(primitive.material.pbrMetallicRoughness.metallicRoughnessTexture, textureCache)
+            material.addTexture('metallicRoughnessTexture', texture)
         }
     }
     if (primitive.material && primitive.material.normalTexture) {
@@ -200,16 +221,10 @@ async function loadTexture(
     if (info.index !== undefined && textureCache.has(info.index)) {
         return textureCache.get(info.index)!
     }
-    if(info.texture.source === undefined) {
+    if (info.texture.source === undefined) {
         throw new Error('Texture source is undefined')
     }
-
-    const byteOffset = info.texture.source!.bufferView!.byteOffset
-    const byteLength = info.texture.source!.bufferView!.byteLength
     let data = info.texture.source!.bufferView!.data
-    if (byteOffset && byteLength) {
-        data = new Uint8Array(data.buffer, byteOffset, byteLength)
-    }
     const imageBitmap = await convertUint8ArrayToImageBitmap(
         data,
         info.texture.source!.image.width!,

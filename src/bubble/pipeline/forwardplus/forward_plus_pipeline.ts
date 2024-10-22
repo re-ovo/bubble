@@ -190,7 +190,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         // draw
         if (mesh.indices) {
             const buffer = context.resourceManager.syncBuffer(mesh.indices).buffer
-            passEncoder.setIndexBuffer(buffer, 'uint32')
+            passEncoder.setIndexBuffer(buffer, 'uint16')
             passEncoder.drawIndexed(mesh.drawCount)
         } else {
             passEncoder.draw(mesh.drawCount)

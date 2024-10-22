@@ -10,7 +10,7 @@ export class Mesh {
             throw new Error(`Attribute ${name} already exists.`);
         }
         this.attributes.set(name, attribute);
-        this.computeDrawCount();
+        this.computeVertexCount();
     }
 
     removeAttribute(name: string) {
@@ -26,20 +26,28 @@ export class Mesh {
     }
 
     setIndices(indices: Uint16Array | Uint32Array) {
-        if(indices instanceof Uint16Array) {
-            indices = new Uint32Array(indices);
-        }
         this.indices = new BufferAttribute(indices, 1, GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST);
-        this.computeDrawCount();
+        // resize index buffer (Number of bytes to write must be a multiple of 4)
+        if (indices instanceof Uint16Array && indices.byteLength % 4 !== 0) {
+            const newSize = Math.ceil(indices.byteLength / 4) * 4;
+            const newIndices = new Uint16Array(newSize);
+            newIndices.set(indices);
+            this.indices.data = newIndices;
+        }
+        this.computeVertexCount();
     }
 
-    computeDrawCount() {
+    computeVertexCount() {
         if (this.indices) {
             this.drawCount = this.indices.data.length;
         } else {
             const firstAttribute = this.attributes.values().next().value
             this.drawCount = firstAttribute.data.length / firstAttribute.itemSize;
         }
+    }
+
+    setVertexCount(count: number) {
+        this.drawCount = count;
     }
 }
 
