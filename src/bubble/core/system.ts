@@ -1,7 +1,7 @@
 import type {Disposable} from "@/bubble/core/dispose";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, type Quat, quat, vec3, type Vec3} from "wgpu-matrix";
-import {quatToEulerYXZ} from "@/bubble/math/maths";
+import {quatToEuler} from "@/bubble/math/maths";
 
 export class Scene implements ComponentHolder, Disposable {
     readonly objects: Entity[];
@@ -9,13 +9,11 @@ export class Scene implements ComponentHolder, Disposable {
 
     constructor() {
         this.objects = [];
-        this.addComponent(Transform);
     }
 
     addEntity(entity: Entity) {
         this.objects.push(entity);
         entity.scene = this;
-        entity.getComponent(Transform)!.parentTransform = this.getComponent(Transform);
         return entity;
     }
 
@@ -193,7 +191,7 @@ export class Transform extends Component implements Versioned {
     private _rotationCache = quat.create();
 
     updateMatrix() {
-        this.positionMatrix = mat4.translation(this.position, this.positionMatrix);
+        mat4.translation(this.position, this.positionMatrix);
 
         quat.fromEuler(
             this.rotation[0],
@@ -203,28 +201,28 @@ export class Transform extends Component implements Versioned {
             this._rotationCache
         );
         quat.normalize(this._rotationCache, this._rotationCache);
-        this.rotationMatrix = mat4.fromQuat(this._rotationCache, this.rotationMatrix);
+        mat4.fromQuat(this._rotationCache, this.rotationMatrix);
 
-        this.scaleMatrix = mat4.scaling(this.scale, this.scaleMatrix);
+        mat4.scaling(this.scale, this.scaleMatrix);
 
-        this.transformMatrix = mat4.mul(
+        mat4.mul(
             this.positionMatrix,
             this.rotationMatrix,
             this.transformMatrix,
-        );
-        this.transformMatrix = mat4.mul(
+        ); // position * rotation
+        mat4.mul(
             this.transformMatrix,
             this.scaleMatrix,
             this.transformMatrix,
-        );
+        ); // position * rotation * scale
         if (this.parentTransform) {
-            this.transformMatrix = mat4.mul(
+            mat4.mul(
                 this.parentTransform.transformMatrix,
                 this.transformMatrix,
                 this.transformMatrix,
             );
         }
-        this.transformMatrixInverse = mat4.inverse(this.transformMatrix, this.transformMatrixInverse);
+        mat4.inverse(this.transformMatrix, this.transformMatrixInverse);
     }
 
     setNeedsUpdate() {
@@ -257,6 +255,12 @@ export class Transform extends Component implements Versioned {
         return this;
     }
 
+    setTranslation(translation: Vec3): Transform {
+        vec3.copy(translation, this.position);
+        this.setNeedsUpdate()
+        return this;
+    }
+
     setRotation(rotation: Vec3): Transform {
         vec3.copy(rotation, this.rotation);
         this.setNeedsUpdate()
@@ -264,7 +268,9 @@ export class Transform extends Component implements Versioned {
     }
 
     setRotationByQuaternion(quaternion: Quat): Transform {
-        vec3.copy(quatToEulerYXZ(quaternion), this.rotation);
+        if (quaternion.length !== 4) throw new Error("Invalid quaternion length");
+        quat.normalize(quaternion, quaternion);
+        quatToEuler(quaternion, 'yxz', this.rotation);
         this.setNeedsUpdate()
         return this
     }

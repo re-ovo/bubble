@@ -92,7 +92,7 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/miyu.glb').then((gltf) => {
+  loadGltfModel('/models/low_poly_winter_scene.glb').then((gltf) => {
     gltf.forEach((entity) => {
       scene?.addEntity(entity)
     })

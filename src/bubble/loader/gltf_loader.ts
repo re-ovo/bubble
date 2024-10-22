@@ -12,10 +12,11 @@ import {Mesh} from "@/bubble/node/mesh/mesh";
 import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
-import {mat3, mat4, quat, vec3} from "wgpu-matrix";
+import {mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/primitive/texture";
 import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
 import NProgress from "nprogress";
+import {getTransformByMatrix} from "@/bubble/math/maths";
 
 /**
  * 从 glTF 示例仓库加载模型
@@ -59,26 +60,56 @@ export async function loadGltfModel(
 // 将 glTF 转换为Entities
 async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entity: Entity) => void): Promise<Entity[]> {
     const entities: Entity[] = []
+    const nodeEntities: Map<GLTFNodePostprocessed, Entity> = new Map()
     const textureCache: Map<number, Texture> = new Map()
-    const nodes = gltf.nodes.length
 
-    for (const [index, node] of gltf.nodes.entries()) {
-        const mesh = node.mesh
-        if (!mesh) {
-            continue
+    for (const node of gltf.nodes) {
+        // Node Self
+        const nodeEntity = new Entity()
+        const nodeTransform = nodeEntity.getComponent(Transform)!
+        if(node.matrix) {
+            const transform = getTransformByMatrix(node.matrix, 'column')
+            nodeTransform.setPosition(transform.translation)
+            nodeTransform.setScale(transform.scale)
+            nodeTransform.setRotationByQuaternion(transform.rotation)
+            console.log('Matrix Transform:', node.matrix)
+        } else {
+            if(node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
+            if(node.rotation) nodeTransform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+            if(node.scale) nodeTransform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
         }
-        for (const primitive of mesh.primitives) {
-            await convertPrimitive(
-                node,
-                primitive,
-                entities,
-                textureCache,
-                onEntityLoaded
-            );
-            await new Promise(resolve => setTimeout(resolve, 0))
-        }
+        entities.push(nodeEntity)
+        nodeEntities.set(node, nodeEntity)
 
-        NProgress.set(index / nodes - 1)
+        // Node Primitives
+        if(node.mesh) {
+            const primitives: Entity[] = []
+            for (const primitive of node.mesh.primitives) {
+                await convertPrimitive(
+                    primitive,
+                    primitives,
+                    textureCache,
+                    onEntityLoaded
+                );
+            }
+            primitives.forEach(entity => entity.setParent(nodeEntity))
+            entities.push(...primitives)
+        }
+    }
+
+    // Node Hierarchy
+    for (const rawNode of gltf.nodes) {
+        if (rawNode.children && rawNode.children.length > 0) {
+            const nodeEntity = nodeEntities.get(rawNode)
+            if (!nodeEntity) {
+                throw new Error('Node entity not found')
+            }
+            for (const child of rawNode.children) {
+                const childEntity = nodeEntities.get(child)!
+                if(childEntity.parent) throw new Error('Child entity already has parent')
+                childEntity.setParent(nodeEntity)
+            }
+        }
     }
 
     console.log('Loaded', entities.length, 'entities')
@@ -87,43 +118,12 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
 }
 
 async function convertPrimitive(
-    node: GLTFNodePostprocessed,
     primitive: GLTFMeshPrimitivePostprocessed,
     entities: Entity[],
     textureCache: Map<number, Texture>,
     onEntityLoaded: (entity: Entity) => void
 ) {
-    if (node.children && node.children.length > 0) {
-        throw new Error('Node children are not supported')
-    }
-
     const entity = new Entity()
-
-    // Transform
-    const transform = entity.getComponent(Transform)!
-    if (node.translation) {
-        transform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
-    }
-    if (node.rotation) {
-        transform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
-    }
-    if (node.scale) {
-        transform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
-    }
-
-    // if (node.matrix) {
-    //     const mat = mat4.create(
-    //         node.matrix[0], node.matrix[4], node.matrix[8], node.matrix[12],
-    //         node.matrix[1], node.matrix[5], node.matrix[9], node.matrix[13],
-    //         node.matrix[2], node.matrix[6], node.matrix[10], node.matrix[14],
-    //         node.matrix[3], node.matrix[7], node.matrix[11], node.matrix[15],
-    //     )
-    //     const translation = mat4.getTranslation(mat)
-    //     const scaling = mat4.getScaling(mat)
-    //     const rotation = quat.fromMat(mat3.fromMat4(mat))
-    //     throw new Error('Matrix transformation is not supported')
-    // }
-
 
     const renderer = entity.addComponent(MeshRendererComponent)
 
