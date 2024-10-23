@@ -1,7 +1,7 @@
 import type {Disposable} from "@/bubble/core/dispose";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, type Quat, quat, vec3, type Vec3} from "wgpu-matrix";
-import {quatToEuler} from "@/bubble/math/maths";
+import {isMatrixOrthogonal, quatToEuler} from "@/bubble/math/maths";
 
 export class Scene implements ComponentHolder, Disposable {
     readonly objects: Entity[];
@@ -137,9 +137,9 @@ export class Entity implements ComponentHolder, Disposable {
 }
 
 export class Component {
-    readonly holder: ComponentHolder;
+    readonly holder?: ComponentHolder;
 
-    constructor(holder: ComponentHolder) {
+    constructor(holder?: ComponentHolder) {
         this.holder = holder;
     }
 
@@ -173,9 +173,10 @@ export class Transform extends Component implements Versioned {
     scaleMatrix: Mat4;
 
     transformMatrix: Mat4;
+    localTransformMatrix: Mat4;
     transformMatrixInverse: Mat4;
 
-    constructor(parent: ComponentHolder) {
+    constructor(parent?: ComponentHolder) {
         super(parent);
         this.position = vec3.create(0, 0, 0);
         this.rotation = vec3.create(0, 0, 0);
@@ -183,6 +184,7 @@ export class Transform extends Component implements Versioned {
         this.positionMatrix = mat4.create();
         this.rotationMatrix = mat4.create();
         this.scaleMatrix = mat4.create();
+        this.localTransformMatrix = mat4.create();
         this.transformMatrix = mat4.create();
         this.transformMatrixInverse = mat4.create();
         this.updateMatrix();
@@ -209,12 +211,13 @@ export class Transform extends Component implements Versioned {
             this.positionMatrix,
             this.rotationMatrix,
             this.transformMatrix,
-        ); // position * rotation
+        ); // transformMatrix = position * rotation
         mat4.mul(
             this.transformMatrix,
             this.scaleMatrix,
             this.transformMatrix,
-        ); // position * rotation * scale
+        ); // transformMatrix = position * rotation * scale
+        mat4.copy(this.transformMatrix, this.localTransformMatrix);
         if (this.parentTransform) {
             mat4.mul(
                 this.parentTransform.transformMatrix,
@@ -262,6 +265,7 @@ export class Transform extends Component implements Versioned {
     }
 
     setRotation(rotation: Vec3): Transform {
+        if (rotation.length !== 3) throw new Error("Invalid rotation length");
         vec3.copy(rotation, this.rotation);
         this.setNeedsUpdate()
         return this;
@@ -298,6 +302,69 @@ export class Transform extends Component implements Versioned {
 
     translate(translation: Vec3): Transform {
         vec3.add(this.position, translation, this.position);
+        this.setNeedsUpdate()
+        return this;
+    }
+
+    setByMatrix(matrix: Mat4): Transform {
+        const copy = mat4.clone(matrix);
+
+        // extract position
+        mat4.getTranslation(copy, this.position);
+        copy[12] = 0;
+        copy[13] = 0;
+        copy[14] = 0;
+
+        // extract scale
+        mat4.getScaling(copy, this.scale);
+
+        // remove scale
+        const invScaleX = 1 / this.scale[0];
+        const invScaleY = 1 / this.scale[1];
+        const invScaleZ = 1 / this.scale[2];
+        copy[0] *= invScaleX;
+        copy[1] *= invScaleX;
+        copy[2] *= invScaleX;
+        copy[4] *= invScaleY;
+        copy[5] *= invScaleY;
+        copy[6] *= invScaleY;
+        copy[8] *= invScaleZ;
+        copy[9] *= invScaleZ;
+        copy[10] *= invScaleZ;
+
+        const newQuat = quat.create(0, 0, 0, 1);
+        quat.fromMat(copy, newQuat);
+        // const trace = copy[0] + copy[5] + copy[10];
+        // if (trace > 0) {
+        //     // |w| > 1/2, may as well choose w > 1/2
+        //     const root = Math.sqrt(trace + 1);  // 2w
+        //     newQuat[3] = 0.5 * root; // w
+        //     const invRoot = 0.5 / root;
+        //     newQuat[0] = (copy[6] - copy[9]) * invRoot;
+        //     newQuat[1] = (copy[8] - copy[2]) * invRoot;
+        //     newQuat[2] = (copy[1] - copy[4]) * invRoot;
+        // } else {
+        //     if (copy[0] > copy[5] && copy[0] > copy[10]) {
+        //         const s = 2.0 * Math.sqrt(1.0 + copy[0] - copy[5] - copy[10]);
+        //         newQuat[3] = (copy[9] - copy[6]) / s;
+        //         newQuat[0] = 0.25 * s;
+        //         newQuat[1] = (copy[1] + copy[4]) / s;
+        //         newQuat[2] = (copy[8] + copy[2]) / s;
+        //     } else if (copy[5] > copy[10]) {
+        //         const s = 2.0 * Math.sqrt(1.0 + copy[5] - copy[0] - copy[10]);
+        //         newQuat[3] = (copy[2] - copy[8]) / s;
+        //         newQuat[0] = (copy[1] + copy[4]) / s;
+        //         newQuat[1] = 0.25 * s;
+        //         newQuat[2] = (copy[6] + copy[9]) / s;
+        //     } else {
+        //         const s = 2.0 * Math.sqrt(1.0 + copy[10] - copy[0] - copy[5]);
+        //         newQuat[3] = (copy[4] - copy[1]) / s;
+        //         newQuat[0] = (copy[8] + copy[2]) / s;
+        //         newQuat[1] = (copy[6] + copy[9]) / s;
+        //         newQuat[2] = 0.25 * s;
+        //     }
+        // }
+        quatToEuler(newQuat, 'yxz', this.rotation);
         this.setNeedsUpdate()
         return this;
     }

@@ -1,15 +1,12 @@
-import {mat3, mat4, quat, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
-import type {Transform} from "@/bubble/core/system";
+import {type Mat4, type Quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 
 export function angleToRadians(angle: number): number {
     return angle * Math.PI / 180;
 }
 
-
 export function quatToEuler(q: Quat, order: RotationOrder, dst?: Vec3): Vec3 {
     const newDst = dst || vec3.create();
     const [x, y, z, w] = q;
-
     switch (order) {
         case 'xyz': {
             const sinr_cosp = 2 * (w * x + y * z);
@@ -52,27 +49,32 @@ export function quatToEuler(q: Quat, order: RotationOrder, dst?: Vec3): Vec3 {
     return newDst;
 }
 
-export type MatrixMajor = 'row' | 'column';
+export function isMatrixOrthogonal(matrix: Mat4): boolean {
+    const epsilon = 1e-6;
 
-export function getTransformByMatrix(values: number[] | Float32Array, major: MatrixMajor): {
-    translation: Vec3,
-    scale: Vec3,
-    rotation: Quat,
-} {
-    if (values.length !== 16) throw new Error('Matrix must have 16 components');
-    const mat = mat4.create(...values)
-    if (major === 'column') {
-        // make it row-major
-        mat4.transpose(mat, mat);
+    const transpose = [
+        matrix[0], matrix[4], matrix[8],
+        matrix[1], matrix[5], matrix[9],
+        matrix[2], matrix[6], matrix[10]
+    ];
+
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            let dotProduct = 0;
+            for (let k = 0; k < 3; k++) {
+                dotProduct += matrix[i * 4 + k] * transpose[k * 3 + j];
+            }
+            if (i === j) {
+                if (Math.abs(dotProduct - 1) > epsilon) {
+                    return false;
+                }
+            } else {
+                if (Math.abs(dotProduct) > epsilon) {
+                    return false;
+                }
+            }
+        }
     }
 
-    const translation = mat4.getTranslation(mat);
-    const scale = mat4.getScaling(mat);
-    const rot = quat.fromMat(mat);
-
-    return {
-        translation: translation,
-        scale: scale,
-        rotation: rot
-    }
+    return true;
 }

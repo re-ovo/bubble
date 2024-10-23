@@ -54,7 +54,7 @@ export class TextureResourceMapper implements ResourceMapper<Texture, TextureRes
             this.context.device.queue.copyExternalImageToTexture(
                 {
                     source: resource.data,
-                    flipY: true,
+                    // flipY: true,
                 },
                 {
                     texture: texture,

@@ -63,7 +63,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     var Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo);
     Lo *= lightRadiance;
     
-    let ambient = vec3<f32>(0.02) * albedo;
+    let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
     return vec4<f32>(gamma_correct(color), 1.0);
 }

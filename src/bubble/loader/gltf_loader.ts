@@ -16,7 +16,6 @@ import {mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/primitive/texture";
 import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
 import NProgress from "nprogress";
-import {getTransformByMatrix} from "@/bubble/math/maths";
 
 /**
  * 从 glTF 示例仓库加载模型
@@ -68,11 +67,12 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
         const nodeEntity = new Entity()
         const nodeTransform = nodeEntity.getComponent(Transform)!
         if(node.matrix) {
-            const transform = getTransformByMatrix(node.matrix, 'column')
-            nodeTransform.setPosition(transform.translation)
-            nodeTransform.setScale(transform.scale)
-            nodeTransform.setRotationByQuaternion(transform.rotation)
-            console.log('Matrix Transform:', node.matrix)
+            const matrix4 = mat4.create(...node.matrix)
+            nodeTransform.setByMatrix(matrix4)
+            nodeTransform.updateMatrix()
+            if(!mat4.equalsApproximately(matrix4, nodeTransform.localTransformMatrix)) {
+                console.warn('Matrix not equal', matrix4, nodeTransform.localTransformMatrix)
+            }
         } else {
             if(node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
             if(node.rotation) nodeTransform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))

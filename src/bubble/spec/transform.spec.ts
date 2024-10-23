@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {mat4, quat, vec3} from "wgpu-matrix";
-import {getTransformByMatrix, quatToEuler} from "@/bubble/math/maths";
+import {isMatrixOrthogonal, quatToEuler} from "@/bubble/math/maths";
 
 describe("transform", () => {
     it("should convert quaternion to euler angles correctly", () => {
@@ -19,37 +19,21 @@ describe("transform", () => {
         expect(q_yxz_angle).toBeLessThan(0.0001);
     })
 
-    it("should convert matrix to transform correctly", () => {
-        const matrix = mat4.create(...[
-            -0.18572000000000002,
-            -0.025710000000000004,
-            0,
-            0,
-            0.025710000000000004,
-            -0.18572000000000002,
-            0,
-            0,
-            0,
-            0,
-            0.11421000000000002,
-            0,
-            -1.0091899999999998,
-            -8.847480000000001,
-            4.344519999999999,
-            1
-        ])
-        const transform = getTransformByMatrix(matrix, 'column');
-        const mvp = mat4.translation(transform.translation)
-        mat4.multiply(
-            mvp,
-            mat4.fromQuat(transform.rotation),
-            mvp
+    it("test matrix orthogonality", () => {
+        const matrix = mat4.create(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
         )
-        mat4.mul(mvp, mat4.scaling(transform.scale), mvp)
-        // convert mvp to column major
-        const mvp_column = mat4.transpose(mvp)
-        const mvp_column_transform = getTransformByMatrix(mvp_column, 'column')
+        expect(isMatrixOrthogonal(matrix)).toBeTruthy()
 
-        console.log(transform, '\n', mvp_column_transform)
+        const matrix2 = mat4.create(
+            1, 0.2, 0, 0,
+            0, 1, 0, 0.1,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        )
+        expect(isMatrixOrthogonal(matrix2)).toBeFalsy()
     })
 })

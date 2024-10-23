@@ -11,6 +11,7 @@ import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
+import {vec3} from "wgpu-matrix";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -69,7 +70,7 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  // cameraTransform.setPosition(vec3.fromValues(-481, 158, -56))
+  cameraTransform.setPosition(vec3.fromValues(4, -54, 0))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
   const cameraInfo = {
     get position() {
@@ -92,15 +93,15 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/low_poly_winter_scene.glb').then((gltf) => {
-    gltf.forEach((entity) => {
-      scene?.addEntity(entity)
-    })
-  })
-  // loadGltfModel(
-  //     '/models/Bistro/bistro.gltf',
-  //     (e) => scene?.addEntity(e)
-  // )
+  // loadGltfModel('/models/city.glb').then((gltf) => {
+  //   gltf.forEach((entity) => {
+  //     scene?.addEntity(entity)
+  //   })
+  // })
+  loadGltfModel(
+      '/models/Bistro/bistro.gltf',
+      (e) => scene?.addEntity(e)
+  )
 
   // render loop
   const render = () => {
