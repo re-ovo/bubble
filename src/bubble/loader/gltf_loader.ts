@@ -184,7 +184,7 @@ async function convertPrimitive(
         if (primitive.material.pbrMetallicRoughness.metallicRoughnessTexture) {
             console.log('Metallic Roughness Texture:', primitive.material.pbrMetallicRoughness.metallicRoughnessTexture)
             const texture = await loadTexture(primitive.material.pbrMetallicRoughness.metallicRoughnessTexture, textureCache)
-            material.addTexture('metallicRoughnessTexture', texture)
+            material.addTexture('pbrTexture', texture)
         }
     }
     if (primitive.material && primitive.material.normalTexture) {
@@ -208,6 +208,15 @@ async function convertPrimitive(
             1
         ))
         console.log('created default normal texture for', primitive)
+    }
+    if(!material.hasTexture('pbrTexture')) {
+        const imageBitmap = await createImageBitmapOfColor(1, 1, '#ffffff')
+        material.addTexture('pbrTexture', new Texture2D(
+            imageBitmap,
+            1,
+            1
+        ))
+        console.log('created default pbr texture for', primitive)
     }
 
     entities.push(entity)

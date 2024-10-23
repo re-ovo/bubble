@@ -41,6 +41,7 @@ ${gamma_correct()}
 
 ${textureAndSampler('baseColorTexture', 'texture_2d<f32>')}
 ${textureAndSampler('normalTexture', 'texture_2d<f32>')}
+${textureAndSampler('pbrTexture', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
@@ -55,8 +56,8 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let aa = material.metallic;
     let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
     
-    let metallic = material.metallic;
-    let roughness = material.roughness;
+    let metallic = material.metallic * textureSample(pbrTexture, pbrTextureSampler, input.uv).b;
+    let roughness = material.roughness * textureSample(pbrTexture, pbrTextureSampler, input.uv).g;
     
     let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
@@ -65,6 +66,6 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     
     let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
-    return vec4<f32>(gamma_correct(color), 1.0);
+    return vec4<f32>(gamma_correct(vec3f(color)), 1.0);
 }
 `

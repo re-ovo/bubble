@@ -70,7 +70,7 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.setPosition(vec3.fromValues(4, -54, 0))
+  // cameraTransform.setPosition(vec3.fromValues(4, -54, 0))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
   const cameraInfo = {
     get position() {
@@ -93,15 +93,16 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  // loadGltfModel('/models/city.glb').then((gltf) => {
+  loadGltfModel('/models/zis-101a_sport_1938.glb').then((gltf) => {
+    gltf.forEach((entity) => {
+      scene?.addEntity(entity)
+    })
+  })
+  // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
   //   gltf.forEach((entity) => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel(
-      '/models/Bistro/bistro.gltf',
-      (e) => scene?.addEntity(e)
-  )
 
   // render loop
   const render = () => {
