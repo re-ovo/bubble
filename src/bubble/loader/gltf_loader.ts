@@ -16,6 +16,7 @@ import {mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/primitive/texture";
 import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
 import NProgress from "nprogress";
+import {MaterialBlendMode} from "@/bubble/node/material/material";
 
 /**
  * 从 glTF 示例仓库加载模型
@@ -66,23 +67,23 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
         // Node Self
         const nodeEntity = new Entity()
         const nodeTransform = nodeEntity.getComponent(Transform)!
-        if(node.matrix) {
+        if (node.matrix) {
             const matrix4 = mat4.create(...node.matrix)
             nodeTransform.setByMatrix(matrix4)
             nodeTransform.updateMatrix()
-            if(!mat4.equalsApproximately(matrix4, nodeTransform.localTransformMatrix)) {
+            if (!mat4.equalsApproximately(matrix4, nodeTransform.localTransformMatrix)) {
                 console.warn('Matrix not equal', matrix4, nodeTransform.localTransformMatrix)
             }
         } else {
-            if(node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
-            if(node.rotation) nodeTransform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
-            if(node.scale) nodeTransform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
+            if (node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
+            if (node.rotation) nodeTransform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+            if (node.scale) nodeTransform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
         }
         entities.push(nodeEntity)
         nodeEntities.set(node, nodeEntity)
 
         // Node Primitives
-        if(node.mesh) {
+        if (node.mesh) {
             const primitives: Entity[] = []
             for (const primitive of node.mesh.primitives) {
                 await convertPrimitive(
@@ -92,7 +93,9 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
                     onEntityLoaded
                 );
             }
-            primitives.forEach(entity => entity.setParent(nodeEntity))
+            primitives.forEach(primitive => {
+                primitive.setParent(nodeEntity)
+            })
             entities.push(...primitives)
         }
     }
@@ -106,7 +109,7 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
             }
             for (const child of rawNode.children) {
                 const childEntity = nodeEntities.get(child)!
-                if(childEntity.parent) throw new Error('Child entity already has parent')
+                if (childEntity.parent) throw new Error('Child entity already has parent')
                 childEntity.setParent(nodeEntity)
             }
         }
@@ -116,6 +119,25 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
 
     return entities
 }
+
+const defaultAlbedo = new Texture2D(
+    createImageBitmapOfColor(1, 1, '#ffffff'),
+    1,
+    1,
+    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+)
+const defaultNormal = new Texture2D(
+    createImageBitmapOfColor(1, 1, '#8080ff'),
+    1,
+    1,
+    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+)
+const defaultPBR = new Texture2D(
+    createImageBitmapOfColor(1, 1, '#ffffff'),
+    1,
+    1,
+    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+)
 
 async function convertPrimitive(
     primitive: GLTFMeshPrimitivePostprocessed,
@@ -160,6 +182,7 @@ async function convertPrimitive(
     const material = new StandardMaterial()
     renderer.material = material
 
+    // Material Properties
     const baseColorFactor = primitive.material?.pbrMetallicRoughness?.baseColorFactor
     material.color = baseColorFactor ? colors.newColor4f(
         baseColorFactor[0],
@@ -169,6 +192,9 @@ async function convertPrimitive(
     ) : colors.Red
     material.roughness = primitive.material?.pbrMetallicRoughness?.roughnessFactor ?? 1.0
     material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
+    material.blendMode = primitive.material?.alphaMode === 'BLEND' ? MaterialBlendMode.BLEND : MaterialBlendMode.OPAQUE
+
+    // Textures
     if (primitive.material && primitive.material.pbrMetallicRoughness) {
         // PBR Albedo
         if (primitive.material.pbrMetallicRoughness.baseColorTexture) {
@@ -176,13 +202,11 @@ async function convertPrimitive(
             if (coord !== undefined) {
                 throw new Error('Texture coord is not supported yet')
             }
-
             const texture = await loadTexture(primitive.material.pbrMetallicRoughness.baseColorTexture, textureCache)
             material.addTexture('baseColorTexture', texture)
         }
         // PBR Metallic Roughness
         if (primitive.material.pbrMetallicRoughness.metallicRoughnessTexture) {
-            console.log('Metallic Roughness Texture:', primitive.material.pbrMetallicRoughness.metallicRoughnessTexture)
             const texture = await loadTexture(primitive.material.pbrMetallicRoughness.metallicRoughnessTexture, textureCache)
             material.addTexture('pbrTexture', texture)
         }
@@ -192,31 +216,13 @@ async function convertPrimitive(
         material.addTexture('normalTexture', texture)
     }
     if (!material.hasTexture('baseColorTexture')) {
-        const imageBitmap = await createImageBitmapOfColor(1, 1, '#ffffff')
-        material.addTexture('baseColorTexture', new Texture2D(
-            imageBitmap,
-            1,
-            1
-        ))
-        console.log('created default base color texture for', primitive)
+        material.addTexture('baseColorTexture', defaultAlbedo)
     }
     if (!material.hasTexture('normalTexture')) {
-        const imageBitmap = await createImageBitmapOfColor(1, 1, '#8080ff')
-        material.addTexture('normalTexture', new Texture2D(
-            imageBitmap,
-            1,
-            1
-        ))
-        console.log('created default normal texture for', primitive)
+        material.addTexture('normalTexture', defaultNormal)
     }
-    if(!material.hasTexture('pbrTexture')) {
-        const imageBitmap = await createImageBitmapOfColor(1, 1, '#ffffff')
-        material.addTexture('pbrTexture', new Texture2D(
-            imageBitmap,
-            1,
-            1
-        ))
-        console.log('created default pbr texture for', primitive)
+    if (!material.hasTexture('pbrTexture')) {
+        material.addTexture('pbrTexture', defaultPBR)
     }
 
     entities.push(entity)
@@ -245,8 +251,29 @@ async function loadTexture(
         info.texture.source!.image.width!,
         info.texture.source!.image.height!,
     )
+
+    texture.minFilter = FilterValueMapping[info.texture.sampler.minFilter] ?? 'linear'
+    texture.magFilter = FilterValueMapping[info.texture.sampler.magFilter] ?? 'linear'
+    texture.addressModeU = WrapValueMapping[info.texture.sampler.wrapS] ?? 'repeat'
+    texture.addressModeV = WrapValueMapping[info.texture.sampler.wrapT] ?? 'repeat'
+
     if (info.index !== undefined) {
         textureCache.set(info.index, texture)
     }
     return texture
+}
+
+const FilterValueMapping: Record<number, GPUFilterMode> = {
+    9728: 'nearest', // NEAREST
+    9729: 'linear', // LINEAR
+    9984: 'nearest', // NEAREST_MIPMAP_NEAREST
+    9985: 'linear', // LINEAR_MIPMAP_NEAREST
+    9986: 'nearest', // NEAREST_MIPMAP_LINEAR
+    9987: 'linear' // LINEAR_MIPMAP_LINEAR
+}
+
+const WrapValueMapping: Record<number, GPUAddressMode> = {
+    33071: 'clamp-to-edge', // CLAMP_TO_EDGE
+    33648: 'mirror-repeat', // MIRRORED_REPEAT
+    10497: 'repeat' // REPEAT
 }

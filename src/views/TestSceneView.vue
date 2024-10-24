@@ -93,7 +93,7 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/zis-101a_sport_1938.glb').then((gltf) => {
+  loadGltfModel('/models/stylised_sky_player_home_dioroma.glb').then((gltf) => {
     gltf.forEach((entity) => {
       scene?.addEntity(entity)
     })

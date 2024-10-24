@@ -13,11 +13,8 @@ export async function convertUint8ArrayToImageBitmap(
             {colorSpaceConversion: 'none'}
         )
     } catch (e) {
-        return createImageBitmapOfColor(
-            width,
-            height,
-            '#ff0000'
-        )
+        console.error('Failed to create image bitmap', e)
+        throw e
     }
 }
 
@@ -25,10 +22,12 @@ export function createImageBitmapOfColor(
     width: number,
     height: number,
     color: string
-): Promise<ImageBitmap> {
-    const canvas = new OffscreenCanvas(width, height);
-    const context = canvas.getContext('2d')!;
-    context.fillStyle = color;
-    context.fillRect(0, 0, width, height);
-    return createImageBitmap(canvas);
+): ImageData {
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')!
+    context.fillStyle = color
+    context.fillRect(0, 0, width, height)
+    return context.getImageData(0, 0, width, height)
 }

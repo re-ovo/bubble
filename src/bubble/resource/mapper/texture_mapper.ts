@@ -39,10 +39,10 @@ export class TextureResourceMapper implements ResourceMapper<Texture, TextureRes
     create(resource: Texture): TextureResources {
         if (resource instanceof Texture2D) {
             const sampler = this.context.device.createSampler({
-                minFilter: 'linear',
-                addressModeU: 'repeat',
-                addressModeV: 'repeat',
-                addressModeW: 'repeat',
+                minFilter: resource.minFilter,
+                magFilter: resource.magFilter,
+                addressModeU: resource.addressModeU,
+                addressModeV: resource.addressModeV,
             })
             const texture = this.context.device.createTexture({
                 size: [resource.width, resource.height],

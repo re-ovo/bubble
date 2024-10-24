@@ -11,6 +11,8 @@ export class Material implements Versioned {
     buffers: Map<string, BufferResource>;
     textures: Map<string, Texture>;
 
+    blendMode: MaterialBlendMode = MaterialBlendMode.OPAQUE;
+
     constructor(shader: Shader) {
         this.shader = shader;
         this.buffers = new Map();
@@ -63,4 +65,9 @@ export class Material implements Versioned {
     removeTexture(name: string) {
         this.textures.delete(name);
     }
+}
+
+export enum MaterialBlendMode {
+    OPAQUE = 'OPAQUE',
+    BLEND = 'BLEND',
 }

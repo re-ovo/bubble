@@ -3,6 +3,8 @@ import type {Camera} from "@/bubble/node/camera/camera";
 import type {RenderContext} from "@/bubble/pipeline/context";
 import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
+import {Material} from "@/bubble/node/material/material";
+import type {Entity} from "@/bubble/core/system";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     render(context: RenderContext, cameras: Camera[]): void {
@@ -50,27 +52,31 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             }
         });
 
-        context.scene.objects.forEach((object) => {
-            let renderer = object.getComponent(RendererComponent);
-            if (renderer) {
-                this.renderEntity(context, renderer);
-            }
-        })
+        this.renderEntities(context, context.scene.objects);
 
         context.endRenderPass();
         context.submit();
     }
 
-    renderEntity(
-        context: RenderContext,
-        renderer: RendererComponent,
-    ) {
-        if (renderer instanceof MeshRendererComponent) {
-            this.renderMeshRenderer(context, renderer);
-        }
+    renderEntities(context: RenderContext, entities: Entity[]) {
+        // render opaque first
+        entities.forEach((entity) => {
+            let renderer = entity.getComponent(MeshRendererComponent);
+            if (renderer && renderer.material?.blendMode == 'OPAQUE') {
+                this.renderMeshRenderer(context, renderer);
+            }
+        })
+
+        // render transparent
+        entities.forEach((entity) => {
+            let renderer = entity.getComponent(MeshRendererComponent);
+            if (renderer && renderer.material?.blendMode == 'BLEND') {
+                this.renderMeshRenderer(context, renderer);
+            }
+        })
     }
 
-    pipeline: GPURenderPipeline | null = null;
+    pipeline: Map<MeshRendererComponent, GPURenderPipeline> = new Map();
 
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
@@ -91,8 +97,9 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 }
             })
 
-        if (!this.pipeline) {
-            this.pipeline = context.device.createRenderPipeline({
+        let pipeline = this.pipeline.get(renderer);
+        if (!pipeline) {
+            pipeline = context.device.createRenderPipeline({
                 layout: 'auto',
                 vertex: {
                     module: shaderModule,
@@ -102,6 +109,18 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     module: shaderModule,
                     targets: [{
                         format: context.targetFormat,
+                        blend: {
+                            color: {
+                                srcFactor: 'src-alpha',
+                                dstFactor: 'one-minus-src-alpha',
+                                operation: 'add',
+                            },
+                            alpha: {
+                                srcFactor: 'one',
+                                dstFactor: 'one',
+                                operation: 'add',
+                            }
+                        }
                     }]
                 },
                 primitive: {
@@ -109,15 +128,16 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     cullMode: 'back',
                 },
                 depthStencil: {
-                    depthWriteEnabled: true,
+                    depthWriteEnabled: material.blendMode == 'OPAQUE',
                     depthCompare: 'less',
                     format: 'depth24plus',
-                }
+                },
             })
+            this.pipeline.set(renderer, pipeline);
         }
 
         // setup pipeline
-        passEncoder.setPipeline(this.pipeline);
+        passEncoder.setPipeline(pipeline);
 
         // setup attributes
         material.shader.attributes.forEach((attributeMeta) => {
@@ -131,7 +151,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         // setup binding resource
         material.shader.bindingGroups.forEach((bindingGroup, index) => {
             const bindGroup = context.device.createBindGroup({
-                layout: this.pipeline!.getBindGroupLayout(index),
+                layout: pipeline!.getBindGroupLayout(index),
                 entries: bindingGroup.bindings.map((bindingMeta) => {
                     if (bindingMeta.name == 'camera') {
                         return {
