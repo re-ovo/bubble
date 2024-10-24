@@ -128,7 +128,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     cullMode: 'back',
                 },
                 depthStencil: {
-                    depthWriteEnabled: true, // material.blendMode == 'OPAQUE',
+                    depthWriteEnabled: material.blendMode == 'OPAQUE',
                     depthCompare: 'less',
                     format: 'depth24plus',
                 },
