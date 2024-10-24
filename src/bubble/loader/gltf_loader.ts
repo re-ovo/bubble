@@ -189,10 +189,10 @@ async function convertPrimitive(
         baseColorFactor[1],
         baseColorFactor[2],
         baseColorFactor[3]
-    ) : colors.Red
+    ) : colors.White
     material.roughness = primitive.material?.pbrMetallicRoughness?.roughnessFactor ?? 1.0
     material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
-    material.blendMode = primitive.material?.alphaMode === 'BLEND' ? MaterialBlendMode.BLEND : MaterialBlendMode.OPAQUE
+    material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
 
     // Textures
     if (primitive.material && primitive.material.pbrMetallicRoughness) {
@@ -276,4 +276,10 @@ const WrapValueMapping: Record<number, GPUAddressMode> = {
     33071: 'clamp-to-edge', // CLAMP_TO_EDGE
     33648: 'mirror-repeat', // MIRRORED_REPEAT
     10497: 'repeat' // REPEAT
+}
+
+const BlendModeMapping: Record<string, MaterialBlendMode> = {
+    'OPAQUE': MaterialBlendMode.OPAQUE,
+    'MASK': MaterialBlendMode.MASK,
+    'BLEND': MaterialBlendMode.BLEND
 }

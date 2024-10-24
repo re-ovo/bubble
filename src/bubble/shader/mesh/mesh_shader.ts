@@ -59,7 +59,9 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let metallic = material.metallic * textureSample(pbrTexture, pbrTextureSampler, input.uv).b;
     let roughness = material.roughness * textureSample(pbrTexture, pbrTextureSampler, input.uv).g;
     
-    let albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
+    var albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
+    albedo *= material.color.rgb; // multiply by color factor
+    
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
     var Lo = calculateBRDF(N, V, L, H, F0, roughness, metallic, albedo);
     Lo *= lightRadiance;

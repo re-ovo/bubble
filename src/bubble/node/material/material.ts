@@ -70,4 +70,5 @@ export class Material implements Versioned {
 export enum MaterialBlendMode {
     OPAQUE = 'OPAQUE',
     BLEND = 'BLEND',
+    MASK = 'MASK',
 }

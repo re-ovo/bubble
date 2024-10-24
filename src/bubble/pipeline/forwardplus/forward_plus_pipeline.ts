@@ -70,7 +70,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         // render transparent
         entities.forEach((entity) => {
             let renderer = entity.getComponent(MeshRendererComponent);
-            if (renderer && renderer.material?.blendMode == 'BLEND') {
+            if (renderer && renderer.material?.blendMode != 'OPAQUE') {
                 this.renderMeshRenderer(context, renderer);
             }
         })
@@ -128,7 +128,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     cullMode: 'back',
                 },
                 depthStencil: {
-                    depthWriteEnabled: material.blendMode == 'OPAQUE',
+                    depthWriteEnabled: true, // material.blendMode == 'OPAQUE',
                     depthCompare: 'less',
                     format: 'depth24plus',
                 },
