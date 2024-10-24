@@ -154,8 +154,8 @@ export class RenderContext {
 
     setupModel(entity: Entity) {
         const transform = entity.getComponent(Transform)!
-        let buffer = this._transformCache.get(transform)
-        if(!buffer) {
+        let cached = this._transformCache.get(transform)
+        if(!cached) {
             const buf = new BufferResource(
                 "ModelInfo",
                 GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -163,16 +163,17 @@ export class RenderContext {
             buf.setSize(128)
             buf.setFloat32Array(0, transform.transformMatrix) // model matrix in MVP
             buf.setFloat32Array(64, transform.transformMatrixInverse) // model matrix inverse
-            buffer = {
+            cached = {
                 value: buf,
                 version: transform.version
             }
-            this._transformCache.set(transform, buf, buffer.version)
+            this._transformCache.set(transform, buf, cached.version)
         }
-        if(buffer.version !== transform.version) {
-            buffer.value.setFloat32Array(0, transform.transformMatrix)
-            buffer.version = transform.version
+        if(cached.version !== transform.version) {
+            cached.value.setFloat32Array(0, transform.transformMatrix)
+            cached.value.setFloat32Array(64, transform.transformMatrixInverse)
+            cached.version = transform.version
         }
-        return buffer.value
+        return cached.value
     }
 }
