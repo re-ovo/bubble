@@ -125,7 +125,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 },
                 primitive: {
                     topology: 'triangle-list',
-                    cullMode: 'back',
+                    cullMode: material.doubleSided ? 'none' : 'back',
                 },
                 depthStencil: {
                     depthWriteEnabled: material.blendMode == 'OPAQUE',

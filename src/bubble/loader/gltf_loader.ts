@@ -193,6 +193,7 @@ async function convertPrimitive(
     material.roughness = primitive.material?.pbrMetallicRoughness?.roughnessFactor ?? 1.0
     material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
     material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
+    material.doubleSided = primitive.material?.doubleSided ?? false
 
     // Textures
     if (primitive.material && primitive.material.pbrMetallicRoughness) {

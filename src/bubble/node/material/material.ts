@@ -12,6 +12,7 @@ export class Material implements Versioned {
     textures: Map<string, Texture>;
 
     blendMode: MaterialBlendMode = MaterialBlendMode.OPAQUE;
+    doubleSided: boolean = false;
 
     constructor(shader: Shader) {
         this.shader = shader;

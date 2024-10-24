@@ -93,16 +93,16 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
-    gltf.forEach((entity) => {
-      scene?.addEntity(entity)
-    })
-  })
   // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
   //   gltf.forEach((entity) => {
   //     scene?.addEntity(entity)
   //   })
   // })
+  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
+    gltf.reverse().forEach((entity) => {
+      scene?.addEntity(entity)
+    })
+  })
 
   // render loop
   const render = () => {
