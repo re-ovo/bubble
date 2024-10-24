@@ -76,7 +76,7 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
             }
         } else {
             if (node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
-            if (node.rotation) nodeTransform.setRotationByQuaternion(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
+            if (node.rotation) nodeTransform.setRotation(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
             if (node.scale) nodeTransform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
         }
         entities.push(nodeEntity)

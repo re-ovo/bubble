@@ -70,7 +70,7 @@ onMounted(async () => {
   const cameraEntity = scene.addEntity(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
   const cameraTransform = cameraEntity.getComponent(Transform)!
-  // cameraTransform.setPosition(vec3.fromValues(4, -54, 0))
+  cameraTransform.setPosition(vec3.fromValues(0, 50, 100))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
   const cameraInfo = {
     get position() {
@@ -93,7 +93,7 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/stylised_sky_player_home_dioroma.glb').then((gltf) => {
+  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
     gltf.forEach((entity) => {
       scene?.addEntity(entity)
     })

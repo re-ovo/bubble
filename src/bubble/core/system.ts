@@ -1,7 +1,6 @@
 import type {Disposable} from "@/bubble/core/dispose";
 import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
-import {mat4, type Mat4, type Quat, quat, vec3, type Vec3} from "wgpu-matrix";
-import {isMatrixOrthogonal, quatToEuler} from "@/bubble/math/maths";
+import {mat4, type Mat4, type Quat, quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
 
 export class Scene implements ComponentHolder, Disposable {
     readonly objects: Entity[];
@@ -165,7 +164,7 @@ export class Transform extends Component implements Versioned {
     parentTransform: Transform | null = null;
 
     position: Vec3; // this is local position
-    rotation: Vec3;
+    rotation: Quat;
     scale: Vec3;
 
     positionMatrix: Mat4;
@@ -179,7 +178,7 @@ export class Transform extends Component implements Versioned {
     constructor(parent?: ComponentHolder) {
         super(parent);
         this.position = vec3.create(0, 0, 0);
-        this.rotation = vec3.create(0, 0, 0);
+        this.rotation = quat.identity();
         this.scale = vec3.create(1, 1, 1);
         this.positionMatrix = mat4.create();
         this.rotationMatrix = mat4.create();
@@ -190,21 +189,9 @@ export class Transform extends Component implements Versioned {
         this.updateMatrix();
     }
 
-    private _rotationCache = quat.create();
-
     updateMatrix() {
         mat4.translation(this.position, this.positionMatrix);
-
-        quat.fromEuler(
-            this.rotation[0],
-            this.rotation[1],
-            this.rotation[2],
-            'yxz',
-            this._rotationCache
-        );
-        quat.normalize(this._rotationCache, this._rotationCache);
-        mat4.fromQuat(this._rotationCache, this.rotationMatrix);
-
+        mat4.fromQuat(this.rotation, this.rotationMatrix);
         mat4.scaling(this.scale, this.scaleMatrix);
 
         mat4.mul(
@@ -233,23 +220,25 @@ export class Transform extends Component implements Versioned {
         notifyUpdate(this);
     }
 
+    // 返回指向摄像机前方的向量，不受旋转影响
     get forwardDirection(): Vec3 {
-        return vec3.transformMat4(vec3.create(0, 0, -1), this.rotationMatrix);
+        // 默认指向z轴负方向
+        const forward = vec3.create(0, 0, -1);
+        // 旋转
+        vec3.transformQuat(forward, this.rotation, forward);
+        // 此时forward可能受到摄像机的旋转影响，需要将y轴的旋转置为0
+        forward[1] = 0;
+        // 归一化
+        vec3.normalize(forward, forward);
+        return forward;
     }
 
     get rightDirection(): Vec3 {
-        return vec3.transformMat4(vec3.create(1, 0, 0), this.rotationMatrix);
-    }
-
-    get upDirection(): Vec3 {
-        return vec3.transformMat4(vec3.create(0, 1, 0), this.rotationMatrix);
-    }
-
-    lookAt(target: Vec3): Transform {
-        const matrix = mat4.lookAt(this.position, target, vec3.create(0, 1, 0));
-        quat.fromMat(matrix, this.rotation)
-        this.setNeedsUpdate()
-        return this;
+        const right = vec3.create(1, 0, 0);
+        vec3.transformQuat(right, this.rotation, right);
+        right[1] = 0;
+        vec3.normalize(right, right);
+        return right;
     }
 
     setPosition(position: Vec3): Transform {
@@ -258,23 +247,16 @@ export class Transform extends Component implements Versioned {
         return this;
     }
 
-    setTranslation(translation: Vec3): Transform {
-        vec3.copy(translation, this.position);
-        this.setNeedsUpdate()
-        return this;
-    }
-
-    setRotation(rotation: Vec3): Transform {
+    setEulerAngle(rotation: Vec3, order: RotationOrder): Transform {
         if (rotation.length !== 3) throw new Error("Invalid rotation length");
-        vec3.copy(rotation, this.rotation);
+        quat.fromEuler(rotation[0], rotation[1], rotation[2], order, this.rotation);
         this.setNeedsUpdate()
         return this;
     }
 
-    setRotationByQuaternion(quaternion: Quat): Transform {
+    setRotation(quaternion: Quat): Transform {
         if (quaternion.length !== 4) throw new Error("Invalid quaternion length");
-        quat.normalize(quaternion, quaternion);
-        quatToEuler(quaternion, 'yxz', this.rotation);
+        quat.copy(quaternion, this.rotation);
         this.setNeedsUpdate()
         return this
     }
@@ -286,17 +268,21 @@ export class Transform extends Component implements Versioned {
     }
 
     rotateEulerAngles(eulerAngles: Vec3): Transform {
-        vec3.add(this.rotation, eulerAngles, this.rotation);
+        throw new Error("Not implemented");
         this.setNeedsUpdate()
-        this.updateMatrix()
         return this;
     }
 
-    // yaw/pitch is in radians
+    private _rotationYaw = quat.identity();
+    private _rotationPitch = quat.identity();
+
     rotateYawPitch(yaw: number, pitch: number) {
-        this.rotation[1] += yaw;
-        this.rotation[0] += pitch;
-        this.rotation[0] = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation[0]));
+        quat.fromAxisAngle(vec3.create(0, 1, 0), yaw, this._rotationYaw);
+        quat.fromAxisAngle(vec3.create(1, 0, 0), pitch, this._rotationPitch);
+
+        quat.mul(this._rotationYaw, this.rotation, this.rotation);
+        quat.mul(this.rotation, this._rotationPitch, this.rotation);
+
         this.setNeedsUpdate()
     }
 
@@ -332,39 +318,9 @@ export class Transform extends Component implements Versioned {
         copy[9] *= invScaleZ;
         copy[10] *= invScaleZ;
 
-        const newQuat = quat.create(0, 0, 0, 1);
-        quat.fromMat(copy, newQuat);
-        // const trace = copy[0] + copy[5] + copy[10];
-        // if (trace > 0) {
-        //     // |w| > 1/2, may as well choose w > 1/2
-        //     const root = Math.sqrt(trace + 1);  // 2w
-        //     newQuat[3] = 0.5 * root; // w
-        //     const invRoot = 0.5 / root;
-        //     newQuat[0] = (copy[6] - copy[9]) * invRoot;
-        //     newQuat[1] = (copy[8] - copy[2]) * invRoot;
-        //     newQuat[2] = (copy[1] - copy[4]) * invRoot;
-        // } else {
-        //     if (copy[0] > copy[5] && copy[0] > copy[10]) {
-        //         const s = 2.0 * Math.sqrt(1.0 + copy[0] - copy[5] - copy[10]);
-        //         newQuat[3] = (copy[9] - copy[6]) / s;
-        //         newQuat[0] = 0.25 * s;
-        //         newQuat[1] = (copy[1] + copy[4]) / s;
-        //         newQuat[2] = (copy[8] + copy[2]) / s;
-        //     } else if (copy[5] > copy[10]) {
-        //         const s = 2.0 * Math.sqrt(1.0 + copy[5] - copy[0] - copy[10]);
-        //         newQuat[3] = (copy[2] - copy[8]) / s;
-        //         newQuat[0] = (copy[1] + copy[4]) / s;
-        //         newQuat[1] = 0.25 * s;
-        //         newQuat[2] = (copy[6] + copy[9]) / s;
-        //     } else {
-        //         const s = 2.0 * Math.sqrt(1.0 + copy[10] - copy[0] - copy[5]);
-        //         newQuat[3] = (copy[4] - copy[1]) / s;
-        //         newQuat[0] = (copy[8] + copy[2]) / s;
-        //         newQuat[1] = (copy[6] + copy[9]) / s;
-        //         newQuat[2] = 0.25 * s;
-        //     }
-        // }
-        quatToEuler(newQuat, 'yxz', this.rotation);
+        // extract rotation
+        quat.fromMat(copy, this.rotation);
+
         this.setNeedsUpdate()
         return this;
     }
