@@ -55,7 +55,6 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         this.renderEntities(context, context.scene.objects);
 
         context.endRenderPass();
-        context.submit();
     }
 
     renderEntities(context: RenderContext, entities: Entity[]) {

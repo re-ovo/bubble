@@ -16,8 +16,8 @@ export class BufferAttribute<T extends ArrayBufferView> implements Versioned {
     ) {
         this.data = data;
         this.itemSize = itemSize;
-        this.usage = usage || this.usage
-        this.stepMode = stepMode || 'vertex'
+        this.usage = usage ?? this.usage
+        this.stepMode = stepMode ?? 'vertex'
     }
 
     setNeedsUpdate() {

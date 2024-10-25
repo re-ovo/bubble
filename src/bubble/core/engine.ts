@@ -124,8 +124,8 @@ export class RenderEngine {
     }
 
     destroy() {
-        this._canvasContext?.unconfigure();
         this.device.destroy();
+        this._canvasContext?.unconfigure();
     }
 }
 
