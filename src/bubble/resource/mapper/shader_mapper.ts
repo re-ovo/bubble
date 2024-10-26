@@ -10,43 +10,34 @@ export interface ShaderGPUResources {
 export class ShaderResourceMapper implements ResourceMapper<Shader, ShaderGPUResources> {
     private context: RenderContext;
 
-    private cache = new VersionedCache<Shader, ShaderGPUResources>()
+    private cache = new Map<String, GPUShaderModule>()
 
     constructor(context: RenderContext) {
         this.context = context
     }
 
     sync(resource: Shader): ShaderGPUResources {
-        let cacheValue = this.cache.get(resource)
+        let cacheValue = this.cache.get(resource.code)
         if (!cacheValue) {
-            const newValue = this.create(resource)
-            cacheValue = {
-                version: resource.version,
-                value: newValue
-            }
-            this.cache.set(resource, newValue)
+            cacheValue = this.context.device.createShaderModule({
+                code: resource.code
+            })
+            this.cache.set(resource.code, cacheValue)
         }
-        if(resource.version !== cacheValue.version) {
-            cacheValue.value = this.update(resource, cacheValue.value)
-            cacheValue.version = resource.version
+        return {
+            module: cacheValue
         }
-        return cacheValue.value
     }
 
     create(resource: Shader): ShaderGPUResources {
-        // create shader module
-        let module = this.context.device.createShaderModule({
-            code: resource.code
-        })
-        return {
-            module,
-        }
+        throw new Error("Method not implemented.");
     }
 
     update(resource: Shader, gpuResources: ShaderGPUResources): ShaderGPUResources {
-        this.dispose(resource, gpuResources)
-        return this.create(resource)
+        throw new Error("Method not implemented.");
     }
 
-    dispose(object: Shader, gpuResource: ShaderGPUResources): void {}
+    dispose(object: Shader, gpuResource: ShaderGPUResources): void {
+        throw new Error("Method not implemented.");
+    }
 }
