@@ -9,7 +9,7 @@ import {Camera, CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/c
 import {usePane} from "@/hooks/usePane";
 import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
-import {loadGltfModel} from "@/bubble/loader/gltf_loader";
+import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
 import {vec3} from "wgpu-matrix";
 
@@ -93,16 +93,16 @@ onMounted(async () => {
   //     scene?.addEntity(entity)
   //   })
   // })
-  loadGltfModel('/models/instances.glb').then((gltf) => {
-    gltf.forEach((entity) => {
-      scene?.addEntity(entity)
-    })
-  })
-  // loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
-  //   gltf.reverse().forEach((entity) => {
+  // loadGltfModel('/models/instances.glb').then((gltf) => {
+  //   gltf.forEach((entity) => {
   //     scene?.addEntity(entity)
   //   })
   // })
+  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
+    gltf.reverse().forEach((entity) => {
+      scene?.addEntity(entity)
+    })
+  })
 
   // render loop
   const render = () => {

@@ -24,7 +24,7 @@ import {MaterialBlendMode} from "@/bubble/node/material/material";
  * @param modelName 模型名称
  * @param onEntityLoaded 每个实体加载完成后的回调，用于渐进式加载
  */
-export async function loadGltfExample(modelName: string, onEntityLoaded: (entity: Entity) => void) {
+export async function loadGltfExample(modelName: string, onEntityLoaded: (entity: Entity) => void = () => {}) {
     return await loadGltfModel(`https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/${modelName}/glTF/${modelName}.gltf`, onEntityLoaded)
 }
 
@@ -169,12 +169,11 @@ async function convertPrimitive(
     ))
     if (primitive.indices) {
         if (primitive.indices.type !== 'SCALAR') throw new Error('Indices attribute is not SCALAR')
-        const uint16Array = new Uint16Array(primitive.indices.value)
-        mesh.setIndices(uint16Array)
+        mesh.setIndices(primitive.indices.value as Uint16Array | Uint32Array)
         // if(mesh.drawCount !== primitive.indices.count) throw new Error('Draw count is not equal to indices count')
         mesh.setVertexCount(primitive.indices.count)
     } else {
-        console.log('No indices found for primitive', primitive)
+        throw new Error('Indices attribute is not found')
     }
     renderer.mesh = mesh
 
