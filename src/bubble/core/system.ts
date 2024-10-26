@@ -295,14 +295,17 @@ export class Transform extends Component implements Versioned {
     setByMatrix(matrix: Mat4): Transform {
         const copy = mat4.clone(matrix);
 
+        // extract scale
+        mat4.getScaling(copy, this.scale);
+        if(mat4.determinant(copy) < 0) {
+            this.scale[0] *= -1;
+        }
+
         // extract position
         mat4.getTranslation(copy, this.position);
         copy[12] = 0;
         copy[13] = 0;
         copy[14] = 0;
-
-        // extract scale
-        mat4.getScaling(copy, this.scale);
 
         // remove scale
         const invScaleX = 1 / this.scale[0];
