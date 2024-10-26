@@ -52,10 +52,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let V = normalize(camera.cameraPosition - input.fragPos);
     let L = normalize(lightPosition - input.fragPos);
     let H = normalize(V + L);
-    
-    let aa = material.metallic;
-    let newfd = textureSample(normalTexture, normalTextureSampler, input.uv).xyz;
-    
+
     let metallic = material.metallic * textureSample(pbrTexture, pbrTextureSampler, input.uv).b;
     let roughness = material.roughness * textureSample(pbrTexture, pbrTextureSampler, input.uv).g;
     

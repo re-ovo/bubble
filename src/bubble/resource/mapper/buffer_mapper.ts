@@ -6,6 +6,8 @@ import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
 
 export interface BufferResources {
     buffer: GPUBuffer;
+    offset: number;
+    size: number;
 }
 
 export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any> | BufferResource, BufferResources> {
@@ -39,20 +41,24 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
         if (resource instanceof BufferResource) {
             let buffer = this.context.device.createBuffer({
                 size: resource.bufferSize,
-                usage: resource.usage,
+                usage: resource.usage | GPUBufferUsage.COPY_SRC,
             })
             this.context.device.queue.writeBuffer(buffer, 0, resource.view)
             return {
                 buffer: buffer,
+                offset: 0,
+                size: resource.bufferSize
             }
         } else {
             let buffer = this.context.device.createBuffer({
                 size: resource.data.byteLength,
-                usage: resource.usage,
+                usage: resource.usage| GPUBufferUsage.COPY_SRC,
             })
             this.context.device.queue.writeBuffer(buffer, 0, resource.data)
             return {
                 buffer: buffer,
+                offset: 0,
+                size: resource.data.byteLength
             }
         }
     }

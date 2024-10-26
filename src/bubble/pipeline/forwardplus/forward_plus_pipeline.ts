@@ -1,7 +1,6 @@
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import type {Camera} from "@/bubble/node/camera/camera";
 import type {RenderContext} from "@/bubble/pipeline/context";
-import {RendererComponent} from "@/bubble/node/renderer/renderer";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
 import type {Entity} from "@/bubble/core/system";
@@ -75,7 +74,12 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         })
     }
 
-    pipeline: Map<GPUShaderModule, GPURenderPipeline> = new Map();
+    pipeline: Map<GPUShaderModule, {
+        pipeline: GPURenderPipeline,
+        bindingGroupLayouts: GPUBindGroupLayout[],
+    }> = new Map();
+
+    bindGroups: Map<Material, GPUBindGroup[]> = new Map();
 
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
@@ -96,10 +100,19 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 }
             })
 
-        let pipeline = this.pipeline.get(shaderModule);
-        if (!pipeline) {
-            pipeline = context.device.createRenderPipeline({
-                layout: 'auto',
+        let pipelineCache = this.pipeline.get(shaderModule);
+        if (!pipelineCache) {
+            const layouts: GPUBindGroupLayout[] = material.shader.bindingGroups.map(group => {
+                return context.device.createBindGroupLayout({
+                    entries: group.bindings.map(binding => {
+                        return binding.layout
+                    })
+                })
+            })
+            const pipeline = context.device.createRenderPipeline({
+                layout: context.device.createPipelineLayout({
+                    bindGroupLayouts: layouts
+                }),
                 vertex: {
                     module: shaderModule,
                     buffers: vertexBufferLayouts,
@@ -132,11 +145,15 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     format: 'depth24plus',
                 },
             })
-            this.pipeline.set(shaderModule, pipeline);
+            pipelineCache = {
+                pipeline,
+                bindingGroupLayouts: layouts,
+            }
+            this.pipeline.set(shaderModule, pipelineCache);
         }
 
         // setup pipeline
-        passEncoder.setPipeline(pipeline);
+        passEncoder.setPipeline(pipelineCache.pipeline);
 
         // setup attributes
         material.shader.attributes.forEach((attributeMeta) => {
@@ -148,9 +165,10 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         })
 
         // setup binding resource
-        material.shader.bindingGroups.forEach((bindingGroup, index) => {
-            const bindGroup = context.device.createBindGroup({
-                layout: pipeline!.getBindGroupLayout(index),
+        let bindGroups = this.bindGroups.get(material);
+        const bindGroupDescs: GPUBindGroupDescriptor[] = material.shader.bindingGroups.map((bindingGroup, index) => {
+            return {
+                layout: pipelineCache.bindingGroupLayouts[index],
                 entries: bindingGroup.bindings.map((bindingMeta) => {
                     if (bindingMeta.name == 'camera') {
                         return {
@@ -202,14 +220,22 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                         }
                     }
                 })
+            }
+        })
+        if(!bindGroups) {
+            bindGroups = bindGroupDescs.map((desc) => {
+                return context.device.createBindGroup(desc)
             })
+            this.bindGroups.set(material, bindGroups)
+        }
+        bindGroups.forEach((bindGroup, index) => {
             passEncoder.setBindGroup(index, bindGroup);
         })
 
         // draw
         if (mesh.indices) {
-            const buffer = context.resourceManager.syncBuffer(mesh.indices).buffer
-            passEncoder.setIndexBuffer(buffer, 'uint16')
+            const buffer = context.resourceManager.syncBuffer(mesh.indices)
+            passEncoder.setIndexBuffer(buffer.buffer, 'uint16', buffer.offset, buffer.size)
             passEncoder.drawIndexed(mesh.drawCount)
         } else {
             passEncoder.draw(mesh.drawCount)

@@ -48,6 +48,6 @@ export function textureAndSampler(name: string, type: string): string {
     // group 1 is the texture, group 2 is the sampler
     return wgsl`
     @group(1) @binding(${autoBinding(1)}) var ${name}: ${type};
-    @group(2) @binding(${autoBinding(2)}) var ${name}Sampler: sampler;
+    @group(1) @binding(${autoBinding(1)}) var ${name}Sampler: sampler;
     `
 }

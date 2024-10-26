@@ -127,7 +127,7 @@ export class RenderContext {
         if(!buffer) {
             const buf = new BufferResource(
                 "CameraInput",
-                GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             )
             buf.setSize(192) // 64(mat4) + 64(mat4) + 64(vec3, padding)
             buf.setFloat32Array(0, camera.projectionMatrix)
@@ -158,7 +158,7 @@ export class RenderContext {
         if(!cached) {
             const buf = new BufferResource(
                 "ModelInfo",
-                GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                 GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             )
             buf.setSize(128)
             buf.setFloat32Array(0, transform.transformMatrix) // model matrix in MVP
