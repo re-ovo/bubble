@@ -100,7 +100,7 @@ export interface BindingGroupEntryMetadata {
     name: string;
     binding: number;
     type: string;
-    // layout: GPUBindGroupLayoutEntry;
+    layout: GPUBindGroupLayoutEntry;
 }
 
 function computeShaderAttribute(metadata: WgslReflect): ShaderAttributeMetadata[] {
@@ -189,23 +189,28 @@ function computeBindingGroups(metadata: WgslReflect): BindingGroupMetadata[] {
     const result: BindingGroupMetadata[] = [];
 
     metadata.getBindGroups().forEach((group) => {
-        group.forEach((entry) => {
+        group.forEach((variable) => {
             // generate binding group metadata
-            let groupIndex = entry.group
+            let groupIndex = variable.group
             if (!result[groupIndex]) {
                 result[groupIndex] = {bindings: []}
             }
 
             // generate binding entry metadata
             let groupMetadata = result[groupIndex]
-            let bindingIndex = entry.binding
-            let type = entry.type.name
+            let bindingIndex = variable.binding
+            let type = variable.type.name
+            let layout: GPUBindGroupLayoutEntry = {
+                binding: bindingIndex,
+                visibility: findUsageStage(metadata, variable),
+            }
+            inferBindingResourceType(metadata, variable, layout)
             groupMetadata.bindings[bindingIndex] = {
-                name: entry.name,
+                name: variable.name,
                 binding: bindingIndex,
                 type: type,
+                layout: layout
             }
-            // TODO: Maybe reflect more layout information?
         })
     })
 
@@ -229,4 +234,26 @@ function findUsageStage(metadata: WgslReflect, v: VariableInfo): GPUShaderStageF
     }
     // console.log(`Usage of ${v.name}: ${usage} (vertex: ${isInStage(usage, GPUShaderStage.VERTEX)}, fragment: ${isInStage(usage, GPUShaderStage.FRAGMENT)}, compute: ${isInStage(usage, GPUShaderStage.COMPUTE)})`)
     return usage;
+}
+
+function inferBindingResourceType(
+    metadata: WgslReflect,
+    variableInfo: VariableInfo,
+    entry: GPUBindGroupLayoutEntry
+) {
+    const typeName = variableInfo.type.name
+
+    if (typeName === 'texture_2d') {
+        entry.texture = {}
+        return
+    }
+    if (variableInfo.type.name === 'sampler') {
+        entry.sampler = {}
+        return
+    }
+
+    // still not match, so it's a buffer
+    entry.buffer = {
+        type: metadata.uniforms.find(uni => uni.name === variableInfo.name) ? 'uniform' : 'storage',
+    }
 }
