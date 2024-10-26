@@ -75,7 +75,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         })
     }
 
-    pipeline: Map<MeshRendererComponent, GPURenderPipeline> = new Map();
+    pipeline: Map<GPUShaderModule, GPURenderPipeline> = new Map();
 
     renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
         let mesh = renderer.mesh!;
@@ -96,7 +96,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 }
             })
 
-        let pipeline = this.pipeline.get(renderer);
+        let pipeline = this.pipeline.get(shaderModule);
         if (!pipeline) {
             pipeline = context.device.createRenderPipeline({
                 layout: 'auto',
@@ -132,7 +132,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                     format: 'depth24plus',
                 },
             })
-            this.pipeline.set(renderer, pipeline);
+            this.pipeline.set(shaderModule, pipeline);
         }
 
         // setup pipeline
