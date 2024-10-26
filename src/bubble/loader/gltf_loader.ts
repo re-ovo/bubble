@@ -189,8 +189,8 @@ async function convertPrimitive(
         baseColorFactor[2],
         baseColorFactor[3]
     ) : colors.White
-    material.roughness = primitive.material?.pbrMetallicRoughness?.roughnessFactor ?? 1.0
-    material.metallic = primitive.material?.pbrMetallicRoughness?.metallicFactor ?? 1.0
+    material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
+    material.metallic = primitive.material?.pbrMetallicRoughness? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
     material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
     material.doubleSided = primitive.material?.doubleSided ?? false
 
