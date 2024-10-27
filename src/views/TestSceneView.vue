@@ -6,7 +6,7 @@
 import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
 import {Camera, CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
-import {usePane} from "@/hooks/usePane";
+import {lookupModels, usePane} from "@/hooks/usePane";
 import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
@@ -40,6 +40,10 @@ onMounted(async () => {
 
   // setup scene
   scene = new Scene()
+  const sceneFolder = pane.addFolder({
+    title: 'Scene',
+  })
+  lookupModels(sceneFolder, scene) // 列出所有模型
 
   // let material = new StandardMaterial()
   // material.color = colors.newColor4f(1, 0, 0, 1)
@@ -72,37 +76,24 @@ onMounted(async () => {
   const cameraTransform = cameraEntity.getComponent(Transform)!
   cameraTransform.setPosition(vec3.fromValues(0, 5, 5))
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
+  const cameraFolder = pane.addFolder({
+    title: 'Camera',
+  })
   const cameraInfo = {
     get position() {
       return `[${cameraTransform.position[0].toFixed(2)}, ${cameraTransform.position[1].toFixed(2)}, ${cameraTransform.position[2].toFixed(2)}]`
     },
   }
-  pane.addBinding(cameraInfo, 'position', {
+  cameraFolder.addBinding(cameraInfo, 'position', {
     readonly: true,
     label: 'Camera Position',
   })
-  pane.addBinding(cameraEntity.getComponent(FPSController)!, 'moveSpeed', {
+  cameraFolder.addBinding(cameraEntity.getComponent(FPSController)!, 'moveSpeed', {
     min: 0.1,
     max: 10,
     step: 0.1,
   })
 
-  // GLTF
-  // loadGltfExample('Sponza').then((gltf) => {
-  //   gltf.forEach((entity) => {
-  //     scene?.addEntity(entity)
-  //   })
-  // })
-  // loadGltfModel('/models/instances.glb').then((gltf) => {
-  //   gltf.forEach((entity) => {
-  //     scene?.addEntity(entity)
-  //   })
-  // })
-  loadGltfModel('/models/Bistro/bistro.gltf').then((gltf) => {
-    gltf.reverse().forEach((entity) => {
-      scene?.addEntity(entity)
-    })
-  })
 
   // render loop
   const render = () => {
