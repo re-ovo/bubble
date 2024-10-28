@@ -24,7 +24,8 @@ import {MaterialBlendMode} from "@/bubble/node/material/material";
  * @param modelName 模型名称
  * @param onEntityLoaded 每个实体加载完成后的回调，用于渐进式加载
  */
-export async function loadGltfExample(modelName: string, onEntityLoaded: (entity: Entity) => void = () => {}) {
+export async function loadGltfExample(modelName: string, onEntityLoaded: (entity: Entity) => void = () => {
+}) {
     return await loadGltfModel(`https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/${modelName}/glTF/${modelName}.gltf`, onEntityLoaded)
 }
 
@@ -124,18 +125,21 @@ const defaultAlbedo = new Texture2D(
     createImageBitmapOfColor(1, 1, '#ffffff'),
     1,
     1,
+    'rgba8unorm-srgb',
     GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 const defaultNormal = new Texture2D(
     createImageBitmapOfColor(1, 1, '#8080ff'),
     1,
     1,
+    'rgba8unorm',
     GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 const defaultPBR = new Texture2D(
     createImageBitmapOfColor(1, 1, '#ffffff'),
     1,
     1,
+    'rgba8unorm',
     GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
@@ -190,7 +194,7 @@ async function convertPrimitive(
         baseColorFactor[3]
     ) : colors.White
     material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
-    material.metallic = primitive.material?.pbrMetallicRoughness? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
+    material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
     material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
     material.doubleSided = primitive.material?.doubleSided ?? false
 
@@ -202,17 +206,29 @@ async function convertPrimitive(
             if (coord !== undefined) {
                 throw new Error('Texture coord is not supported yet')
             }
-            const texture = await loadTexture(primitive.material.pbrMetallicRoughness.baseColorTexture, textureCache)
+            const texture = await loadTexture(
+                primitive.material.pbrMetallicRoughness.baseColorTexture,
+                textureCache,
+                'rgba8unorm-srgb',
+            )
             material.addTexture('baseColorTexture', texture)
         }
         // PBR Metallic Roughness
         if (primitive.material.pbrMetallicRoughness.metallicRoughnessTexture) {
-            const texture = await loadTexture(primitive.material.pbrMetallicRoughness.metallicRoughnessTexture, textureCache)
+            const texture = await loadTexture(
+                primitive.material.pbrMetallicRoughness.metallicRoughnessTexture,
+                textureCache,
+                'rgba8unorm',
+            )
             material.addTexture('pbrTexture', texture)
         }
     }
     if (primitive.material && primitive.material.normalTexture) {
-        const texture = await loadTexture(primitive.material.normalTexture, textureCache)
+        const texture = await loadTexture(
+            primitive.material.normalTexture,
+            textureCache,
+            'rgba8unorm',
+        )
         material.addTexture('normalTexture', texture)
     }
     if (!material.hasTexture('baseColorTexture')) {
@@ -231,7 +247,8 @@ async function convertPrimitive(
 
 async function loadTexture(
     info: { index?: number, texture: any },
-    textureCache: Map<number, Texture>
+    textureCache: Map<number, Texture>,
+    format: GPUTextureFormat
 ): Promise<Texture> {
     if (info.index !== undefined && textureCache.has(info.index)) {
         return textureCache.get(info.index)!
@@ -250,6 +267,7 @@ async function loadTexture(
         imageBitmap,
         info.texture.source!.image.width!,
         info.texture.source!.image.height!,
+        format,
     )
 
     texture.minFilter = FilterValueMapping[info.texture.sampler.minFilter] ?? 'linear'

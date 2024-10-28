@@ -45,12 +45,12 @@ ${textureAndSampler('pbrTexture', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    let lightPosition = vec3<f32>(9.0, 10.0, 1.6);
-    let lightRadiance = vec3<f32>(7.0);
+    let lightDirection = vec3<f32>(0.5, 0.5, 0.5);
+    let lightRadiance = vec3<f32>(4.0);
     
     let N = normalize(input.normal);
     let V = normalize(camera.cameraPosition - input.fragPos);
-    let L = normalize(lightPosition - input.fragPos);
+    let L = normalize(lightDirection);
     let H = normalize(V + L);
 
     let metallic = material.metallic * textureSample(pbrTexture, pbrTextureSampler, input.uv).b;

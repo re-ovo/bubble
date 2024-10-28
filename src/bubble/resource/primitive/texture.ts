@@ -4,12 +4,16 @@ export abstract class Texture implements Versioned {
     version: number = 0;
 
     usage: GPUTextureUsageFlags;
-
+    format: GPUTextureFormat;
     minFilter: GPUFilterMode = 'linear';
     magFilter: GPUFilterMode = 'linear';
 
-    protected constructor(usage?: GPUTextureUsageFlags) {
+    protected constructor(
+        format?: GPUTextureFormat,
+        usage?: GPUTextureUsageFlags,
+    ) {
         this.usage = usage ?? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
+        this.format = format ?? 'rgba8unorm';
     }
 
     setNeedsUpdate() {
@@ -30,9 +34,10 @@ export class Texture2D extends Texture {
     constructor(
         data: ImageBitmap | ImageData,
         width: number, height: number,
+        format?: GPUTextureFormat,
         usage?: GPUTextureUsageFlags,
     ) {
-        super(usage);
+        super(format, usage);
         this.width = width;
         this.height = height;
         this.data = data;
