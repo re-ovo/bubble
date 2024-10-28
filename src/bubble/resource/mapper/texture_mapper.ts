@@ -44,7 +44,6 @@ export class TextureResourceMapper implements ResourceMapper<Texture, TextureRes
                 addressModeU: resource.addressModeU,
                 addressModeV: resource.addressModeV,
             })
-            console.log(resource.format)
             const texture = this.context.device.createTexture({
                 size: [resource.width, resource.height],
                 format: resource.format,
