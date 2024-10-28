@@ -77,12 +77,6 @@ fn vs(input: VertexInput) -> @builtin(position) vec4<f32> {
 }`;
 ```
 
-## 资源分配
-资源分配在渲染中尤为重要，引擎需要在正确的时间创建/更新/销毁资源，避免频繁的资源创建和销毁。
-
-本项目使用基于version number的资源管理策略，CPU端的资源包装类会标记自己的版本，当更新时会更新版本号。在渲染时，资源分配器
-会检查资源的版本号，如果GPU端的资源不存在或者版本号和CPU端的资源版本号不一致，会重新创建或者更新GPU端的资源。
-
 ## 三方库
 
 - [Tweakpane](https://tweakpane.github.io/docs/getting-started/): 数据驱动的UI，方便调试
