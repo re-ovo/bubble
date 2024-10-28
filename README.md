@@ -9,16 +9,19 @@
 - [ ] Forward+ 渲染管线 (Clustered Forward Rendering)
 - [x] 类Unity Component组件系统 (GameObject->Entity, Component->Component)
 - [x] 可编程渲染管线 (SRP)
-- [ ] 全局光照系统 (Voxel Cone Tracing GI)
-- [ ] 骨骼网格体和动画 (Skeletal Animation)
+- [ ] 全局光照系统
+- [ ] 动画系统
 - [x] PBR材质(Cook-Torrance BRDF)
 - [ ] 剔除 (Culling)
 - [ ] 阴影 (ShadowMap/Cascaded ShadowMap)
 - [ ] 灯光 (Point/Spot/Directional/Ambient Light)
-- [ ] 雾/体积雾 (Fog, Volumetric Fog)
+- [ ] 雾/体积雾 (Volumetric Fog)
 - [ ] 天空盒 (Skybox)
 - [ ] CubeMap IBL
 - [ ] PostProcessing (Bloom)
+
+## 性能对比
+TODO
 
 ## 使用
 
