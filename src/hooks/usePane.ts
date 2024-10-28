@@ -34,7 +34,7 @@ export function usePane(options: PaneConfig): Pane {
 }
 
 export function lookupModels(pane: FolderApi, scene: Scene) {
-    const models = Object.keys(import.meta.glob('/public/models/**/*.glb'))
+    const models = Object.keys(import.meta.glob('/public/models/**/*.(gltf|glb)'))
         .map((path) => path.slice(7)) // remove /public
         .map((path) => {
             const text = path.split('/').pop()
