@@ -1,7 +1,11 @@
+/**
+ * Convert a buffer to an ImageBitmap.
+ *
+ * @param data the buffer to convert
+ * @param mimeType the mime type of the image (optional)
+ */
 export async function convertUint8ArrayToImageBitmap(
     data: ArrayBuffer | ArrayBufferView,
-    width: number,
-    height: number,
     mimeType?: string
 ): Promise<ImageBitmap> {
     if(!data) throw new Error('data is required');
@@ -18,6 +22,13 @@ export async function convertUint8ArrayToImageBitmap(
     }
 }
 
+/**
+ * Create an ImageData object of a solid color.
+ *
+ * @param width the width of the image
+ * @param height the height of the image
+ * @param color the color of the image
+ */
 export function createImageBitmapOfColor(
     width: number,
     height: number,

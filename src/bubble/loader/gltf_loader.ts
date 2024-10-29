@@ -259,8 +259,6 @@ async function loadTexture(
     let data = info.texture.source!.bufferView!.data
     const imageBitmap = await convertUint8ArrayToImageBitmap(
         data,
-        info.texture.source!.image.width!,
-        info.texture.source!.image.height!,
         info.texture.source!.mimeType
     )
     const texture = new Texture2D(
