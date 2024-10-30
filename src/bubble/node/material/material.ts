@@ -8,7 +8,7 @@ export class Material implements Versioned {
     version: number = 0;
 
     shader: Shader;
-    buffers: Map<string, BufferResource>;
+    uniforms: Map<string, any> = new Map();
     textures: Map<string, Texture>;
 
     blendMode: MaterialBlendMode = MaterialBlendMode.OPAQUE;
@@ -16,35 +16,13 @@ export class Material implements Versioned {
 
     constructor(shader: Shader) {
         this.shader = shader;
-        this.buffers = new Map();
+        this.uniforms = new Map();
         this.textures = new Map();
     }
 
     setNeedsUpdate() {
         this.version++;
         notifyUpdate(this);
-    }
-
-    addBuffer(variableName: string, buffer: BufferResource) {
-        buffer.setShader(this.shader!);
-        this.buffers.set(variableName, buffer);
-    }
-
-    removeBuffer(name: string) {
-        this.buffers.delete(name);
-    }
-
-    getBuffer(name: string): BufferResource {
-        let buf = this.buffers.get(name);
-        if (buf) {
-            return buf;
-        }
-        throw new Error(`Buffer ${name} not found.`);
-    }
-
-    getBufferView(name: string): DataView {
-        let buffer = this.getBuffer(name);
-        return buffer.view;
     }
 
     addTexture(variableName: string, texture: Texture) {
@@ -65,6 +43,26 @@ export class Material implements Versioned {
 
     removeTexture(name: string) {
         this.textures.delete(name);
+    }
+
+    setUniform(name: string, value: any) {
+        this.uniforms.set(name, value);
+    }
+
+    getUniform(name: string): any {
+        let uniform = this.uniforms.get(name);
+        if (uniform) {
+            return uniform;
+        }
+        throw new Error(`Uniform ${name} not found.`);
+    }
+
+    hasUniform(name: string): boolean {
+        return this.uniforms.has(name);
+    }
+
+    removeUniform(name: string) {
+        this.uniforms.delete(name);
     }
 }
 

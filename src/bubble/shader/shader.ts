@@ -1,6 +1,7 @@
 import {TemplateInfo, TypeInfo, VariableInfo, WgslReflect} from "wgsl_reflect";
 import type {Versioned} from "@/bubble/resource/versioned";
 import {providerWGSLCounterScope} from "@/bubble/shader/counter";
+import {makeShaderDataDefinitions, type VariableDefinitions} from "webgpu-utils";
 
 /**
  * Shader source provider
@@ -15,6 +16,7 @@ export class Shader implements Versioned {
     private _metadata: WgslReflect | null = null;
     private _attributes: ShaderAttributeMetadata[] = [];
     private _bindingGroups: BindingGroupMetadata[] = [];
+    private _uniforms: VariableDefinitions = {};
 
     version: number = 0;
 
@@ -55,6 +57,8 @@ export class Shader implements Versioned {
         this._metadata = new WgslReflect(source);
         this._attributes = computeShaderAttribute(this._metadata);
         this._bindingGroups = computeBindingGroups(this._metadata);
+        const shaderData = makeShaderDataDefinitions(this._code);
+        this._uniforms = shaderData.uniforms;
         this.setNeedsUpdate(); // need to recompile shader module
     }
 
@@ -78,6 +82,10 @@ export class Shader implements Versioned {
 
     get bindingGroups(): BindingGroupMetadata[] {
         return this._bindingGroups;
+    }
+
+    get uniforms(): VariableDefinitions {
+        return this._uniforms;
     }
 }
 

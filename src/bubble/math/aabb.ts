@@ -1,6 +1,4 @@
 import {type Vec3} from "wgpu-matrix";
-import {struct, vec3f} from "typegpu/data";
-import tgpu from "typegpu";
 
 export class AABB {
     private readonly _min: Vec3;
@@ -19,12 +17,3 @@ export class AABB {
         return this._max;
     }
 }
-
-const test = struct({
-    min: vec3f,
-    max: vec3f
-});
-
-struct({
-    oo: test
-})
