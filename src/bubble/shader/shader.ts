@@ -17,6 +17,7 @@ export class Shader implements Versioned {
     private _attributes: ShaderAttributeMetadata[] = [];
     private _bindingGroups: BindingGroupMetadata[] = [];
     private _uniforms: VariableDefinitions = {};
+    private _storages: VariableDefinitions = {};
 
     version: number = 0;
 
@@ -59,6 +60,7 @@ export class Shader implements Versioned {
         this._bindingGroups = computeBindingGroups(this._metadata);
         const shaderData = makeShaderDataDefinitions(this._code);
         this._uniforms = shaderData.uniforms;
+        this._storages = shaderData.storages;
         this.setNeedsUpdate(); // need to recompile shader module
     }
 
@@ -86,6 +88,10 @@ export class Shader implements Versioned {
 
     get uniforms(): VariableDefinitions {
         return this._uniforms;
+    }
+
+    get storages(): VariableDefinitions {
+        return this._storages;
     }
 }
 
