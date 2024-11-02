@@ -4,7 +4,7 @@ import {ShaderResourceMapper} from "@/bubble/resource/mapper/shader_mapper";
 import type {Shader} from "@/bubble/shader/shader";
 import type {BufferResource} from "@/bubble/resource/primitive/buffer";
 import {BufferResourceMapper} from "@/bubble/resource/mapper/buffer_mapper";
-import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
+import type {VertexAttribute} from "@/bubble/resource/primitive/attribute";
 import {TextureResourceMapper} from "@/bubble/resource/mapper/texture_mapper";
 import type {Texture} from "@/bubble/resource/primitive/texture";
 
@@ -23,7 +23,7 @@ export class ResourceManager implements Disposable {
         return this.shaderMapper.sync(shader);
     }
 
-    syncBuffer(buffer: BufferAttribute<any> | BufferResource) {
+    syncBuffer(buffer: VertexAttribute<any> | BufferResource) {
         return this.bufferMapper.sync(buffer);
     }
 

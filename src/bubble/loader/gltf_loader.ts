@@ -9,7 +9,7 @@ import {load} from "@loaders.gl/core";
 import {Entity, Transform} from "@/bubble/core/system";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Mesh} from "@/bubble/node/mesh/mesh";
-import {BufferAttribute} from "@/bubble/resource/primitive/attribute";
+import {VertexAttribute} from "@/bubble/resource/primitive/attribute";
 import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
 import {mat4, quat, vec3} from "wgpu-matrix";
@@ -157,17 +157,17 @@ async function convertPrimitive(
     const mesh = new Mesh()
     const positionAttribute = primitive.attributes['POSITION']
     if (positionAttribute.type !== 'VEC3') throw new Error('Position attribute is not VEC3')
-    mesh.addAttribute('position', new BufferAttribute(
+    mesh.addAttribute('position', new VertexAttribute(
         positionAttribute.value,
         3
     ))
     if (primitive.attributes['NORMAL'].type !== 'VEC3') throw new Error('Normal attribute is not VEC3')
-    mesh.addAttribute('normal', new BufferAttribute(
+    mesh.addAttribute('normal', new VertexAttribute(
         primitive.attributes['NORMAL'].value,
         3
     ))
     if (primitive.attributes['TEXCOORD_0'].type !== 'VEC2') throw new Error('UV attribute is not VEC2')
-    mesh.addAttribute('uv', new BufferAttribute(
+    mesh.addAttribute('uv', new VertexAttribute(
         primitive.attributes['TEXCOORD_0'].value,
         2
     ))

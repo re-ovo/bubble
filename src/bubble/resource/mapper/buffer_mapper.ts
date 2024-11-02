@@ -2,7 +2,7 @@ import type {ResourceMapper} from "@/bubble/resource/resource_mapper";
 import {BufferResource} from "@/bubble/resource/primitive/buffer";
 import {VersionedCache} from "@/bubble/resource/versioned";
 import type {RenderContext} from "@/bubble/pipeline/context";
-import type {BufferAttribute} from "@/bubble/resource/primitive/attribute";
+import type {VertexAttribute} from "@/bubble/resource/primitive/attribute";
 
 export interface BufferResources {
     buffer: GPUBuffer;
@@ -10,15 +10,15 @@ export interface BufferResources {
     size: number;
 }
 
-export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any> | BufferResource, BufferResources> {
+export class BufferResourceMapper implements ResourceMapper<VertexAttribute | BufferResource, BufferResources> {
     private context: RenderContext;
-    private cache = new VersionedCache<BufferAttribute<any> | BufferResource, BufferResources>()
+    private cache = new VersionedCache<VertexAttribute | BufferResource, BufferResources>()
 
     constructor(context: RenderContext) {
         this.context = context;
     }
 
-    sync(resource: BufferAttribute<any> | BufferResource): BufferResources {
+    sync(resource: VertexAttribute | BufferResource): BufferResources {
         let cacheValue = this.cache.get(resource)
         if (!cacheValue) {
             const newValue = this.create(resource)
@@ -36,7 +36,7 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
     }
 
 
-    create(resource: BufferAttribute<any> | BufferResource): BufferResources {
+    create(resource: VertexAttribute | BufferResource): BufferResources {
         // console.log('create buffer for', resource)
         if (resource instanceof BufferResource) {
             let buffer = this.context.device.createBuffer({
@@ -52,7 +52,7 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
         } else {
             let buffer = this.context.device.createBuffer({
                 size: resource.data.byteLength,
-                usage: resource.usage| GPUBufferUsage.COPY_SRC,
+                usage: resource.usage | GPUBufferUsage.COPY_SRC,
             })
             this.context.device.queue.writeBuffer(buffer, 0, resource.data)
             return {
@@ -63,13 +63,13 @@ export class BufferResourceMapper implements ResourceMapper<BufferAttribute<any>
         }
     }
 
-    update(resource: BufferAttribute<any> | BufferResource, gpu: BufferResources): BufferResources {
+    update(resource: VertexAttribute | BufferResource, gpu: BufferResources): BufferResources {
         // console.log('update buffer for', resource)
         this.context.device.queue.writeBuffer(gpu.buffer, 0, resource instanceof BufferResource ? resource.view : resource.data);
         return gpu;
     }
 
-    dispose(resource: BufferAttribute<any> | BufferResource, gpu: BufferResources): void {
+    dispose(resource: VertexAttribute | BufferResource, gpu: BufferResources): void {
         gpu.buffer.destroy();
     }
 }
