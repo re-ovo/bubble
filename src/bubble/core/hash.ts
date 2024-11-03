@@ -12,6 +12,10 @@ export class Hasher {
         this.hash = hash ?? 0x811c9dc5;
     }
 
+    reset(hash?: Hash): void {
+        this.hash = hash ?? 0x811c9dc5;
+    }
+
     string(str: string): void {
         for (const char of str) {
             this.hash ^= char.charCodeAt(0);
