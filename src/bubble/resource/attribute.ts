@@ -1,29 +1,18 @@
-import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import type {TypedArray} from "@/bubble/core/types";
+import {type Resource, resourceVersionSymbol} from "@/bubble/resource/resource";
 
-export class VertexAttribute implements Versioned {
+export class VertexAttribute implements Resource {
+    [resourceVersionSymbol]: number = 0;
+
     data: TypedArray;
     itemSize: number;
-    stepMode: GPUVertexStepMode;
-    usage: GPUBufferUsageFlags = GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST;
-
-    version: number = 0;
 
     constructor(
         data: TypedArray,
-        itemSize: number,
-        usage?: GPUBufferUsageFlags,
-        stepMode?: GPUVertexStepMode
+        itemSize: number
     ) {
         this.data = data;
         this.itemSize = itemSize;
-        this.usage = usage ?? this.usage
-        this.stepMode = stepMode ?? 'vertex'
-    }
-
-    setNeedsUpdate() {
-        this.version++;
-        notifyUpdate(this);
     }
 }
 
@@ -34,7 +23,7 @@ export class IndexAttribute extends VertexAttribute {
         data: Uint16Array | Uint32Array,
         count: number = data.length
     ) {
-        super(data, 1, GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST);
+        super(data, 1);
         this.count = count;
 
         // resize index buffer (Number of bytes to write must be a multiple of 4)

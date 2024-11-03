@@ -2,8 +2,7 @@ import type {Camera} from "@/bubble/node/camera/camera";
 import {type Scene, Transform} from "@/bubble/core/system";
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
-import {RenderContext} from "@/bubble/pipeline/context";
-import {VersionedCache} from "@/bubble/resource/versioned";
+import RenderContext from "@/bubble/pipeline/context";
 
 export interface EngineOptions {
     // RequestAdapter options
@@ -57,7 +56,7 @@ export class RenderEngine {
             format: this.preferredFormat,
             alphaMode: 'opaque',
         })
-        this._renderContext = new RenderContext(this.device,);
+        this._renderContext = new RenderContext(this.device);
         this._renderPipeline = options.pipelineProvider?.() ?? new ForwardPlusPipeline();
         console.log("WebGPU initialized.");
         console.log("Preferred format: ", this.preferredFormat);
@@ -98,8 +97,6 @@ export class RenderEngine {
             this._renderPipeline?.render(this._renderContext!, [camera]);
         }
     }
-
-    private transformVersionMap = new VersionedCache<Transform, void>()
 
     // 更新场景
     private updateScene(scene: Scene) {

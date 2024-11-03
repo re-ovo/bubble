@@ -1,5 +1,5 @@
-import {wgsl} from "@/bubble/shader/processor";
-import {autoBinding} from "@/bubble/shader/counter";
+import {wgsl} from "@/bubble/resource/shader/processor";
+import {autoBinding} from "@/bubble/resource/shader/shader_counter";
 
 export default () => wgsl`
 struct CameraInput {

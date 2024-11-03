@@ -1,5 +1,5 @@
-import {wgsl} from "@/bubble/shader/processor";
-import {autoBinding, autoLocation, textureAndSampler} from "@/bubble/shader/counter";
+import {wgsl} from "@/bubble/resource/shader/processor";
+import {autoBinding, autoLocation, textureAndSampler} from "@/bubble/resource/shader/shader_counter";
 import material_standard from "@/bubble/shader/material/material_standard";
 import gamma_correct from "@/bubble/shader/common/gamma_correct";
 import camera_input from "@/bubble/shader/common/camera_input";

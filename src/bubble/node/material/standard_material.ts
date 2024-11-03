@@ -1,9 +1,9 @@
 import {Material} from "@/bubble/node/material/material";
-import {Shader} from "@/bubble/shader/shader";
+import {Shader} from "@/bubble/resource/shader";
 import mesh_shader from "@/bubble/shader/mesh/mesh_shader";
 import colors, {type Color3f, type Color4f} from "@/bubble/math/colors";
 import {createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
-import {Texture2D} from "@/bubble/resource/primitive/texture";
+import {Texture2D} from "@/bubble/resource/texture";
 
 export class StandardMaterial extends Material {
     constructor() {

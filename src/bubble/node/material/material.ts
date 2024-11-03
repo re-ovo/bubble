@@ -1,28 +1,16 @@
-import type {Shader} from "@/bubble/shader/shader";
-import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
-import {BufferResource} from "@/bubble/resource/primitive/buffer";
-import type {Texture} from "@/bubble/resource/primitive/texture";
+import type {Shader} from "@/bubble/resource/shader";
+import type {Texture} from "@/bubble/resource/texture";
 
 // Material -> ShaderModule/Pipeline/BindingGroups
-export class Material implements Versioned {
-    version: number = 0;
-
+export class Material {
     shader: Shader;
-    uniforms: Map<string, any> = new Map();
+    uniforms: Map<string, any>;
     textures: Map<string, Texture>;
-
-    blendMode: MaterialBlendMode = MaterialBlendMode.OPAQUE;
-    doubleSided: boolean = false;
 
     constructor(shader: Shader) {
         this.shader = shader;
         this.uniforms = new Map();
         this.textures = new Map();
-    }
-
-    setNeedsUpdate() {
-        this.version++;
-        notifyUpdate(this);
     }
 
     addTexture(variableName: string, texture: Texture) {

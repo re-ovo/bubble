@@ -1,4 +1,4 @@
-import {wgsl} from "@/bubble/shader/processor";
+import {wgsl} from "@/bubble/resource/shader/processor";
 
 let _shaderModule: GPUShaderModule | null = null
 let _sampler: GPUSampler | null = null;

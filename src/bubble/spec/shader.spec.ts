@@ -1,8 +1,8 @@
-import {wgsl} from "@/bubble/shader/processor";
+import {wgsl} from "@/bubble/resource/shader/processor";
 import {describe, expect, it} from "vitest";
-import {autoBinding, autoLocation, providerWGSLCounterScope} from "@/bubble/shader/counter";
+import {autoBinding, autoLocation, providerWGSLCounterScope} from "@/bubble/resource/shader/shader_counter";
 import camera_input from "@/bubble/shader/common/camera_input";
-import {Shader} from "@/bubble/shader/shader";
+import {Shader} from "@/bubble/resource/shader";
 
 describe("WGSL Shader Processor", () => {
     it("test shader interpolation", () => {

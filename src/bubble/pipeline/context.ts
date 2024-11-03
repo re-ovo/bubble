@@ -1,18 +1,15 @@
-import {ResourceManager} from "@/bubble/resource/resource_manager";
 import {Entity, type Scene, Transform} from "@/bubble/core/system";
 import type {Camera} from "@/bubble/node/camera/camera";
-import {VersionedCache} from "@/bubble/resource/versioned";
-import {BufferResource} from "@/bubble/resource/primitive/buffer";
-import type {Material} from "@/bubble/node/material/material";
+import Allocator from "@/bubble/resource/allocator";
 
 /**
  * 可编程渲染上下文
  *
  * 提供了一系列的方法来操作渲染流程
  */
-export class RenderContext {
+class RenderContext {
     public readonly device: GPUDevice;
-    public readonly resourceManager: ResourceManager;
+    public readonly allocator: Allocator;
 
     private _targetView: GPUTextureView | null = null;
     private _targetFormat: GPUTextureFormat | null = null;
@@ -25,7 +22,7 @@ export class RenderContext {
 
     constructor(device: GPUDevice) {
         this.device = device
-        this.resourceManager = new ResourceManager(this);
+        this.allocator = new Allocator(this)
         this._commandEncoder = this.device.createCommandEncoder();
     }
 
@@ -111,69 +108,71 @@ export class RenderContext {
         this.computePassEncoder.end();
     }
 
-    private _cameraCache = new VersionedCache<Camera, BufferResource>()
-    private _cameraBuffer: BufferResource | null = null
-    get cameraBuffer() {
-        if(!this._cameraBuffer) {
-            throw new Error("Camera buffer not set, did you forget to setup camera?");
-        }
-        return this._cameraBuffer
-    }
-
-    setupCamera(camera: Camera) {
-        let buffer = this._cameraCache.get(camera)
-        const entity = camera.parent!.entity!
-        let transform = entity.getComponent(Transform)!
-        if(!buffer) {
-            const buf = new BufferResource(
-                "CameraInput",
-                GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            )
-            buf.setSize(192) // 64(mat4) + 64(mat4) + 64(vec3, padding)
-            buf.setFloat32Array(0, camera.projectionMatrix)
-            buf.setFloat32Array(64, transform.transformMatrixInverse)
-            buf.setFloat32Array(128, transform.position)
-            buffer = {
-                value: buf,
-                version: [camera.version, transform.version]
-            }
-            this._cameraCache.set(camera, buf, buffer.version)
-        }
-        const currentVersion = buffer.version as number[]
-        if(currentVersion[0] !== camera.version || currentVersion[1] !== transform.version) {
-            buffer.value.setFloat32Array(0, camera.projectionMatrix)
-            buffer.value.setFloat32Array(64, transform.transformMatrixInverse)
-            buffer.value.setFloat32Array(128, transform.position)
-            buffer.version = [camera.version, transform.version]
-        }
-        this._cameraBuffer = buffer.value
-        return buffer.value
-    }
-
-    private _transformCache = new VersionedCache<Transform, BufferResource>()
-
-    setupModel(entity: Entity) {
-        const transform = entity.getComponent(Transform)!
-        let cached = this._transformCache.get(transform)
-        if(!cached) {
-            const buf = new BufferResource(
-                "ModelInfo",
-                 GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            )
-            buf.setSize(128)
-            buf.setFloat32Array(0, transform.transformMatrix) // model matrix in MVP
-            buf.setFloat32Array(64, transform.transformMatrixInverse) // model matrix inverse
-            cached = {
-                value: buf,
-                version: transform.version
-            }
-            this._transformCache.set(transform, buf, cached.version)
-        }
-        if(cached.version !== transform.version) {
-            cached.value.setFloat32Array(0, transform.transformMatrix)
-            cached.value.setFloat32Array(64, transform.transformMatrixInverse)
-            cached.version = transform.version
-        }
-        return cached.value
-    }
+    // private _cameraCache = new VersionedCache<Camera, BufferResource>()
+    // private _cameraBuffer: BufferResource | null = null
+    // get cameraBuffer() {
+    //     if (!this._cameraBuffer) {
+    //         throw new Error("Camera buffer not set, did you forget to setup camera?");
+    //     }
+    //     return this._cameraBuffer
+    // }
+    //
+    // setupCamera(camera: Camera) {
+    //     let buffer = this._cameraCache.get(camera)
+    //     const entity = camera.parent!.entity!
+    //     let transform = entity.getComponent(Transform)!
+    //     if (!buffer) {
+    //         const buf = new BufferResource(
+    //             "CameraInput",
+    //             GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    //         )
+    //         buf.setSize(192) // 64(mat4) + 64(mat4) + 64(vec3, padding)
+    //         buf.setFloat32Array(0, camera.projectionMatrix)
+    //         buf.setFloat32Array(64, transform.transformMatrixInverse)
+    //         buf.setFloat32Array(128, transform.position)
+    //         buffer = {
+    //             value: buf,
+    //             version: [camera.version, transform.version]
+    //         }
+    //         this._cameraCache.set(camera, buf, buffer.version)
+    //     }
+    //     const currentVersion = buffer.version as number[]
+    //     if (currentVersion[0] !== camera.version || currentVersion[1] !== transform.version) {
+    //         buffer.value.setFloat32Array(0, camera.projectionMatrix)
+    //         buffer.value.setFloat32Array(64, transform.transformMatrixInverse)
+    //         buffer.value.setFloat32Array(128, transform.position)
+    //         buffer.version = [camera.version, transform.version]
+    //     }
+    //     this._cameraBuffer = buffer.value
+    //     return buffer.value
+    // }
+    //
+    // private _transformCache = new VersionedCache<Transform, BufferResource>()
+    //
+    // setupModel(entity: Entity) {
+    //     const transform = entity.getComponent(Transform)!
+    //     let cached = this._transformCache.get(transform)
+    //     if (!cached) {
+    //         const buf = new BufferResource(
+    //             "ModelInfo",
+    //             GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    //         )
+    //         buf.setSize(128)
+    //         buf.setFloat32Array(0, transform.transformMatrix) // model matrix in MVP
+    //         buf.setFloat32Array(64, transform.transformMatrixInverse) // model matrix inverse
+    //         cached = {
+    //             value: buf,
+    //             version: transform.version
+    //         }
+    //         this._transformCache.set(transform, buf, cached.version)
+    //     }
+    //     if (cached.version !== transform.version) {
+    //         cached.value.setFloat32Array(0, transform.transformMatrix)
+    //         cached.value.setFloat32Array(64, transform.transformMatrixInverse)
+    //         cached.version = transform.version
+    //     }
+    //     return cached.value
+    // }
 }
+
+export default RenderContext;

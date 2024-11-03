@@ -1,6 +1,5 @@
 import {TemplateInfo, TypeInfo, VariableInfo, WgslReflect} from "wgsl_reflect";
-import type {Versioned} from "@/bubble/resource/versioned";
-import {providerWGSLCounterScope} from "@/bubble/shader/counter";
+import {providerWGSLCounterScope} from "@/bubble/resource/shader/shader_counter";
 import {makeShaderDataDefinitions, type VariableDefinitions} from "webgpu-utils";
 
 /**
@@ -8,7 +7,7 @@ import {makeShaderDataDefinitions, type VariableDefinitions} from "webgpu-utils"
  */
 export type ShaderSourceProvider = string | ((params: Record<any, any>) => string);
 
-export class Shader implements Versioned {
+export class Shader {
     private provider: ShaderSourceProvider;
     private params: Record<string, any> = {};
 
@@ -18,12 +17,6 @@ export class Shader implements Versioned {
     private _bindingGroups: BindingGroupMetadata[] = [];
     private _uniforms: VariableDefinitions = {};
     private _storages: VariableDefinitions = {};
-
-    version: number = 0;
-
-    setNeedsUpdate() {
-        this.version++;
-    }
 
     constructor(sourceProvider: ShaderSourceProvider, params: Record<string, any> = {}) {
         this.provider = sourceProvider;
@@ -61,7 +54,6 @@ export class Shader implements Versioned {
         const shaderData = makeShaderDataDefinitions(this._code);
         this._uniforms = shaderData.uniforms;
         this._storages = shaderData.storages;
-        this.setNeedsUpdate(); // need to recompile shader module
     }
 
     get code(): string {

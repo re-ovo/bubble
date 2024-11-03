@@ -1,4 +1,4 @@
-import {IndexAttribute, VertexAttribute} from "@/bubble/resource/primitive/attribute";
+import {IndexAttribute, VertexAttribute} from "@/bubble/resource/attribute";
 
 export class Mesh {
     readonly attributes: Map<string, VertexAttribute> = new Map();

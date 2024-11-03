@@ -1,4 +1,4 @@
-import {wgsl} from "@/bubble/shader/processor";
+import {wgsl} from "@/bubble/resource/shader/processor";
 
 export function providerWGSLCounterScope<T>(scope: () => T): T {
     if(counterContext != null) {
