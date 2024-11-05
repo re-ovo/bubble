@@ -1,5 +1,5 @@
 import type {TypedArray} from "@/bubble/core/types";
-import {type Resource, resourceVersionSymbol} from "@/bubble/resource/resource";
+import {type Resource, resourceVersionSymbol} from "@/bubble/resource/tracker";
 
 export class VertexAttribute implements Resource {
     [resourceVersionSymbol]: number = 0;

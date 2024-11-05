@@ -1,4 +1,4 @@
-import {type Resource, resourceVersionSymbol} from "@/bubble/resource/resource";
+import {type Resource, resourceVersionSymbol} from "@/bubble/resource/tracker";
 
 export class Buffer implements Resource {
     [resourceVersionSymbol]: number = 0;

@@ -1,5 +1,5 @@
 import {type Texture, Texture2D} from "@/bubble/resource/texture";
-import {getResourceVersion} from "@/bubble/resource/resource";
+import {getResourceVersion} from "@/bubble/resource/tracker";
 import {IndexAttribute, type VertexAttribute} from "@/bubble/resource/attribute";
 import type RenderContext from "@/bubble/pipeline/context";
 
