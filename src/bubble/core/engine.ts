@@ -91,11 +91,11 @@ export class RenderEngine {
             this._canvasSize!,
             scene
         )
-        if (Array.isArray(camera)) {
-            this._renderPipeline?.render(this._renderContext!, camera);
-        } else {
-            this._renderPipeline?.render(this._renderContext!, [camera]);
-        }
+        // if (Array.isArray(camera)) {
+        //     this._renderPipeline?.render(this._renderContext!, camera);
+        // } else {
+        //     this._renderPipeline?.render(this._renderContext!, [camera]);
+        // }
     }
 
     // 更新场景
@@ -109,13 +109,12 @@ export class RenderEngine {
             for (let [_, component] of entity.components) {
                 component.update?.(this.clock.deltaTime);
             }
+        }
 
-            // 更新Object的Transform(Component), 特殊Component
-            if (this.transformVersionMap.get(entity.getComponent(Transform)!)?.version !== entity.getComponent(Transform)!.version) {
-                this.transformVersionMap.set(entity.getComponent(Transform)!, undefined); // mark as updated
-                entity.getComponent(Transform)!.updateMatrix()
-                // 同时还需要更新其子节点
-                scene.getChildren(entity, true).forEach(child => child.getComponent(Transform)!.updateMatrix());
+        // PostUpdate
+        for (let entity of scene.objects) {
+            for (let [_, component] of entity.components) {
+                component.postUpdate?.();
             }
         }
     }

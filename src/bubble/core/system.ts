@@ -1,6 +1,6 @@
 import type {Disposable} from "@/bubble/core/dispose";
-import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {mat4, type Mat4, type Quat, quat, type RotationOrder, vec3, type Vec3} from "wgpu-matrix";
+import {track, type Tracked, Tracker, TrackState} from "@/bubble/resource/tracker";
 
 export class Scene implements ComponentHolder, Disposable {
     readonly objects: Entity[];
@@ -156,37 +156,64 @@ export class Component {
      * @param deltaTime 两帧之间的时间间隔
      */
     update?(deltaTime: number): void;
+
+
+    /**
+     * 更新逻辑之后
+     *
+     * 这里通常执行一些dirty数据的更新操作，不应该再产生新的dirty数据了
+     */
+    postUpdate?(): void;
 }
 
-export class Transform extends Component implements Versioned {
-    version: number = 0;
-
+export class Transform extends Component {
     parentTransform: Transform | null = null;
 
-    position: Vec3; // this is local position
-    rotation: Quat;
-    scale: Vec3;
+    position: Tracked<Vec3>; // this is local position
+    rotation: Tracked<Quat>;
+    scale: Tracked<Vec3>;
 
     positionMatrix: Mat4;
     rotationMatrix: Mat4;
     scaleMatrix: Mat4;
 
-    transformMatrix: Mat4;
-    localTransformMatrix: Mat4;
-    transformMatrixInverse: Mat4;
+    transformMatrix: Tracked<Mat4>;
+    localTransformMatrix: Tracked<Mat4>;
+    transformMatrixInverse: Tracked<Mat4>;
+
+    private _tracker = new Tracker<Float32Array>();
 
     constructor(parent?: ComponentHolder) {
         super(parent);
-        this.position = vec3.create(0, 0, 0);
-        this.rotation = quat.identity();
-        this.scale = vec3.create(1, 1, 1);
+
+        this.position = track(vec3.create(0, 0, 0));
+        this.rotation = track(quat.identity());
+        this.scale = track(vec3.create(1, 1, 1));
+
         this.positionMatrix = mat4.create();
         this.rotationMatrix = mat4.create();
         this.scaleMatrix = mat4.create();
-        this.localTransformMatrix = mat4.create();
-        this.transformMatrix = mat4.create();
-        this.transformMatrixInverse = mat4.create();
+
+        this.localTransformMatrix = track(mat4.create());
+        this.transformMatrix = track(mat4.create());
+        this.transformMatrixInverse = track(mat4.create());
+
         this.updateMatrix();
+    }
+
+
+    postUpdate() {
+        const [positionState, rotationState, scaleState] = this._tracker.getTrackStates(this.position, this.rotation, this.scale);
+
+        if (positionState !== TrackState.FRESH || rotationState !== TrackState.FRESH || scaleState !== TrackState.FRESH) {
+            this.updateMatrix();
+            this.entity?.getChildren(true).forEach(child => {
+                // update children transform recursively
+                child.getComponent(Transform)!.updateMatrix();
+            })
+            this._tracker.markFresh(this.position, this.rotation, this.scale);
+            console.log("update matrix due to transform change");
+        }
     }
 
     updateMatrix() {
@@ -215,11 +242,6 @@ export class Transform extends Component implements Versioned {
         mat4.inverse(this.transformMatrix, this.transformMatrixInverse);
     }
 
-    setNeedsUpdate() {
-        this.version++;
-        notifyUpdate(this);
-    }
-
     // 返回指向摄像机前方的向量，不受旋转影响
     get forwardDirection(): Vec3 {
         // 默认指向z轴负方向
@@ -243,35 +265,26 @@ export class Transform extends Component implements Versioned {
 
     setPosition(position: Vec3): Transform {
         vec3.copy(position, this.position);
-        this.setNeedsUpdate()
         return this;
     }
 
     setEulerAngle(rotation: Vec3, order: RotationOrder): Transform {
         if (rotation.length !== 3) throw new Error("Invalid rotation length");
         quat.fromEuler(rotation[0], rotation[1], rotation[2], order, this.rotation);
-        this.setNeedsUpdate()
         return this;
     }
 
     setRotation(quaternion: Quat): Transform {
         if (quaternion.length !== 4) throw new Error("Invalid quaternion length");
         quat.copy(quaternion, this.rotation);
-        this.setNeedsUpdate()
         return this
     }
 
     setScale(scale: Vec3): Transform {
         vec3.copy(scale, this.scale);
-        this.setNeedsUpdate()
         return this;
     }
 
-    rotateEulerAngles(eulerAngles: Vec3): Transform {
-        throw new Error("Not implemented");
-        this.setNeedsUpdate()
-        return this;
-    }
 
     private _rotationYaw = quat.identity();
     private _rotationPitch = quat.identity();
@@ -282,13 +295,10 @@ export class Transform extends Component implements Versioned {
 
         quat.mul(this._rotationYaw, this.rotation, this.rotation);
         quat.mul(this.rotation, this._rotationPitch, this.rotation);
-
-        this.setNeedsUpdate()
     }
 
     translate(translation: Vec3): Transform {
         vec3.add(this.position, translation, this.position);
-        this.setNeedsUpdate()
         return this;
     }
 
@@ -297,7 +307,7 @@ export class Transform extends Component implements Versioned {
 
         // extract scale
         mat4.getScaling(copy, this.scale);
-        if(mat4.determinant(copy) < 0) {
+        if (mat4.determinant(copy) < 0) {
             this.scale[0] *= -1;
         }
 
@@ -324,7 +334,6 @@ export class Transform extends Component implements Versioned {
         // extract rotation
         quat.fromMat(copy, this.rotation);
 
-        this.setNeedsUpdate()
         return this;
     }
 }

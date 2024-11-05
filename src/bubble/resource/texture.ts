@@ -1,8 +1,4 @@
-import {type Resource, resourceVersionSymbol} from "@/bubble/resource/tracker";
-
-export abstract class Texture implements Resource {
-    [resourceVersionSymbol]: number = 0;
-
+export abstract class Texture {
     format: GPUTextureFormat;
     minFilter: GPUFilterMode = 'linear';
     magFilter: GPUFilterMode = 'linear';

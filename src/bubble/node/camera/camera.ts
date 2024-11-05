@@ -1,45 +1,40 @@
 import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
-import {notifyUpdate, type Versioned} from "@/bubble/resource/versioned";
 import {Component} from "@/bubble/core/system";
+import {type Tracked, Tracker, TrackState} from "@/bubble/resource/tracker";
+import {track} from "@/bubble/resource/tracker";
 
 export class CameraComponent extends Component {
-    private _camera: Camera | null = null;
-    private _previousVersion: number = -1;
+    private _camera: Tracked<Camera> | null = null;
+    private _cameraTracker = new Tracker<Camera>();
 
     get camera(): Camera | null {
         return this._camera;
     }
 
     set camera(camera: Camera) {
-        this._camera = camera;
+        this._camera = track(camera);
         camera.parent = this;
     }
 
     update(deltaTime: number) {
-        if (!this.camera) throw new Error("Camera not set in CameraComponent, did you forget to add?");
+        if (!this._camera) throw new Error("Camera not set in CameraComponent, did you forget to add?");
 
-        // Automatically update the projection matrix if the camera has changed
-        if(this._previousVersion !== this.camera.version) {
-            console.log("Updating camera projection matrix");
-            this.camera.updateProjectionMatrix();
-            this._previousVersion = this.camera.version;
+        const cameraState = this._cameraTracker.getTrackState(this._camera);
+        if (cameraState !== TrackState.FRESH) {
+            console.log("Updating camera projection matrix", this._camera.updateProjectionMatrix);
+            this._camera.updateProjectionMatrix();
+            this._cameraTracker.markFresh(this._camera);
         }
     }
 }
 
-export abstract class Camera implements Versioned {
-    version: number = 0;
+export abstract class Camera {
     parent: CameraComponent | null = null;
 
-    abstract projectionMatrix: Mat4;
+    abstract readonly projectionMatrix: Tracked<Mat4>;
 
     abstract updateProjectionMatrix(): void;
-
-    setNeedsUpdate() {
-        this.version++;
-        notifyUpdate(this);
-    }
 }
 
 export class PerspectiveCamera extends Camera {
@@ -48,7 +43,7 @@ export class PerspectiveCamera extends Camera {
     near: number;
     far: number;
 
-    projectionMatrix: Mat4;
+    readonly projectionMatrix: Tracked<Mat4>;
 
     constructor(
         fov: number,
@@ -63,19 +58,18 @@ export class PerspectiveCamera extends Camera {
         this.near = near;
         this.far = far;
 
-        this.projectionMatrix = mat4.create();
+        this.projectionMatrix = track(mat4.create());
         this.updateProjectionMatrix();
     }
 
     updateProjectionMatrix() {
-        this.projectionMatrix = mat4.perspective(
+        mat4.perspective(
             angleToRadians(this.fov),
             this.aspect,
             this.near,
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
-        this.setNeedsUpdate()
     }
 }
 
@@ -87,7 +81,7 @@ export class OrthographicCamera extends Camera {
     near: number;
     far: number;
 
-    projectionMatrix: Mat4;
+    readonly projectionMatrix: Tracked<Mat4>;
 
     constructor(
         left: number,
@@ -106,12 +100,12 @@ export class OrthographicCamera extends Camera {
         this.near = near;
         this.far = far;
 
-        this.projectionMatrix = mat4.create();
+        this.projectionMatrix = track(mat4.create());
         this.updateProjectionMatrix();
     }
 
     updateProjectionMatrix() {
-        this.projectionMatrix = mat4.ortho(
+        mat4.ortho(
             this.left,
             this.right,
             this.bottom,
@@ -120,7 +114,6 @@ export class OrthographicCamera extends Camera {
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
-        this.setNeedsUpdate()
     }
 }
 

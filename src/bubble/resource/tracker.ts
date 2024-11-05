@@ -6,24 +6,22 @@ export type Tracked<T extends object> = T & {
 
 function track<T extends object>(resource: T): Tracked<T> {
     if (isTracked(resource)) {
+        console.warn("Resource is already tracked:", resource);
         return resource;
     }
 
-    const trackedResource: Tracked<T> = {
-        ...resource,
-        [resourceVersionSymbol]: 0,
-    }
-
-    // make resourceVersionSymbol not enumerable
+    const trackedResource: Tracked<T> = resource as Tracked<T>;
     Object.defineProperty(trackedResource, resourceVersionSymbol, {
         enumerable: false,
+        value: 0,
+        writable: true
     });
 
     return new Proxy(trackedResource, {
         set(target, property, value) {
             target[resourceVersionSymbol]++;
             return Reflect.set(target, property, value)
-        }
+        },
     })
 }
 
@@ -57,21 +55,20 @@ class Tracker<T extends object> {
         return TrackState.STALE;
     }
 
-    getTrackStateAndMarkFresh(resource: Tracked<T>): TrackState {
-        const state = this.getTrackState(resource);
-        this.markFresh(resource);
-        return state;
+    getTrackStates(...resources: Tracked<T>[]): TrackState[] {
+        return resources.map(resource => this.getTrackState(resource));
     }
 
-    markFresh(resource: Tracked<T>) {
-        this._versionMap.set(resource, resource[resourceVersionSymbol]);
+    markFresh(...resources: Tracked<T>[]) {
+        resources.forEach(resource => {
+            this._versionMap.set(resource, resource[resourceVersionSymbol]);
+        });
     }
 
     discard(resource: Tracked<T>) {
         this._versionMap.delete(resource);
     }
 }
-
 
 
 export {

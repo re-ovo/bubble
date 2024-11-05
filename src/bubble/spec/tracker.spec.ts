@@ -37,14 +37,6 @@ describe('Tracking System', () => {
         expect(tracker.getTrackState(trackedResource)).toBe(TrackState.STALE);
     });
 
-    it('should mark resource as fresh and return previous state', () => {
-        tracker.markFresh(trackedResource);
-        trackedResource.name = 'Yet Another Update';
-        const state = tracker.getTrackStateAndMarkFresh(trackedResource);
-        expect(state).toBe(TrackState.STALE);
-        expect(tracker.getTrackState(trackedResource)).toBe(TrackState.FRESH);
-    });
-
     it('should discard tracking information', () => {
         tracker.markFresh(trackedResource);
         tracker.discard(trackedResource);
