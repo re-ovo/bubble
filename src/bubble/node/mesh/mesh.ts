@@ -1,41 +1,49 @@
 import {IndexAttribute, VertexAttribute} from "@/bubble/resource/attribute";
+import {track, type Tracked} from "@/bubble/resource/tracker";
 
 export class Mesh {
-    readonly attributes: Map<string, VertexAttribute> = new Map();
-    indices: IndexAttribute | null = null;
+    private readonly _attributes: Tracked<Map<string, VertexAttribute>>
+    private _indices: Tracked<IndexAttribute> | null = null;
     drawCount: number = 0;
 
+    constructor() {
+        this._attributes = track(new Map());
+    }
+
     addAttribute<T extends VertexAttribute>(name: string, attribute: T) {
-        if (this.attributes.has(name)) {
+        if (this._attributes.has(name)) {
             throw new Error(`Attribute ${name} already exists.`);
         }
-        this.attributes.set(name, attribute);
+        this._attributes.set(name, attribute);
         this.computeVertexCount();
     }
 
     removeAttribute(name: string) {
-        this.attributes.delete(name);
+        this._attributes.delete(name);
     }
 
     getAttribute<T extends VertexAttribute>(name: string): T | null {
-        return this.attributes.get(name) as T;
+        return this._attributes.get(name) as T;
     }
 
     hasAttribute(name: string): boolean {
-        return this.attributes.has(name);
+        return this._attributes.has(name);
     }
 
     setIndices(indices: Uint16Array | Uint32Array) {
-        this.indices = new IndexAttribute(indices);
-
+        this._indices = track(new IndexAttribute(indices));
         this.computeVertexCount();
+    }
+
+    get indices(): Tracked<IndexAttribute> | null {
+        return this._indices;
     }
 
     computeVertexCount() {
         if (this.indices) {
             this.drawCount = this.indices.count;
         } else {
-            const firstAttribute = this.attributes.values().next().value
+            const firstAttribute = this._attributes.values().next().value
             this.drawCount = firstAttribute.data.length / firstAttribute.itemSize;
         }
     }
