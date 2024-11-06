@@ -26,6 +26,12 @@ export type Tracked<T extends object> = T & {
     [resourceVersionSymbol]: number;
 }
 
+/**
+ * Tracks an object by adding a version number to it.
+ *
+ * @param resource The object to track.
+ * @param delegate An optional delegate object to forward property changes to.
+ */
 function track<T extends object>(resource: T, delegate?: Tracked<any>): Tracked<T> {
     if (isTracked(resource)) {
         console.warn("Resource is already tracked:", resource);
@@ -83,6 +89,10 @@ function getTrackVersion<T extends object>(trackedResource: Tracked<T>): number 
 
 function resetTrackVersion<T extends object>(trackedResource: Tracked<T>) {
     trackedResource[resourceVersionSymbol] = 0;
+}
+
+function incrementTrackVersion<T extends object>(trackedResource: Tracked<T>) {
+    trackedResource[resourceVersionSymbol]++;
 }
 
 enum TrackState {
