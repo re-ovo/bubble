@@ -1,32 +1,26 @@
 export abstract class Texture {
     format: GPUTextureFormat;
-    minFilter: GPUFilterMode = 'linear';
-    magFilter: GPUFilterMode = 'linear';
+    size: GPUExtent3D;
 
     protected constructor(
+        size: GPUExtent3D,
         format?: GPUTextureFormat,
     ) {
-        this.format = format ?? 'rgba8unorm';
+        this.size = size;
+        this.format = format ?? 'rgba8unorm-srgb';
     }
 }
 
 export class Texture2D extends Texture {
     data: ImageBitmap | ImageData;
 
-    width: number;
-    height: number;
-
-    addressModeU: GPUAddressMode = 'repeat';
-    addressModeV: GPUAddressMode = 'repeat';
-
     constructor(
         data: ImageBitmap | ImageData,
-        width: number, height: number,
+        size: GPUExtent3D,
         format?: GPUTextureFormat,
     ) {
-        super(format);
-        this.width = width;
-        this.height = height;
+        super(size, format);
         this.data = data;
     }
 }
+

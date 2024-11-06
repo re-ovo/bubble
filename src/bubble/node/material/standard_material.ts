@@ -77,48 +77,36 @@ export class StandardMaterial extends Material {
 
 const defaultBaseColor = new Texture2D(
     createImageBitmapOfColor(1, 1, '#FFFFFF'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
 const defaultNormalMap = new Texture2D(
     createImageBitmapOfColor(1, 1, '#8080FF'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
 const defaultMetallicMap = new Texture2D(
     createImageBitmapOfColor(1, 1, '#FFFFFF'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
 const defaultRoughnessMap = new Texture2D(
     createImageBitmapOfColor(1, 1, '#FFFFFF'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
 const defaultEmissiveMap = new Texture2D(
     createImageBitmapOfColor(1, 1, '#000000'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )
 
 const defaultOcclusionMap = new Texture2D(
     createImageBitmapOfColor(1, 1, '#FFFFFF'),
-    1,
-    1,
+    [1, 1],
     'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
 )

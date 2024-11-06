@@ -1,16 +1,20 @@
 import type {Shader} from "@/bubble/resource/shader";
 import type {Texture} from "@/bubble/resource/texture";
+import type {Tracked} from "@/bubble/resource/tracker";
+import {track} from "@/bubble/resource/tracker";
 
 // Material -> ShaderModule/Pipeline/BindingGroups
 export class Material {
-    shader: Shader;
-    uniforms: Map<string, any>;
-    textures: Map<string, Texture>;
+    readonly shader: Tracked<Shader>;
+    readonly uniforms: Tracked<Map<string, any>>;
+    readonly textures: Tracked<Map<string, Texture>>;
+    readonly options: Tracked<MaterialOptions>;
 
     constructor(shader: Shader) {
-        this.shader = shader;
-        this.uniforms = new Map();
-        this.textures = new Map();
+        this.shader = track(shader);
+        this.uniforms = track(new Map());
+        this.textures = track(new Map());
+        this.options = track(new MaterialOptions());
     }
 
     addTexture(variableName: string, texture: Texture) {
@@ -52,6 +56,12 @@ export class Material {
     removeUniform(name: string) {
         this.uniforms.delete(name);
     }
+}
+
+export class MaterialOptions {
+    blendMode: MaterialBlendMode = MaterialBlendMode.OPAQUE;
+    cullMode: GPUCullMode = 'back';
+    depthWrite: boolean = true;
 }
 
 export enum MaterialBlendMode {
