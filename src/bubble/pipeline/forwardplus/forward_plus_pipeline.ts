@@ -1,9 +1,9 @@
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import type {Camera} from "@/bubble/node/camera/camera";
-import type {RenderContext} from "@/bubble/pipeline/context";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
 import type {Entity} from "@/bubble/core/system";
+import type RenderContext from "@/bubble/pipeline/context";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     render(context: RenderContext, cameras: Camera[]): void {

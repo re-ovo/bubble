@@ -1,6 +1,6 @@
 import type {Camera} from "@/bubble/node/camera/camera";
 import type {Disposable} from "@/bubble/core/dispose";
-import type {RenderContext} from "@/bubble/pipeline/context";
+import type RenderContext from "@/bubble/pipeline/context";
 
 /**
  * 可编程渲染管线
