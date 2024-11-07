@@ -1,7 +1,7 @@
 export const resourceVersionSymbol = Symbol('resourceVersion');
 
 export type Tracked<T extends object> = {
-    [P in keyof T]: T[P] extends object ? MaybeTracked<T[P]> : T[P];
+    [P in keyof T]: T[P] extends object ? Tracked<T[P]> : T[P];
 } & {
     [resourceVersionSymbol]: number;
 };
@@ -68,6 +68,10 @@ function incrementTrackVersion<T extends object>(trackedResource: Tracked<T>) {
     trackedResource[resourceVersionSymbol]++;
 }
 
+function unwrapTracked<T extends object>(trackedResource: Tracked<T>): T {
+    return trackedResource as T;
+}
+
 enum TrackState {
     NOT_TRACKED,
     STALE,
@@ -77,31 +81,35 @@ enum TrackState {
 class Tracker<T extends object> {
     private _versionMap = new WeakMap<Tracked<T>, number>();
 
-    getTrackState(resource: Tracked<T>): TrackState {
-        const version = this._versionMap.get(resource);
+    getTrackState(resource: MaybeTracked<T>): TrackState {
+        const version = this._versionMap.get(resource as Tracked<T>);
         if (version === undefined) {
             return TrackState.NOT_TRACKED;
         }
 
-        if (version === resource[resourceVersionSymbol]) {
+        const trackVersion = getTrackVersion(resource);
+        if (version === trackVersion) {
             return TrackState.FRESH;
         }
 
         return TrackState.STALE;
     }
 
-    getTrackStates(...resources: Tracked<T>[]): TrackState[] {
+    getTrackStates(...resources: MaybeTracked<T>[]): TrackState[] {
         return resources.map(resource => this.getTrackState(resource));
     }
 
-    markFresh(...resources: Tracked<T>[]) {
+    markFresh(...resources: MaybeTracked<T>[]) {
         resources.forEach(resource => {
+            if (!isTracked(resource)) {
+                throw new Error('Resource is not tracked: ' + resource);
+            }
             this._versionMap.set(resource, resource[resourceVersionSymbol]);
         });
     }
 
-    discard(resource: Tracked<T>) {
-        this._versionMap.delete(resource);
+    discard(resource: MaybeTracked<T>) {
+        this._versionMap.delete(resource as Tracked<T>);
     }
 }
 
@@ -111,6 +119,8 @@ export {
     isTracked,
     resetTrackVersion,
     getTrackVersion,
+    incrementTrackVersion,
+    unwrapTracked,
     Tracker,
     TrackState
 }

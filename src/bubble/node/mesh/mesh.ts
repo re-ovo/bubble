@@ -1,13 +1,13 @@
 import {IndexAttribute, VertexAttribute} from "@/bubble/resource/attribute";
-import {track, type Tracked} from "@/bubble/resource/tracker";
+import {track, type Tracked, unwrapTracked} from "@/bubble/resource/tracker";
 
 export class Mesh {
-    private readonly _attributes: Tracked<Map<string, VertexAttribute>>
-    private _indices: Tracked<IndexAttribute> | null = null;
+    private readonly _attributes: Map<string, VertexAttribute>
+    private _indices: IndexAttribute | null = null;
     drawCount: number = 0;
 
     constructor() {
-        this._attributes = track(new Map());
+        this._attributes = unwrapTracked(track(new Map()));
     }
 
     addAttribute<T extends VertexAttribute>(name: string, attribute: T) {
@@ -31,11 +31,11 @@ export class Mesh {
     }
 
     setIndices(indices: Uint16Array | Uint32Array) {
-        this._indices = track(new IndexAttribute(indices));
+        this._indices = unwrapTracked(track(new IndexAttribute(indices)));
         this.computeVertexCount();
     }
 
-    get indices(): Tracked<IndexAttribute> | null {
+    get indices(): IndexAttribute | null {
         return this._indices;
     }
 

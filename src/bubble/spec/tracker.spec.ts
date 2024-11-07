@@ -6,7 +6,7 @@ import {
     resourceVersionSymbol,
     track,
     Tracker,
-    TrackState
+    TrackState, unwrapTracked
 } from '@/bubble/resource/tracker'; // replace with your actual module path
 
 describe('Tracked Resource', () => {
@@ -71,7 +71,7 @@ describe('Tracked Resource', () => {
         expect(getTrackVersion(trackedBuffer)).toBe(1);
         trackedBuffer.buffer[1] = 5;
         expect(getTrackVersion(trackedBuffer)).toBe(2);
-        trackedBuffer.buffer = new Float32Array([1, 2, 3]);
+        unwrapTracked(trackedBuffer).buffer = new Float32Array([1, 2, 3]);
         expect(getTrackVersion(trackedBuffer)).toBe(3);
     })
 });

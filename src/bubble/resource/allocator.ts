@@ -1,11 +1,17 @@
 import type RenderContext from "@/bubble/pipeline/context";
-import type {VertexAttribute} from "@/bubble/resource/attribute";
+import {IndexAttribute, VertexAttribute} from "@/bubble/resource/attribute";
+import {Tracker, TrackState} from "@/bubble/resource/tracker";
+import {type Texture, Texture2D} from "@/bubble/resource/texture";
+import {generateMipmap, numMipLevels} from "webgpu-utils";
 
 class Allocator {
     private context: RenderContext;
 
-    private vertexBufferCache: Map<VertexAttribute,AllocatedBuffer> = new WeakMap();
-    private vertexBuffer
+    private vertexBufferCache: WeakMap<VertexAttribute | IndexAttribute, AllocatedBuffer> = new WeakMap();
+    private vertexBufferTracker = new Tracker<VertexAttribute | IndexAttribute>();
+
+    private textureCache: WeakMap<Texture, AllocatedTexture> = new WeakMap();
+    private textureTracker = new Tracker<Texture>();
 
     constructor(context: RenderContext) {
         this.context = context;
@@ -15,7 +21,73 @@ class Allocator {
         return this.context.device
     }
 
-    allocateVertexBuffer()
+    allocateVertexBuffer(attribute: VertexAttribute | IndexAttribute): AllocatedBuffer {
+        let allocated = this.vertexBufferCache.get(attribute);
+        if (!allocated) {
+            const usage = attribute instanceof IndexAttribute ? GPUBufferUsage.INDEX : GPUBufferUsage.VERTEX;
+            const buffer = this.device.createBuffer({
+                size: attribute.data.byteLength,
+                usage: usage | GPUBufferUsage.COPY_DST,
+            });
+            allocated = {
+                buffer,
+                offset: 0,
+                size: attribute.data.byteLength,
+            };
+            this.vertexBufferCache.set(attribute, allocated);
+        }
+        const state = this.vertexBufferTracker.getTrackState(attribute);
+        if (state != TrackState.FRESH) {
+            this.device.queue.writeBuffer(allocated.buffer, allocated.offset, attribute.data);
+            this.vertexBufferTracker.markFresh(attribute);
+        }
+        return allocated;
+    }
+
+    allocateTexture(texture: Texture): AllocatedTexture {
+        if (texture instanceof Texture2D) {
+            return this.allocateTexture2d(texture);
+        }
+        throw new Error('Unsupported texture type: ' + texture);
+    }
+
+    private allocateTexture2d(texture2d: Texture2D): AllocatedTexture {
+        let allocated = this.textureCache.get(texture2d);
+        if (!allocated) {
+            const texture = this.device.createTexture({
+                size: texture2d.size,
+                format: texture2d.format,
+                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+                mipLevelCount: numMipLevels(texture2d.size),
+            });
+            const view = texture.createView();
+            const sampler = this.device.createSampler(texture2d.sampler);
+            allocated = {
+                texture,
+                view,
+                sampler,
+            };
+            this.textureCache.set(texture2d, allocated);
+        }
+
+        const state = this.textureTracker.getTrackState(texture2d);
+        if (state != TrackState.FRESH) {
+            this.device.queue.copyExternalImageToTexture(
+                {
+                    source: texture2d.data
+                },
+                {
+                    texture: allocated.texture,
+                    mipLevel: 0,
+                },
+                texture2d.size,
+            )
+            generateMipmap(this.device, allocated.texture)
+            this.textureTracker.markFresh(texture2d);
+        }
+
+        return allocated;
+    }
 }
 
 export default Allocator;
