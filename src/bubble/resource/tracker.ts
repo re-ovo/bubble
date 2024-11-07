@@ -1,10 +1,12 @@
 export const resourceVersionSymbol = Symbol('resourceVersion');
 
 export type Tracked<T extends object> = {
-    [P in keyof T]: T[P] extends object ? Tracked<T[P]> : T[P];
+    [P in keyof T]: T[P] extends object ? MaybeTracked<T[P]> : T[P];
 } & {
     [resourceVersionSymbol]: number;
-}
+};
+
+export type MaybeTracked<T extends object> = T | Tracked<T>;
 
 function track<T extends object>(value: T, delegate?: Tracked<any>): Tracked<T> {
     if (isTracked(value)) {
@@ -43,19 +45,26 @@ function track<T extends object>(value: T, delegate?: Tracked<any>): Tracked<T> 
 }
 
 // @ts-ignore
-function isTracked<T extends object>(value: T): value is Tracked<T> {
+function isTracked<T extends object>(value: MaybeTracked<T>): value is Tracked<T> {
     return (value as any)[resourceVersionSymbol] !== undefined;
 }
 
-function getTrackVersion<T extends object>(trackedResource: Tracked<T>): number {
-    return trackedResource[resourceVersionSymbol];
+function getTrackVersion<T extends object>(trackedResource: MaybeTracked<T>): number {
+    return (trackedResource as Tracked<T>)[resourceVersionSymbol] || 0;
 }
 
 function resetTrackVersion<T extends object>(trackedResource: Tracked<T>) {
-    trackedResource[resourceVersionSymbol] = 0;
+    if (isTracked(trackedResource)) {
+        trackedResource[resourceVersionSymbol] = 0;
+    } else {
+        throw new Error('Resource is not tracked');
+    }
 }
 
 function incrementTrackVersion<T extends object>(trackedResource: Tracked<T>) {
+    if (!isTracked(trackedResource)) {
+        throw new Error('Resource is not tracked');
+    }
     trackedResource[resourceVersionSymbol]++;
 }
 

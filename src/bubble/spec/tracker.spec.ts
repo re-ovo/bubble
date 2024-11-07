@@ -58,6 +58,22 @@ describe('Tracked Resource', () => {
         expect(getTrackVersion(trackedResource)).toBe(2);
         expect(getTrackVersion(trackedResource.z)).toBe(2);
     })
+
+    it('should track buffer objects', () => {
+        const buffer = new Float32Array([1, 2, 3]);
+        const wrapper = {
+            buffer: buffer
+        }
+        const trackedBuffer = track(wrapper);
+        resetTrackVersion(trackedBuffer);
+        expect(getTrackVersion(trackedBuffer)).toBe(0);
+        trackedBuffer.buffer[0] = 4;
+        expect(getTrackVersion(trackedBuffer)).toBe(1);
+        trackedBuffer.buffer[1] = 5;
+        expect(getTrackVersion(trackedBuffer)).toBe(2);
+        trackedBuffer.buffer = new Float32Array([1, 2, 3]);
+        expect(getTrackVersion(trackedBuffer)).toBe(3);
+    })
 });
 
 describe('Tracked Resource with Delegate', () => {
