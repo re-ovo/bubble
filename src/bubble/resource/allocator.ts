@@ -7,7 +7,7 @@ import {generateMipmap, numMipLevels} from "webgpu-utils";
 class Allocator {
     private context: RenderContext;
 
-    private vertexBufferCache: WeakMap<VertexAttribute | IndexAttribute, AllocatedBuffer> = new WeakMap();
+    private vertexBufferCache: WeakMap<VertexAttribute | IndexAttribute, AllocatedVertexAttribute> = new WeakMap();
     private vertexBufferTracker = new Tracker<VertexAttribute | IndexAttribute>();
 
     private textureCache: WeakMap<Texture, AllocatedTexture> = new WeakMap();
@@ -21,7 +21,7 @@ class Allocator {
         return this.context.device
     }
 
-    allocateVertexBuffer(attribute: VertexAttribute | IndexAttribute): AllocatedBuffer {
+    allocateVertexBuffer(attribute: VertexAttribute | IndexAttribute): AllocatedVertexAttribute {
         let allocated = this.vertexBufferCache.get(attribute);
         if (!allocated) {
             const usage = attribute instanceof IndexAttribute ? GPUBufferUsage.INDEX : GPUBufferUsage.VERTEX;
@@ -33,6 +33,7 @@ class Allocator {
                 buffer,
                 offset: 0,
                 size: attribute.data.byteLength,
+                stride: attribute.data.BYTES_PER_ELEMENT * attribute.itemSize,
             };
             this.vertexBufferCache.set(attribute, allocated);
         }
