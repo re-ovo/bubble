@@ -7,7 +7,8 @@ import {
     track,
     Tracker,
     TrackState, unwrapTracked
-} from '@/bubble/resource/tracker'; // replace with your actual module path
+} from '@/bubble/resource/tracker';
+import {VertexAttribute} from "@/bubble/resource/attribute"; // replace with your actual module path
 
 describe('Tracked Resource', () => {
     let resource: { x: number, y: number, z: { a: number } };
@@ -73,6 +74,54 @@ describe('Tracked Resource', () => {
         expect(getTrackVersion(trackedBuffer)).toBe(2);
         unwrapTracked(trackedBuffer).buffer = new Float32Array([1, 2, 3]);
         expect(getTrackVersion(trackedBuffer)).toBe(3);
+    })
+
+    it('should track map objects', () => {
+        const map = new Map<string, VertexAttribute>();
+        map.set('position', new VertexAttribute(new Float32Array(12), 3));
+
+        const trackedMap = track(map);
+
+        expect(isTracked(trackedMap), 'trackedMap').toBe(true);
+        expect(isTracked(trackedMap.get('position')!), 'trackedMap.position').toBe(true);
+        expect(isTracked(trackedMap.get('position')!.data), 'trackedMap.position.data').toBe(true);
+
+        resetTrackVersion(trackedMap);
+
+        expect(getTrackVersion(trackedMap)).toBe(0);
+        trackedMap.get('position')!.data[0] = 1;
+        expect(getTrackVersion(trackedMap)).toBe(1);
+        trackedMap.get('position')!.data[1] = 2;
+        expect(getTrackVersion(trackedMap)).toBe(2);
+
+        resetTrackVersion(trackedMap);
+        expect(getTrackVersion(trackedMap)).toBe(0);
+
+        trackedMap.get('position')!.data = new Float32Array(12);
+        expect(getTrackVersion(trackedMap)).toBe(1);
+
+        const data = trackedMap.get('position')!;
+        expect(Reflect.ownKeys(data)).not.toContain(resourceVersionSymbol);
+    })
+
+    it('should track array objects', () => {
+        const array = [{x: 1}, {x: 2}];
+        const trackedArray = track(array);
+
+        expect(isTracked(trackedArray), 'trackedArray').toBe(true);
+        expect(isTracked(trackedArray[0]), 'trackedArray[0]').toBe(true);
+
+        resetTrackVersion(trackedArray);
+
+        expect(getTrackVersion(trackedArray)).toBe(0);
+        trackedArray[0].x = 3;
+        expect(getTrackVersion(trackedArray)).toBe(1);
+
+        unwrapTracked(trackedArray)[0] = {x: 4};
+        expect(getTrackVersion(trackedArray)).toBe(2);
+        expect(getTrackVersion(trackedArray[0])).toBe(2);
+        expect(getTrackVersion(trackedArray[1])).toBe(2);
+        expect(isTracked(trackedArray[0]), 'trackedArray[0]').toBe(true);
     })
 });
 
