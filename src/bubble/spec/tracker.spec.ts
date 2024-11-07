@@ -1,20 +1,20 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {beforeEach, describe, expect, it} from 'vitest';
 import {
-    track,
-    isTracked,
     getTrackVersion,
-    Tracker,
-    TrackState,
+    isTracked,
     resetTrackVersion,
-    resourceVersionSymbol
+    resourceVersionSymbol,
+    track,
+    Tracker,
+    TrackState
 } from '@/bubble/resource/tracker'; // replace with your actual module path
 
 describe('Tracked Resource', () => {
-    let resource: { x: number, y: number };
+    let resource: { x: number, y: number, z: { a: number } };
     let trackedResource: any;
 
     beforeEach(() => {
-        resource = { x: 1, y: 2 };
+        resource = {x: 1, y: 2, z: {a: 3}};
         trackedResource = track(resource);
     });
 
@@ -31,12 +31,33 @@ describe('Tracked Resource', () => {
         expect(isTracked(trackedResource)).toBe(true);
     });
 
-    it('should warn if a resource is already tracked', () => {
-        const consoleWarnSpy = vi.spyOn(console, 'warn');
-        track(trackedResource);
-        expect(consoleWarnSpy).toHaveBeenCalledWith("Resource is already tracked:", trackedResource);
-        consoleWarnSpy.mockRestore();
-    });
+    it('should track nested properties', () => {
+        expect(isTracked(trackedResource.z)).toBe(true);
+    })
+
+    it('should not define version property on nested properties', () => {
+        expect(Reflect.ownKeys(trackedResource.z)).not.toContain(resourceVersionSymbol);
+    })
+
+    it('should update version when a nested property is modified', () => {
+        resetTrackVersion(trackedResource);
+        trackedResource.z.a = 4;
+        expect(getTrackVersion(trackedResource)).toBe(1);
+        expect(getTrackVersion(trackedResource.z)).toBe(1);
+        trackedResource.z.a = 5;
+        expect(getTrackVersion(trackedResource)).toBe(2);
+        expect(getTrackVersion(trackedResource.z)).toBe(2);
+    })
+
+    it('should track nested objects after replacing the object', () => {
+        resetTrackVersion(trackedResource);
+        trackedResource.z = {a: 4};
+        expect(getTrackVersion(trackedResource)).toBe(1);
+        expect(getTrackVersion(trackedResource.z)).toBe(1);
+        trackedResource.z.a = 5;
+        expect(getTrackVersion(trackedResource)).toBe(2);
+        expect(getTrackVersion(trackedResource.z)).toBe(2);
+    })
 });
 
 describe('Tracked Resource with Delegate', () => {
@@ -46,8 +67,8 @@ describe('Tracked Resource with Delegate', () => {
     let trackedDelegate: any;
 
     beforeEach(() => {
-        resource = { x: 1 };
-        delegateResource = { y: 2 };
+        resource = {x: 1};
+        delegateResource = {y: 2};
         trackedDelegate = track(delegateResource);
         trackedResource = track(resource, trackedDelegate);
     });
@@ -79,7 +100,7 @@ describe('Tracker Class', () => {
 
     beforeEach(() => {
         tracker = new Tracker();
-        trackedResource = track({ x: 1 });
+        trackedResource = track({x: 1});
     });
 
     it('should return NOT_TRACKED if resource is not tracked', () => {
@@ -98,7 +119,7 @@ describe('Tracker Class', () => {
     });
 
     it('should update track states for multiple resources', () => {
-        const anotherResource = track({ y: 2 });
+        const anotherResource = track({y: 2});
         tracker.markFresh(trackedResource, anotherResource);
         trackedResource.x = 2;
         expect(tracker.getTrackStates(trackedResource, anotherResource)).toEqual([TrackState.STALE, TrackState.FRESH]);

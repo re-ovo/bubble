@@ -1,86 +1,50 @@
 export const resourceVersionSymbol = Symbol('resourceVersion');
 
-/**
- * A tracked resource is an object that has a version number attached to it.
- *
- * The version number is incremented every time a property of the object is modified.
- *
- * This is useful for tracking changes to resources and determining if they are stale.
- *
- * @example
- * ```ts
- * const trackedResource = track({x: 1, y: 2});
- *
- * console.log(getTrackVersion(trackedResource)); // 0
- *
- * trackedResource.x = 3;
- *
- * console.log(getTrackVersion(trackedResource)); // 1
- *
- * console.log(isTracked(trackedResource)); // true
- * ```
- *
- * @template T The type of the object being tracked.
- */
-export type Tracked<T extends object> = T & {
+export type Tracked<T extends object> = {
+    [P in keyof T]: T[P] extends object ? Tracked<T[P]> : T[P];
+} & {
     [resourceVersionSymbol]: number;
 }
 
-/**
- * Tracks an object by adding a version number to it.
- *
- * @param resource The object to track.
- * @param delegate An optional delegate object to forward property changes to.
- */
-function track<T extends object>(resource: T, delegate?: Tracked<any>): Tracked<T> {
-    if (isTracked(resource)) {
-        console.warn("Resource is already tracked:", resource);
-        return resource;
+function track<T extends object>(value: T, delegate?: Tracked<any>): Tracked<T> {
+    if (isTracked(value)) {
+        return value;
     }
 
-    if(delegate) {
-        const trackedResource: Tracked<T> = resource as Tracked<T>;
-        return new Proxy(trackedResource, {
-            set(target, property, value) {
-                if(property === resourceVersionSymbol) {
-                    console.warn("Cannot set version directly.");
-                    return Reflect.set(delegate, property, value);
-                }
-                delegate[resourceVersionSymbol]++;
-                return Reflect.set(target, property, value)
-            },
-            get(target, property) {
-                if(property === resourceVersionSymbol) {
-                    return delegate[resourceVersionSymbol];
-                }
-                return Reflect.get(target, property);
-            },
-            has(target: T & { [resourceVersionSymbol]: number }, p: string | symbol): boolean {
-                if(p === resourceVersionSymbol) {
-                    return Reflect.has(delegate, p);
-                }
-                return Reflect.has(target, p);
-            },
-        })
-    }
+    const versionObject = delegate || {
+        [resourceVersionSymbol]: 0
+    } as Tracked<T>;
 
-    const trackedResource: Tracked<T> = resource as Tracked<T>;
-    Object.defineProperty(trackedResource, resourceVersionSymbol, {
-        enumerable: false,
-        value: 0,
-        writable: true
-    });
-
-    return new Proxy(trackedResource, {
-        set(target, property, value) {
-            target[resourceVersionSymbol]++;
-            return Reflect.set(target, property, value)
+    const handler: ProxyHandler<Tracked<T>> = {
+        get(target, prop, receiver) {
+            if (prop === resourceVersionSymbol) {
+                return versionObject[resourceVersionSymbol];
+            }
+            const propVal = Reflect.get(target, prop, receiver);
+            if (typeof propVal === 'object' && propVal !== null) {
+                // track nested objects
+                return track(propVal, versionObject);
+            }
         },
-    })
+        set(target, prop, value, receiver) {
+            if (prop === resourceVersionSymbol) {
+                versionObject[resourceVersionSymbol] = value;
+                return true;
+            }
+            if (typeof value === 'object' && value !== null) {
+                value = track(value, versionObject);
+            }
+            versionObject[resourceVersionSymbol]++;
+            return Reflect.set(target, prop, value, receiver);
+        }
+    }
+
+    return new Proxy(value as Tracked<T>, handler);
 }
 
-function isTracked<T extends object>(resource: T): resource is Tracked<T> {
-    return resourceVersionSymbol in resource;
+// @ts-ignore
+function isTracked<T extends object>(value: T): value is Tracked<T> {
+    return (value as any)[resourceVersionSymbol] !== undefined;
 }
 
 function getTrackVersion<T extends object>(trackedResource: Tracked<T>): number {
