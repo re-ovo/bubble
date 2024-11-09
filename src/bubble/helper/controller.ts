@@ -1,15 +1,12 @@
-import {Component, Transform} from "@/bubble/core/system";
 import {vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
+import {Component} from "@/bubble/core/component";
 
 export class FPSController extends Component {
     private readonly pressingKeys = new Set<string>()
 
     moveSpeed = 0.1
 
-    get transform(): Transform {
-        return this.entity!.getComponent(Transform)!;
-    }
 
     init(element: HTMLCanvasElement) {
         element.addEventListener('click', async () => {
@@ -57,7 +54,7 @@ export class FPSController extends Component {
         const yaw = e.movementX * sensitivity;
         const pitch = e.movementY * sensitivity;
 
-        this.transform.rotateYawPitch(angleToRadians(-yaw), angleToRadians(-pitch))
+        this.entity.transform.rotateYawPitch(angleToRadians(-yaw), angleToRadians(-pitch))
     }
 
     onKeydown(e: KeyboardEvent) {
@@ -71,28 +68,28 @@ export class FPSController extends Component {
     }
 
     handleKey(key: string) {
-        const forward = this.transform.forwardDirection
-        const right = this.transform.rightDirection
+        const forward = this.entity.transform.forwardDirection
+        const right = this.entity.transform.rightDirection
         const speed = this.moveSpeed
         switch (key) {
             case 'w':
-                this.transform.translate(vec3.create(forward[0] * speed, 0, forward[2] * speed))
+                this.entity.transform.translate(vec3.create(forward[0] * speed, 0, forward[2] * speed))
                 break;
             case 'a':
-                this.transform.translate(vec3.create(-right[0] * speed, 0, -right[2] * speed))
+                this.entity.transform.translate(vec3.create(-right[0] * speed, 0, -right[2] * speed))
                 break;
             case 's':
-                this.transform.translate(vec3.create(-forward[0] * speed, 0, -forward[2] * speed))
+                this.entity.transform.translate(vec3.create(-forward[0] * speed, 0, -forward[2] * speed))
                 break;
             case 'd':
-                this.transform.translate(vec3.create(right[0] * speed, 0, right[2] * speed))
+                this.entity.transform.translate(vec3.create(right[0] * speed, 0, right[2] * speed))
                 break;
             case ' ': // space
-                this.transform.translate(vec3.create(0, speed, 0))
+                this.entity.transform.translate(vec3.create(0, speed, 0))
                 break;
             case 'Shift':
             case 'q':
-                this.transform.translate(vec3.create(0, -speed, 0))
+                this.entity.transform.translate(vec3.create(0, -speed, 0))
                 break;
         }
     }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import {describe, it, expect} from 'vitest';
 import type {Color4f} from "@/bubble/math/colors";
 import colorUtils from "@/bubble/math/colors";
 
@@ -19,17 +19,17 @@ describe('colorUtils', () => {
     });
 
     it('color4fToHex should convert Color4f array to hex number', () => {
-        const hex: number = colorUtils.color4fToHex([1, 0.3411764705882353, 0.2, 1]);
+        const hex: number = colorUtils.color4fToHex(new Float32Array([1, 0.3411764705882353, 0.2, 1]));
         expect(hex).toBe(0xff5733);
     });
 
     it('srgbToLinear should convert sRGB Color4f to linear Color4f', () => {
-        const linearColor: Color4f = colorUtils.srgbToLinear([0.5, 0.5, 0.5, 1]);
+        const linearColor: Color4f = colorUtils.srgbToLinear(new Float32Array([0.5, 0.5, 0.5, 1]));
         expect(linearColor).toEqual([0.21404114048223255, 0.21404114048223255, 0.21404114048223255, 1]);
     });
 
     it('fromLinear should convert linear Color4f to sRGB Color4f', () => {
-        const srgbColor: Color4f = colorUtils.fromLinear([0.21404114048223255, 0.21404114048223255, 0.21404114048223255, 1]);
+        const srgbColor: Color4f = colorUtils.fromLinear(new Float32Array([0.21404114048223255, 0.21404114048223255, 0.21404114048223255, 1]));
         expect(srgbColor).toEqual([0.5, 0.5, 0.5, 1]);
     });
 });

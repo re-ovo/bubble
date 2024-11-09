@@ -6,7 +6,6 @@ import {
     postProcessGLTF
 } from '@loaders.gl/gltf';
 import {load} from "@loaders.gl/core";
-import {Entity, Transform} from "@/bubble/core/system";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Mesh} from "@/bubble/node/mesh/mesh";
 import {VertexAttribute} from "@/bubble/resource/attribute";
@@ -14,9 +13,11 @@ import {StandardMaterial} from "@/bubble/node/material/standard_material";
 import colors from "@/bubble/math/colors";
 import {mat4, quat, vec3} from "wgpu-matrix";
 import {Texture, Texture2D} from "@/bubble/resource/texture";
-import {convertUint8ArrayToImageBitmap, createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
+import {convertUint8ArrayToImageBitmap, createSolidColorTexture} from "@/bubble/loader/texture_loader";
 import NProgress from "nprogress";
 import {MaterialBlendMode} from "@/bubble/node/material/material";
+import {Entity} from "@/bubble/core/entity";
+import {Transform} from "@/bubble/core/transform";
 
 /**
  * 从 glTF 示例仓库加载模型
@@ -64,9 +65,10 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
     const nodeEntities: Map<GLTFNodePostprocessed, Entity> = new Map()
     const textureCache: Map<number, Texture> = new Map()
 
+
     for (const node of gltf.nodes) {
         // Node Self
-        const nodeEntity = new Entity()
+        const nodeEntity = new Entity(node.name ?? 'Node')
         const nodeTransform = nodeEntity.getComponent(Transform)!
         if (node.matrix) {
             const matrix4 = mat4.create(...node.matrix)
@@ -76,9 +78,15 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
                 console.warn('Matrix not equal', matrix4, nodeTransform.localTransformMatrix)
             }
         } else {
-            if (node.translation) nodeTransform.setPosition(vec3.create(node.translation[0], node.translation[1], node.translation[2]))
-            if (node.rotation) nodeTransform.setRotation(quat.create(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]))
-            if (node.scale) nodeTransform.setScale(vec3.create(node.scale[0], node.scale[1], node.scale[2]))
+            if (node.translation) nodeTransform.localPosition = vec3.create(
+                node.translation[0], node.translation[1], node.translation[2]
+            )
+            if (node.rotation) nodeTransform.localRotation = quat.create(
+                node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]
+            )
+            if (node.scale) nodeTransform.localScale = vec3.create(
+                node.scale[0], node.scale[1], node.scale[2]
+            )
         }
         entities.push(nodeEntity)
         nodeEntities.set(node, nodeEntity)
@@ -95,9 +103,8 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
                 );
             }
             primitives.forEach(primitive => {
-                primitive.setParent(nodeEntity)
+                nodeEntity.addChild(primitive)
             })
-            entities.push(...primitives)
         }
     }
 
@@ -121,27 +128,6 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
     return entities
 }
 
-const defaultAlbedo = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#ffffff'),
-    1,
-    1,
-    'rgba8unorm-srgb',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-)
-const defaultNormal = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#8080ff'),
-    1,
-    1,
-    'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-)
-const defaultPBR = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#ffffff'),
-    1,
-    1,
-    'rgba8unorm',
-    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-)
 
 async function convertPrimitive(
     primitive: GLTFMeshPrimitivePostprocessed,
@@ -149,7 +135,7 @@ async function convertPrimitive(
     textureCache: Map<number, Texture>,
     onEntityLoaded: (entity: Entity) => void
 ) {
-    const entity = new Entity()
+    const entity = new Entity('GltfPrimitive')
 
     const renderer = entity.addComponent(MeshRendererComponent)
 
@@ -195,8 +181,8 @@ async function convertPrimitive(
     ) : colors.White
     material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
     material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
-    material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
-    material.doubleSided = primitive.material?.doubleSided ?? false
+    // material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
+    // material.doubleSided = primitive.material?.doubleSided ?? false
 
     // Textures
     if (primitive.material && primitive.material.pbrMetallicRoughness) {
@@ -231,15 +217,6 @@ async function convertPrimitive(
         )
         material.addTexture('normalTexture', texture)
     }
-    if (!material.hasTexture('baseColorTexture')) {
-        material.addTexture('baseColorTexture', defaultAlbedo)
-    }
-    if (!material.hasTexture('normalTexture')) {
-        material.addTexture('normalTexture', defaultNormal)
-    }
-    if (!material.hasTexture('pbrTexture')) {
-        material.addTexture('pbrTexture', defaultPBR)
-    }
 
     entities.push(entity)
     onEntityLoaded(entity)
@@ -263,15 +240,14 @@ async function loadTexture(
     )
     const texture = new Texture2D(
         imageBitmap,
-        info.texture.source!.image.width!,
-        info.texture.source!.image.height!,
+        [info.texture.source!.image.width!, info.texture.source!.image.height!, 1],
         format,
     )
 
-    texture.minFilter = FilterValueMapping[info.texture.sampler.minFilter] ?? 'linear'
-    texture.magFilter = FilterValueMapping[info.texture.sampler.magFilter] ?? 'linear'
-    texture.addressModeU = WrapValueMapping[info.texture.sampler.wrapS] ?? 'repeat'
-    texture.addressModeV = WrapValueMapping[info.texture.sampler.wrapT] ?? 'repeat'
+    // texture.minFilter = FilterValueMapping[info.texture.sampler.minFilter] ?? 'linear'
+    // texture.magFilter = FilterValueMapping[info.texture.sampler.magFilter] ?? 'linear'
+    // texture.addressModeU = WrapValueMapping[info.texture.sampler.wrapS] ?? 'repeat'
+    // texture.addressModeV = WrapValueMapping[info.texture.sampler.wrapT] ?? 'repeat'
 
     if (info.index !== undefined) {
         textureCache.set(info.index, texture)

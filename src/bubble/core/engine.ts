@@ -1,8 +1,8 @@
 import type {Camera} from "@/bubble/node/camera/camera";
-import {type Scene, Transform} from "@/bubble/core/system";
 import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
 import RenderContext from "@/bubble/pipeline/context";
+import type {Scene} from "@/bubble/core/entity";
 
 export interface EngineOptions {
     // RequestAdapter options
@@ -91,11 +91,11 @@ export class RenderEngine {
             this._canvasSize!,
             scene
         )
-        // if (Array.isArray(camera)) {
-        //     this._renderPipeline?.render(this._renderContext!, camera);
-        // } else {
-        //     this._renderPipeline?.render(this._renderContext!, [camera]);
-        // }
+        if (Array.isArray(camera)) {
+            this._renderPipeline?.render(this._renderContext!, camera);
+        } else {
+            this._renderPipeline?.render(this._renderContext!, [camera]);
+        }
     }
 
     // 更新场景
@@ -104,19 +104,11 @@ export class RenderEngine {
         this.clock.tick();
 
         // 更新Entity / Component
-        for (let entity of scene.objects) {
-            // 更新Object的所有Component
-            for (let [_, component] of entity.components) {
+        scene.traverse(entity => {
+            entity.components.forEach(component => {
                 component.update?.(this.clock.deltaTime);
-            }
-        }
-
-        // PostUpdate
-        for (let entity of scene.objects) {
-            for (let [_, component] of entity.components) {
-                component.postUpdate?.();
-            }
-        }
+            })
+        });
     }
 
     destroy() {

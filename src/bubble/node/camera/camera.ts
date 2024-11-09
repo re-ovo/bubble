@@ -1,38 +1,29 @@
 import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/bubble/math/maths";
-import {Component} from "@/bubble/core/system";
-import {type Tracked, Tracker, TrackState} from "@/bubble/resource/tracker";
-import {track} from "@/bubble/resource/tracker";
+import {Component} from "@/bubble/core/component";
 
 export class CameraComponent extends Component {
-    private _camera: Tracked<Camera> | null = null;
-    private _cameraTracker = new Tracker<Camera>();
+    private _camera: Camera | null = null;
 
     get camera(): Camera | null {
         return this._camera;
     }
 
     set camera(camera: Camera) {
-        this._camera = track(camera);
+        this._camera = camera;
         camera.parent = this;
     }
 
     update(deltaTime: number) {
         if (!this._camera) throw new Error("Camera not set in CameraComponent, did you forget to add?");
 
-        const cameraState = this._cameraTracker.getTrackState(this._camera);
-        if (cameraState !== TrackState.FRESH) {
-            console.log("Updating camera projection matrix", this._camera.updateProjectionMatrix);
-            this._camera.updateProjectionMatrix();
-            this._cameraTracker.markFresh(this._camera);
-        }
     }
 }
 
 export abstract class Camera {
     parent: CameraComponent | null = null;
 
-    abstract readonly projectionMatrix: Tracked<Mat4>;
+    abstract readonly projectionMatrix: Mat4;
 
     abstract updateProjectionMatrix(): void;
 }
@@ -43,7 +34,7 @@ export class PerspectiveCamera extends Camera {
     near: number;
     far: number;
 
-    readonly projectionMatrix: Tracked<Mat4>;
+    readonly projectionMatrix: Mat4;
 
     constructor(
         fov: number,
@@ -58,7 +49,7 @@ export class PerspectiveCamera extends Camera {
         this.near = near;
         this.far = far;
 
-        this.projectionMatrix = track(mat4.create());
+        this.projectionMatrix = mat4.create();
         this.updateProjectionMatrix();
     }
 
@@ -81,7 +72,7 @@ export class OrthographicCamera extends Camera {
     near: number;
     far: number;
 
-    readonly projectionMatrix: Tracked<Mat4>;
+    readonly projectionMatrix: Mat4;
 
     constructor(
         left: number,
@@ -100,7 +91,7 @@ export class OrthographicCamera extends Camera {
         this.near = near;
         this.far = far;
 
-        this.projectionMatrix = track(mat4.create());
+        this.projectionMatrix = mat4.create();
         this.updateProjectionMatrix();
     }
 

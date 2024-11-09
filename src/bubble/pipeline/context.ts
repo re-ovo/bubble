@@ -1,6 +1,5 @@
-import {Entity, type Scene, Transform} from "@/bubble/core/system";
-import type {Camera} from "@/bubble/node/camera/camera";
 import Allocator from "@/bubble/resource/allocator";
+import type {Scene} from "@/bubble/core/entity";
 
 /**
  * 可编程渲染上下文

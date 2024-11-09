@@ -2,7 +2,7 @@ import {Material} from "@/bubble/node/material/material";
 import {Shader} from "@/bubble/resource/shader";
 import mesh_shader from "@/bubble/shader/mesh/mesh_shader";
 import colors, {type Color3f, type Color4f} from "@/bubble/math/colors";
-import {createImageBitmapOfColor} from "@/bubble/loader/texture_loader";
+import {createSolidColorTexture} from "@/bubble/loader/texture_loader";
 import {Texture2D} from "@/bubble/resource/texture";
 
 export class StandardMaterial extends Material {
@@ -76,37 +76,37 @@ export class StandardMaterial extends Material {
 }
 
 const defaultBaseColor = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#FFFFFF'),
+    createSolidColorTexture(1, 1, '#FFFFFF'),
     [1, 1],
     'rgba8unorm',
 )
 
 const defaultNormalMap = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#8080FF'),
+    createSolidColorTexture(1, 1, '#8080FF'),
     [1, 1],
     'rgba8unorm',
 )
 
 const defaultMetallicMap = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#FFFFFF'),
+    createSolidColorTexture(1, 1, '#FFFFFF'),
     [1, 1],
     'rgba8unorm',
 )
 
 const defaultRoughnessMap = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#FFFFFF'),
+    createSolidColorTexture(1, 1, '#FFFFFF'),
     [1, 1],
     'rgba8unorm',
 )
 
 const defaultEmissiveMap = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#000000'),
+    createSolidColorTexture(1, 1, '#000000'),
     [1, 1],
     'rgba8unorm',
 )
 
 const defaultOcclusionMap = new Texture2D(
-    createImageBitmapOfColor(1, 1, '#FFFFFF'),
+    createSolidColorTexture(1, 1, '#FFFFFF'),
     [1, 1],
     'rgba8unorm',
 )

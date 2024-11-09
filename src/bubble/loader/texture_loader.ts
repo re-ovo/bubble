@@ -29,7 +29,7 @@ export async function convertUint8ArrayToImageBitmap(
  * @param height the height of the image
  * @param color the color of the image
  */
-export function createImageBitmapOfColor(
+export function createSolidColorTexture(
     width: number,
     height: number,
     color: string

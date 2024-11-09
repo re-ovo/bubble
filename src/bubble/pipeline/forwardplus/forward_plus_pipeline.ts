@@ -2,8 +2,8 @@ import {ScriptablePipeline} from "@/bubble/pipeline/pipeline";
 import type {Camera} from "@/bubble/node/camera/camera";
 import {MeshRendererComponent} from "@/bubble/node/renderer/mesh_renderer";
 import {Material} from "@/bubble/node/material/material";
-import type {Entity} from "@/bubble/core/system";
 import type RenderContext from "@/bubble/pipeline/context";
+import type {Entity} from "@/bubble/core/entity";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     render(context: RenderContext, cameras: Camera[]): void {
@@ -19,7 +19,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     depthTexture: GPUTexture | null = null;
 
     renderCamera(context: RenderContext, camera: Camera): void {
-        context.setupCamera(camera);
+        // context.setupCamera(camera);
 
         if (!this.depthTexture) {
             this.depthTexture = context.device.createTexture({
@@ -51,7 +51,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
             }
         });
 
-        this.renderEntities(context, context.scene.objects);
+        // this.renderEntities(context, context.scene.objects);
 
         context.endRenderPass();
     }

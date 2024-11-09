@@ -7,11 +7,11 @@ import {onMounted, onUnmounted, useTemplateRef} from "vue";
 import {RenderEngine} from "@/bubble/core/engine";
 import {Camera, CameraComponent, PerspectiveCamera} from "@/bubble/node/camera/camera";
 import {lookupModels, usePane} from "@/hooks/usePane";
-import {Entity, Scene, Transform} from "@/bubble/core/system";
 import {ForwardPlusPipeline} from "@/bubble/pipeline/forwardplus/forward_plus_pipeline";
-import {loadGltfExample, loadGltfModel} from "@/bubble/loader/gltf_loader";
 import {FPSController} from "@/bubble/helper/controller";
 import {vec3} from "wgpu-matrix";
+import {Entity, Scene} from "@/bubble/core/entity";
+import {Transform} from "@/bubble/core/transform";
 
 const canvasRef = useTemplateRef<HTMLCanvasElement>('canvasRef')
 
@@ -71,17 +71,16 @@ onMounted(async () => {
   //   0.1,
   //   10000,
   // )
-  const cameraEntity = scene.addEntity(new Entity('Camera'))
+  const cameraEntity = scene.addChild(new Entity('Camera'))
   cameraEntity.addComponent(CameraComponent).camera = camera
-  const cameraTransform = cameraEntity.getComponent(Transform)!
-  cameraTransform.setPosition(vec3.fromValues(0, 5, 5))
+  cameraEntity.transform.localPosition = vec3.fromValues(0, 5, 5)
   cameraEntity.addComponent(FPSController).init(canvasRef.value)
   const cameraFolder = pane.addFolder({
     title: 'Camera',
   })
   const cameraInfo = {
     get position() {
-      return `[${cameraTransform.position[0].toFixed(2)}, ${cameraTransform.position[1].toFixed(2)}, ${cameraTransform.position[2].toFixed(2)}]`
+      return `[${cameraEntity.transform.localPosition[0].toFixed(2)}, ${cameraEntity.transform.localPosition[1].toFixed(2)}, ${cameraEntity.transform.localPosition[2].toFixed(2)}]`
     },
   }
   cameraFolder.addBinding(cameraInfo, 'position', {
