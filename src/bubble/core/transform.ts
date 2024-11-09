@@ -132,10 +132,11 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
         if(this.isDirty(TransformDirtyFlag.LocalMatrix) || force) {
             mat4.translation(this._localPosition, this._positionMatrix);
             mat4.fromQuat(this._localRotation, this._rotationMatrix);
-            mat4.scale(this._localScale, this._scaleMatrix);
+            mat4.scaling(this._localScale, this._scaleMatrix);
 
             mat4.mul(this._positionMatrix, this._rotationMatrix, this._localTransformMatrix);
             mat4.mul(this._localTransformMatrix, this._scaleMatrix, this._localTransformMatrix);
+
             this.clearDirty(TransformDirtyFlag.LocalMatrix);
         }
     }
