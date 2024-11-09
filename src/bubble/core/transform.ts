@@ -2,8 +2,9 @@ import type {Mat4, Quat, Vec3} from "wgpu-matrix";
 import {mat4, quat, vec3} from "wgpu-matrix";
 import {Component} from "@/bubble/core/component";
 import type {Entity} from "@/bubble/core/entity";
+import type {DirtyObject} from "@/bubble/core/dirty";
 
-class Transform extends Component {
+class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
     private readonly _localPosition: Vec3;
     private readonly _localRotation: Quat;
     private readonly _localScale: Vec3;
@@ -214,7 +215,6 @@ class Transform extends Component {
 }
 
 enum TransformDirtyFlag {
-    None = 0,
     LocalMatrix = 1 << 0,
     WorldMatrix = 1 << 1,
     All = LocalMatrix | WorldMatrix,

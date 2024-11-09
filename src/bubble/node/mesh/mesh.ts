@@ -1,13 +1,12 @@
-import {IndexAttribute, VertexAttribute} from "@/bubble/resource/attribute";
-import {track, type Tracked, unwrapTracked} from "@/bubble/resource/tracker";
+import {IndexBuffer, type VertexAttribute} from "@/bubble/resource/attribute";
 
 export class Mesh {
-    private readonly _attributes: Tracked<Map<string, VertexAttribute>>
-    private _indices: Tracked<IndexAttribute> | null = null;
-    drawCount: number = 0;
+    private readonly _attributes: Map<string, VertexAttribute>
+    private _indices: IndexBuffer | null = null;
+    private _drawCount: number = 0;
 
     constructor() {
-        this._attributes = track(new Map());
+        this._attributes = new Map();
     }
 
     addAttribute<T extends VertexAttribute>(name: string, attribute: T) {
@@ -30,88 +29,33 @@ export class Mesh {
         return this._attributes.has(name);
     }
 
+    get attributes(): Map<string, VertexAttribute> {
+        return this._attributes;
+    }
+
     setIndices(indices: Uint16Array | Uint32Array) {
-        this._indices = track(new IndexAttribute(indices));
+        this._indices = new IndexBuffer(indices);
         this.computeVertexCount();
     }
 
-    get indices(): IndexAttribute | null {
+    get indices(): IndexBuffer | null {
         return this._indices;
     }
 
     computeVertexCount() {
         if (this.indices) {
-            this.drawCount = this.indices.count;
+            this._drawCount = this.indices.count;
         } else {
             const firstAttribute = this._attributes.values().next().value
-            this.drawCount = firstAttribute.data.length / firstAttribute.itemSize;
+            this._drawCount = firstAttribute.data.length / firstAttribute.itemSize;
         }
     }
 
-    setVertexCount(count: number) {
-        this.drawCount = count;
+    set drawCount(count: number) {
+        this._drawCount = count;
     }
-}
 
-export function createCubeMesh(): Mesh {
-    const mesh = new Mesh();
-    mesh.addAttribute('position', new VertexAttribute(
-        new Float32Array([
-            // front
-            -1, -1, 1,
-            1, -1, 1,
-            1, 1, 1,
-
-            -1, -1, 1,
-            1, 1, 1,
-            -1, 1, 1,
-
-            // back
-            -1, -1, -1,
-            1, -1, -1,
-            1, 1, -1,
-
-            -1, -1, -1,
-            1, 1, -1,
-            -1, 1, -1,
-
-            // left
-            -1, -1, -1,
-            -1, -1, 1,
-            -1, 1, 1,
-
-            -1, -1, -1,
-            -1, 1, 1,
-            -1, 1, -1,
-
-            // right
-            1, -1, -1,
-            1, -1, 1,
-            1, 1, 1,
-
-            1, -1, -1,
-            1, 1, 1,
-            1, 1, -1,
-
-            // top
-            -1, 1, -1,
-            1, 1, -1,
-            1, 1, 1,
-
-            -1, 1, -1,
-            1, 1, 1,
-            -1, 1, 1,
-
-            // bottom
-            -1, -1, -1,
-            1, -1, -1,
-            1, -1, 1,
-
-            -1, -1, -1,
-            1, -1, 1,
-            -1, -1, 1,
-        ]),
-        3
-    ));
-    return mesh;
+    get drawCount(): number {
+        return this._drawCount;
+    }
 }
