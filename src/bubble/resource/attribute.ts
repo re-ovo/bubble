@@ -4,15 +4,22 @@ import type {DirtyObject} from "@/bubble/core/dirty";
 class VertexAttribute implements DirtyObject<VertexAttributeDirtyFlag> {
     data: TypedArray;
     itemSize: number;
+    stepMode: GPUVertexStepMode;
 
     _dirtyFlag: number = VertexAttributeDirtyFlag.DATA;
 
     constructor(
         data: TypedArray,
-        itemSize: number
+        itemSize: number,
+        stepMode?: GPUVertexStepMode
     ) {
         this.data = data;
         this.itemSize = itemSize;
+        this.stepMode = stepMode ?? 'vertex';
+    }
+
+    get stride() {
+        return this.data.BYTES_PER_ELEMENT * this.itemSize;
     }
 
     isDirty(flag: VertexAttributeDirtyFlag) {

@@ -1,4 +1,5 @@
 import {type Mat4} from "wgpu-matrix";
+import {v4} from "uuid";
 
 export function angleToRadians(angle: number): number {
     return angle * Math.PI / 180;
@@ -32,4 +33,8 @@ export function isMatrixOrthogonal(matrix: Mat4): boolean {
     }
 
     return true;
+}
+
+export function uuid_v4() {
+    return v4()
 }
