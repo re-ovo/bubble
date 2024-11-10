@@ -11,7 +11,6 @@ export class Material {
         this.shader = shader;
         this.uniforms = new Map();
         this.textures = new Map();
-
     }
 
     addTexture(variableName: string, texture: Texture) {

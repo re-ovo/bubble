@@ -47,9 +47,10 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
                 view: this.depthTexture.createView(),
                 depthLoadOp: 'clear',
                 depthStoreOp: 'store',
-                depthClearValue: 1.0
+                depthClearValue: 1.0,
             }
         });
+
 
         // this.renderEntities(context, context.scene.objects);
 

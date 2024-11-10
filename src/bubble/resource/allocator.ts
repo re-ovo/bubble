@@ -7,23 +7,25 @@ import {
     VertexAttribute,
     VertexAttributeDirtyFlag
 } from "@/bubble/resource/attribute";
+import {Buffer, BufferDirtyFlag} from "@/bubble/resource/buffer";
 
 class Allocator {
-    private context: RenderContext;
+    private _context: RenderContext;
 
-    private vertexBufferCache: WeakMap<VertexAttribute | IndexBuffer, AllocatedVertexAttribute> = new WeakMap();
-    private textureCache: WeakMap<Texture, AllocatedTexture> = new WeakMap();
+    private _vertexBufferCache: WeakMap<VertexAttribute | IndexBuffer, AllocatedVertexAttribute> = new WeakMap();
+    private _textureCache: WeakMap<Texture, AllocatedTexture> = new WeakMap();
+    private _bufferCache: WeakMap<Buffer, AllocatedBuffer> = new WeakMap();
 
     constructor(context: RenderContext) {
-        this.context = context;
+        this._context = context;
     }
 
     private get device() {
-        return this.context.device
+        return this._context.device
     }
 
     allocateVertexBuffer(attribute: VertexAttribute | IndexBuffer): AllocatedVertexAttribute {
-        let allocated = this.vertexBufferCache.get(attribute);
+        let allocated = this._vertexBufferCache.get(attribute);
         if (!allocated) {
             const usage = attribute instanceof IndexBuffer ? GPUBufferUsage.INDEX : GPUBufferUsage.VERTEX;
             const buffer = this.device.createBuffer({
@@ -36,7 +38,7 @@ class Allocator {
                 size: attribute.data.byteLength,
                 stride: attribute instanceof VertexAttribute ? attribute.itemSize : 0, // only for vertex buffer
             };
-            this.vertexBufferCache.set(attribute, allocated);
+            this._vertexBufferCache.set(attribute, allocated);
         }
         if (attribute instanceof VertexAttribute) {
             if (attribute.isDirty(VertexAttributeDirtyFlag.DATA)) {
@@ -64,7 +66,7 @@ class Allocator {
     }
 
     private allocateTexture2d(texture2d: Texture2D): AllocatedTexture {
-        let allocated = this.textureCache.get(texture2d);
+        let allocated = this._textureCache.get(texture2d);
         if (!allocated) {
             const texture = this.device.createTexture({
                 size: texture2d.size,
@@ -83,7 +85,7 @@ class Allocator {
                 sampler,
             };
 
-            this.textureCache.set(texture2d, allocated);
+            this._textureCache.set(texture2d, allocated);
         }
 
         if (texture2d.isDirty(TextureDirtyFlag.DATA)) {
@@ -99,7 +101,26 @@ class Allocator {
         return allocated;
     }
 
-
+    allocateBuffer(buffer: Buffer): AllocatedBuffer {
+        let allocated = this._bufferCache.get(buffer);
+        if (!allocated) {
+            const gpuBuffer = this.device.createBuffer({
+                size: buffer.byteLength,
+                usage: buffer.usage | GPUBufferUsage.COPY_DST,
+            });
+            allocated = {
+                buffer: gpuBuffer,
+                offset: 0,
+                size: buffer.data.byteLength,
+            };
+            this._bufferCache.set(buffer, allocated);
+        }
+        if (buffer.isDirty(BufferDirtyFlag.DATA)) {
+            this.device.queue.writeBuffer(allocated.buffer, 0, buffer.data);
+            buffer.clearDirty(BufferDirtyFlag.DATA);
+        }
+        return allocated;
+    }
 }
 
 export default Allocator;
