@@ -22,10 +22,12 @@ class RenderPipelineBuilder {
 
     setLabel(label: string) {
         this._label = label;
+        return this;
     }
 
     setShader(shader: Shader) {
         this._shader = shader;
+        return this;
     }
 
     addRenderTarget(
@@ -36,6 +38,7 @@ class RenderPipelineBuilder {
             format,
             blend,
         })
+        return this;
     }
 
     setVertexAttribute(name: string, buffer: VertexAttribute) {
@@ -57,26 +60,32 @@ class RenderPipelineBuilder {
         } else {
             console.warn(`Attribute ${name} not found in shader`);
         }
+        return this;
     }
 
     setCullMode(cullMode: GPUCullMode) {
         this._primitive.cullMode = cullMode;
+        return this;
     }
 
     setFrontFace(frontFace: GPUFrontFace) {
         this._primitive.frontFace = frontFace;
+        return this;
     }
 
     setPolygonMode(topology: GPUPrimitiveTopology) {
         this._primitive.topology = topology;
+        return this;
     }
 
     setDepthStencil(depthStencil: GPUDepthStencilState) {
         this._depthStencil = depthStencil;
+        return this;
     }
 
     addBindGroupLayout(layout: GPUBindGroupLayout) {
         this._bindGroupLayouts.push(layout);
+        return this;
     }
 
     build(device: GPUDevice): GPURenderPipeline {
