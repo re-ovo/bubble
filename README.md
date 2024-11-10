@@ -1,17 +1,17 @@
 # bubble
 
-一个基于WebGPU的渲染引擎, 参考了Unity的Component和SRP设计
+一个基于WebGPU的渲染引擎, 参考了Unity的Component和SRP设计。
 
 > 仍然在开发中，没有实际渲染功能
 
 ## 功能
 
-- [ ] Forward+ 渲染管线 (Clustered Forward Rendering)
-- [x] 类Unity Component组件系统 (GameObject->Entity, Component->Component)
+- [ ] 内置集群前向渲染管线 (Clustered Forward Rendering)
+- [x] 类Unity Component组件系统 (Entity/Component)
 - [x] 可编程渲染管线 (SRP)
-- [ ] 全局光照系统
-- [ ] 动画系统
-- [x] PBR材质(Cook-Torrance BRDF)
+- [ ] 基于Radiance Cascades的实时全局光照 (Realtime GI)
+- [ ] 动画系统 (Animation)
+- [x] PBR (Cook-Torrance BRDF)
 - [ ] 剔除 (Culling)
 - [ ] 阴影 (ShadowMap/Cascaded ShadowMap)
 - [ ] 灯光 (Point/Spot/Directional/Ambient Light)
@@ -19,6 +19,8 @@
 - [ ] 天空盒 (Skybox)
 - [ ] CubeMap IBL
 - [ ] PostProcessing (Bloom)
+- [ ] SSAO
+- [ ] 物理模拟 (Physics)
 
 ## 性能对比
 TODO
