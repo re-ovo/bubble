@@ -73,7 +73,6 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
         if (node.matrix) {
             const matrix4 = mat4.create(...node.matrix)
             nodeTransform.setByMatrix(matrix4)
-            nodeTransform.updateMatrix()
             if (!mat4.equalsApproximately(matrix4, nodeTransform.localTransformMatrix)) {
                 console.warn('Matrix not equal', matrix4, nodeTransform.localTransformMatrix)
             }
@@ -161,7 +160,7 @@ async function convertPrimitive(
         if (primitive.indices.type !== 'SCALAR') throw new Error('Indices attribute is not SCALAR')
         mesh.setIndices(primitive.indices.value as Uint16Array | Uint32Array)
         // if(mesh.drawCount !== primitive.indices.count) throw new Error('Draw count is not equal to indices count')
-        mesh.setVertexCount(primitive.indices.count)
+        mesh.drawCount = primitive.indices.count
     } else {
         throw new Error('Indices attribute is not found')
     }
