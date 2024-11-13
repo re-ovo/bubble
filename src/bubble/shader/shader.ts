@@ -1,5 +1,5 @@
 import {TemplateInfo, TypeInfo, VariableInfo, WgslReflect} from "wgsl_reflect";
-import {providerWGSLCounterScope} from "@/bubble/resource/shader/shader_counter";
+import {providerWGSLCounterScope} from "@/bubble/shader/utils/binding_counter";
 import {makeShaderDataDefinitions, type VariableDefinitions} from "webgpu-utils";
 
 /**
@@ -8,10 +8,11 @@ import {makeShaderDataDefinitions, type VariableDefinitions} from "webgpu-utils"
 export type ShaderSourceProvider = string | ((params: Record<any, any>) => string);
 
 export class Shader {
-    private provider: ShaderSourceProvider;
-    private params: Record<string, any> = {};
+    private _provider: ShaderSourceProvider;
+    private readonly _definitions: Record<string, any> = {}; // macro definitions
 
-    private _code: string = '';
+    private _code: string = ''; // evaluated shader code
+
     private _metadata: WgslReflect | null = null;
     private _attributes: ShaderAttributeMetadata[] = [];
     private _bindingGroups: BindingGroupMetadata[] = [];
@@ -19,33 +20,24 @@ export class Shader {
     private _storages: VariableDefinitions = {};
 
     constructor(sourceProvider: ShaderSourceProvider, params: Record<string, any> = {}) {
-        this.provider = sourceProvider;
-        this.params = params;
+        this._provider = sourceProvider;
+        this._definitions = params;
         this.evaluate();
     }
 
-    addParams(params: Record<string, any>) {
-        this.params = {...this.params, ...params};
+    addDefinition(key: string, value: any) {
+        this._definitions[key] = value;
         this.evaluate();
-    }
-
-    addParam(key: string, value: any) {
-        this.params[key] = value;
-        this.evaluate();
-    }
-
-    getParam(key: string): any {
-        return this.params[key];
     }
 
     setShaderSourceProvider(provider: ShaderSourceProvider) {
-        this.provider = provider;
+        this._provider = provider;
         this.evaluate();
     }
 
     evaluate() {
         const source = providerWGSLCounterScope(() => {
-            return typeof this.provider === 'function' ? this.provider(this.params) : this.provider;
+            return typeof this._provider === 'function' ? this._provider(this._definitions) : this._provider;
         });
         this._code = source;
         this._metadata = new WgslReflect(source);

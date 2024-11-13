@@ -8,7 +8,10 @@ import {
     VertexAttributeDirtyFlag
 } from "@/bubble/resource/attribute";
 import {Buffer, BufferDirtyFlag} from "@/bubble/resource/buffer";
-import type {Shader} from "@/bubble/resource/shader";
+import type {Shader} from "@/bubble/shader/shader";
+import {RenderPipelineBuilder} from "@/bubble/pipeline/builder/render_pipeline_builder";
+import type {Material} from "@/bubble/node/material/material";
+import type {Mesh} from "@/bubble/node/mesh/mesh";
 
 class RenderCache {
     private _context: RenderContext;
@@ -17,6 +20,8 @@ class RenderCache {
     private _textureCache: WeakMap<Texture, AllocatedTexture>;
     private _bufferCache: WeakMap<Buffer, AllocatedBuffer>;
     private _shaderCache: WeakMap<Shader, GPUShaderModule>;
+    private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
+    private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
 
     constructor(context: RenderContext) {
         this._context = context;
@@ -24,6 +29,8 @@ class RenderCache {
         this._textureCache = new WeakMap();
         this._bufferCache = new WeakMap();
         this._shaderCache = new WeakMap();
+        this._bindGroupLayoutCache = new WeakMap();
+        this._renderPipelineCache = new WeakMap();
     }
 
     private get device() {
@@ -138,6 +145,53 @@ class RenderCache {
         }
         return module;
     }
+
+    requestLayout(shader: Shader): AllocatedLayout {
+        let layout = this._bindGroupLayoutCache.get(shader);
+        if (!layout) {
+            const bindGroupLayouts = shader.bindingGroups.map((group) => {
+                return this.device.createBindGroupLayout({
+                    entries: group.bindings.map((bindingInfo) => {
+                        return bindingInfo.layout
+                    })
+                });
+            });
+            const pipelineLayout = this.device.createPipelineLayout({
+                bindGroupLayouts: bindGroupLayouts,
+            })
+            layout = {
+                bindGroupLayouts,
+                pipelineLayout,
+            };
+            this._bindGroupLayoutCache.set(shader, layout);
+        }
+        return layout;
+    }
+
+    requestRenderPipeline(
+        material: Material,
+        mesh: Mesh,
+    ): GPURenderPipeline {
+        let pipeline = this._renderPipelineCache.get(material.shader);
+        if(!pipeline) {
+            const layout = this.requestLayout(material.shader).pipelineLayout;
+            pipeline = new RenderPipelineBuilder()
+                .setShader(material.shader)
+                .setCullMode(material.cullMode)
+                .setVertexAttributes(mesh.attributes)
+                .setPipelineLayout(layout)
+                .build(this.device);
+            this._renderPipelineCache.set(
+                material.shader,
+                pipeline
+            );
+        }
+        return pipeline;
+    }
+
+    requestBindGroup(shader: Shader, bindGroupIndex: number) {
+        // todo
+    }
 }
 
 export default RenderCache;
@@ -159,4 +213,9 @@ export type AllocatedBuffer = {
     buffer: GPUBuffer,
     offset: number,
     size: number,
+}
+
+export type AllocatedLayout = {
+    bindGroupLayouts: GPUBindGroupLayout[],
+    pipelineLayout: GPUPipelineLayout,
 }

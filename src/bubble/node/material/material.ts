@@ -1,4 +1,4 @@
-import type {Shader} from "@/bubble/resource/shader";
+import type {Shader} from "@/bubble/shader/shader";
 import type {Texture} from "@/bubble/resource/texture";
 
 // Material -> ShaderModule/Pipeline/BindingGroups
@@ -6,11 +6,13 @@ export class Material {
     readonly shader: Shader;
     readonly uniforms: Map<string, any>;
     readonly textures: Map<string, Texture>;
+    private _cullMode: GPUCullMode = 'back';
 
     constructor(shader: Shader) {
         this.shader = shader;
         this.uniforms = new Map();
         this.textures = new Map();
+        this._cullMode = 'back';
     }
 
     addTexture(variableName: string, texture: Texture) {
@@ -51,6 +53,10 @@ export class Material {
 
     removeUniform(name: string) {
         this.uniforms.delete(name);
+    }
+
+    get cullMode(): GPUCullMode {
+        return this._cullMode;
     }
 }
 

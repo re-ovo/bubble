@@ -1,14 +1,14 @@
-import type {Shader} from "@/bubble/resource/shader";
+import type {Shader} from "@/bubble/shader/shader";
 import {uuid_v4} from "@/bubble/math/maths";
 import type {VertexAttribute} from "@/bubble/resource/attribute";
 
-class RenderPipelineBuilder {
+export class RenderPipelineBuilder {
     private _label: string;
 
     private _shader: Shader | null = null;
     private _vertexBuffers: GPUVertexBufferLayout[] = [];
     private _fragmentTargets: GPUColorTargetState[] = [];
-    private _bindGroupLayouts: GPUBindGroupLayout[] = [];
+    private _pipelineLayout: GPUPipelineLayout | null = null;
 
     // primitive state
     private _primitive: GPUPrimitiveState = {}
@@ -63,6 +63,13 @@ class RenderPipelineBuilder {
         return this;
     }
 
+    setVertexAttributes(attributes: Map<string, VertexAttribute>) {
+        attributes.forEach((buffer, name) => {
+            this.setVertexAttribute(name, buffer);
+        });
+        return this;
+    }
+
     setCullMode(cullMode: GPUCullMode) {
         this._primitive.cullMode = cullMode;
         return this;
@@ -83,8 +90,8 @@ class RenderPipelineBuilder {
         return this;
     }
 
-    addBindGroupLayout(layout: GPUBindGroupLayout) {
-        this._bindGroupLayouts.push(layout);
+    setPipelineLayout(pipelineLayout: GPUPipelineLayout) {
+        this._pipelineLayout = pipelineLayout;
         return this;
     }
 
@@ -101,8 +108,8 @@ class RenderPipelineBuilder {
         if(this._vertexBuffers.find((buffer) => !buffer)) {
             throw new Error('Some vertex buffer is missing: ' + this._vertexBuffers);
         }
-        if (this._bindGroupLayouts.length === 0) {
-            throw new Error('No bind group layout is set');
+        if (!this._pipelineLayout) {
+            throw new Error('Pipeline layout is not set');
         }
         const shaderModule = device.createShaderModule({
             code: this._shader.code,
@@ -118,9 +125,7 @@ class RenderPipelineBuilder {
                 module: shaderModule,
                 targets: this._fragmentTargets,
             },
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: this._bindGroupLayouts,
-            }),
+            layout: this._pipelineLayout,
             primitive: this._primitive,
         });
     }

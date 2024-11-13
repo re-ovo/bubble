@@ -1,4 +1,4 @@
-import {wgsl} from "@/bubble/resource/shader/processor";
+import {wgsl} from "@/bubble/shader/utils/processor";
 
 export default () => wgsl`
 const PI: f32 = 3.14159265359;

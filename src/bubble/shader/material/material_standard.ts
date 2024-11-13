@@ -1,5 +1,5 @@
-import {wgsl} from "@/bubble/resource/shader/processor";
-import {autoBinding} from "@/bubble/resource/shader/shader_counter";
+import {wgsl} from "@/bubble/shader/utils/processor";
+import {autoBinding} from "@/bubble/shader/utils/binding_counter";
 import constants from "@/bubble/shader/common/constants";
 
 export default () => wgsl`

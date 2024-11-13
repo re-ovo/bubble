@@ -1,4 +1,4 @@
-import {wgsl} from "@/bubble/resource/shader/processor";
+import {wgsl} from "@/bubble/shader/utils/processor";
 
 export default () => wgsl`
 const gamma = 2.2;

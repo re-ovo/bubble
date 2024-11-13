@@ -1,5 +1,5 @@
 import {Material} from "@/bubble/node/material/material";
-import {Shader} from "@/bubble/resource/shader";
+import {Shader} from "@/bubble/shader/shader";
 import mesh_shader from "@/bubble/shader/mesh/mesh_shader";
 import colors, {type Color3f, type Color4f} from "@/bubble/math/colors";
 import {createSolidColorTexture} from "@/bubble/loader/texture_loader";
