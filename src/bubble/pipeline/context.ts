@@ -1,4 +1,4 @@
-import Allocator from "@/bubble/resource/allocator";
+import RenderCache from "@/bubble/resource/render_cache";
 import type {Scene} from "@/bubble/core/entity";
 
 /**
@@ -8,7 +8,7 @@ import type {Scene} from "@/bubble/core/entity";
  */
 class RenderContext {
     public readonly device: GPUDevice;
-    public readonly allocator: Allocator;
+    public readonly allocator: RenderCache;
 
     private _targetView: GPUTextureView | null = null;
     private _targetFormat: GPUTextureFormat | null = null;
@@ -21,7 +21,7 @@ class RenderContext {
 
     constructor(device: GPUDevice) {
         this.device = device
-        this.allocator = new Allocator(this)
+        this.allocator = new RenderCache(this)
         this._commandEncoder = this.device.createCommandEncoder();
     }
 
