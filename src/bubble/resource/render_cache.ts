@@ -7,7 +7,7 @@ import {
     VertexAttribute,
     VertexAttributeDirtyFlag
 } from "@/bubble/resource/attribute";
-import {Buffer, BufferDirtyFlag} from "@/bubble/resource/buffer";
+import {Buffer, BufferDirtyFlag, UniformBuffer} from "@/bubble/resource/buffer";
 import type {Shader} from "@/bubble/shader/shader";
 import {RenderPipelineBuilder} from "@/bubble/pipeline/builder/render_pipeline_builder";
 import type {Material} from "@/bubble/node/material/material";
@@ -22,6 +22,8 @@ class RenderCache {
     private _shaderCache: WeakMap<Shader, GPUShaderModule>;
     private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
     private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
+    private _bindGroupsCache: WeakMap<Material, GPUBindGroup[]>;
+    private _uniformBufferCache: WeakMap<Material, UniformBuffer>;
 
     constructor(context: RenderContext) {
         this._context = context;
@@ -31,6 +33,8 @@ class RenderCache {
         this._shaderCache = new WeakMap();
         this._bindGroupLayoutCache = new WeakMap();
         this._renderPipelineCache = new WeakMap();
+        this._bindGroupsCache = new WeakMap();
+        this._uniformBufferCache = new WeakMap();
     }
 
     private get device() {
@@ -189,8 +193,44 @@ class RenderCache {
         return pipeline;
     }
 
-    requestBindGroup(shader: Shader, bindGroupIndex: number) {
-        // todo
+    requestUniformBuffer(material: Material): UniformBuffer {
+        let buffer = this._uniformBufferCache.get(material);
+        if (!buffer) {
+            const size= material.shader.uniformByteLength
+            buffer = UniformBuffer.ofSize(size);
+        }
+        return buffer;
+    }
+
+    requestBindGroup(material: Material): GPUBindGroup[] {
+        let bindGroups = this._bindGroupsCache.get(material);
+        if (!bindGroups) {
+            const layout = this.requestLayout(material.shader);
+            bindGroups = material.shader.bindingGroups.map((groupMeta, groupIndex) => {
+                return this.device.createBindGroup({
+                    layout: layout.bindGroupLayouts[groupIndex],
+                    entries: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
+                        const bindingVarName = bindingMeta.name
+                        let resource: GPUBindingResource
+                        if(bindingMeta.type.startsWith('texture')) {
+                            resource = this.requestTexture(material.getTexture(bindingVarName)).view
+                        } else if(bindingMeta.type.startsWith('sampler')) {
+                            const textureName = bindingVarName.slice(0, -7) // remove 'Sampler' suffix
+                            resource = this.requestTexture(material.getTexture(textureName)).sampler
+                        } else {
+                            // buffer (uniform, storage)
+                            const uniformBuffer = this.requestUniformBuffer(material)
+                            resource = this.requestBuffer(uniformBuffer)
+                        }
+                        return {
+                            binding: bindingIndex,
+                            resource: resource,
+                        }
+                    })
+                })
+            })
+        }
+        return bindGroups;
     }
 }
 

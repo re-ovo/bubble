@@ -3,16 +3,16 @@ import type {DirtyObject} from "@/bubble/core/dirty";
 import {makeStructuredView, type StructDefinition, type VariableDefinition} from "webgpu-utils";
 
 class Buffer implements DirtyObject<BufferDirtyFlag> {
-    private _data: TypedArray;
+    private _data: ArrayBuffer;
     private readonly _usage: GPUBufferUsageFlags;
     private _dirtyFlags: BufferDirtyFlag = BufferDirtyFlag.DATA;
 
-    constructor(data: TypedArray, usage: GPUBufferUsageFlags) {
+    constructor(data: ArrayBuffer, usage: GPUBufferUsageFlags) {
         this._data = data;
         this._usage = usage;
     }
 
-    get data(): TypedArray {
+    get data(): ArrayBuffer {
         return this._data;
     }
 
@@ -65,13 +65,17 @@ enum BufferDirtyFlag {
 }
 
 class UniformBuffer extends Buffer {
-    constructor(data: TypedArray) {
+    constructor(data: ArrayBuffer) {
         super(data, GPUBufferUsage.UNIFORM);
+    }
+
+    static ofSize(size: number): UniformBuffer {
+        return new UniformBuffer(new ArrayBuffer(size));
     }
 }
 
 class StorageBuffer extends Buffer {
-    constructor(data: TypedArray) {
+    constructor(data: ArrayBuffer) {
         super(data, GPUBufferUsage.STORAGE);
     }
 }

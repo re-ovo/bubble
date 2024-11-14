@@ -77,6 +77,10 @@ export class Shader {
     get storages(): VariableDefinitions {
         return this._storages;
     }
+
+    get uniformByteLength(): number {
+        return Object.values(this._uniforms).reduce((acc, v) => acc + v.size, 0);
+    }
 }
 
 export interface ShaderAttributeMetadata {
