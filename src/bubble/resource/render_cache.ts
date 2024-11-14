@@ -22,7 +22,7 @@ class RenderCache {
     private _shaderCache: WeakMap<Shader, GPUShaderModule>;
     private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
     private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
-    private _bindGroupsCache: WeakMap<Material, GPUBindGroup[]>;
+    private _bindGroupsCache: WeakMap<Material, {groupId: number, groupVal: GPUBindGroup}[]>;
     private _uniformBufferCache: WeakMap<Material, UniformBuffer>;
 
     constructor(context: RenderContext) {
@@ -177,7 +177,7 @@ class RenderCache {
         mesh: Mesh,
     ): GPURenderPipeline {
         let pipeline = this._renderPipelineCache.get(material.shader);
-        if(!pipeline) {
+        if (!pipeline) {
             const layout = this.requestLayout(material.shader).pipelineLayout;
             pipeline = new RenderPipelineBuilder()
                 .setShader(material.shader)
@@ -193,42 +193,43 @@ class RenderCache {
         return pipeline;
     }
 
-    requestUniformBuffer(material: Material): UniformBuffer {
+    requestUniformBufferFromMaterial(material: Material): UniformBuffer {
         let buffer = this._uniformBufferCache.get(material);
-        if (!buffer) {
-            const size= material.shader.uniformByteLength
-            buffer = UniformBuffer.ofSize(size);
-        }
+
         return buffer;
     }
 
-    requestBindGroup(material: Material): GPUBindGroup[] {
+    requestBindGroup(material: Material): {groupId: number, groupVal: GPUBindGroup}[] {
         let bindGroups = this._bindGroupsCache.get(material);
         if (!bindGroups) {
             const layout = this.requestLayout(material.shader);
             bindGroups = material.shader.bindingGroups.map((groupMeta, groupIndex) => {
-                return this.device.createBindGroup({
-                    layout: layout.bindGroupLayouts[groupIndex],
-                    entries: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
-                        const bindingVarName = bindingMeta.name
-                        let resource: GPUBindingResource
-                        if(bindingMeta.type.startsWith('texture')) {
-                            resource = this.requestTexture(material.getTexture(bindingVarName)).view
-                        } else if(bindingMeta.type.startsWith('sampler')) {
-                            const textureName = bindingVarName.slice(0, -7) // remove 'Sampler' suffix
-                            resource = this.requestTexture(material.getTexture(textureName)).sampler
-                        } else {
-                            // buffer (uniform, storage)
-                            const uniformBuffer = this.requestUniformBuffer(material)
-                            resource = this.requestBuffer(uniformBuffer)
-                        }
-                        return {
-                            binding: bindingIndex,
-                            resource: resource,
-                        }
+                return {
+                    groupId: groupIndex,
+                    groupVal: this.device.createBindGroup({
+                        layout: layout.bindGroupLayouts[groupIndex],
+                        entries: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
+                            const bindingVarName = bindingMeta.name
+                            let resource: GPUBindingResource
+                            if (bindingMeta.type.startsWith('texture')) {
+                                resource = this.requestTexture(material.getTexture(bindingVarName)).view
+                            } else if (bindingMeta.type.startsWith('sampler')) {
+                                const textureName = bindingVarName.slice(0, -7) // remove 'Sampler' suffix
+                                resource = this.requestTexture(material.getTexture(textureName)).sampler
+                            } else {
+                                // buffer (uniform, storage)
+                                const uniformBuffer = this.requestUniformBuffer(material)
+                                resource = this.requestBuffer(uniformBuffer)
+                            }
+                            return {
+                                binding: bindingIndex,
+                                resource: resource,
+                            }
+                        })
                     })
-                })
+                }
             })
+            this._bindGroupsCache.set(material, bindGroups);
         }
         return bindGroups;
     }

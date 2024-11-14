@@ -1,4 +1,5 @@
 import {wgsl} from "@/bubble/shader/utils/processor";
+import {BindGroupId} from "@/bubble/shader/groups";
 
 export function providerWGSLCounterScope<T>(scope: () => T): T {
     if(counterContext != null) {
@@ -34,7 +35,7 @@ class CounterContext {
     }
 }
 
-export function autoBinding(group: number): number {
+export function autoBinding(group: BindGroupId): number {
     if(counterContext == null) throw new Error('counterContext is null');
     return counterContext.allocateBindingGroup(group);
 }
@@ -47,7 +48,7 @@ export function autoLocation(): number {
 export function textureAndSampler(name: string, type: string): string {
     // group 1 is the texture, group 2 is the sampler
     return wgsl`
-    @group(1) @binding(${autoBinding(1)}) var ${name}: ${type};
-    @group(1) @binding(${autoBinding(1)}) var ${name}Sampler: sampler;
+    @group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var ${name}: ${type};
+    @group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var ${name}Sampler: sampler;
     `
 }

@@ -1,5 +1,6 @@
 import {wgsl} from "@/bubble/shader/utils/processor";
 import {autoBinding} from "@/bubble/shader/utils/binding_counter";
+import {BindGroupId} from "@/bubble/shader/groups";
 
 export default () => wgsl`
 struct DirectionalLight {
@@ -30,8 +31,8 @@ struct AmbientLight {
     intensity: f32,
 };
 
-@group(0) @binding(${autoBinding(0)}) var<uniform> directionalLight: DirectionalLight;
-@group(0) @binding(${autoBinding(0)}) var<uniform> ambientLight: AmbientLight;
-@group(0) @binding(${autoBinding(0)}) var<storage> pointLights: array<PointLight>;
-@group(0) @binding(${autoBinding(0)}) var<storage> spotLights: array<SpotLight>;
+@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<uniform> directionalLight: DirectionalLight;
+@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<uniform> ambientLight: AmbientLight;
+@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<storage> pointLights: array<PointLight>;
+@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<storage> spotLights: array<SpotLight>;
 `;

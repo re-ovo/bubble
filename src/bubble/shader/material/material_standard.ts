@@ -1,6 +1,7 @@
 import {wgsl} from "@/bubble/shader/utils/processor";
 import {autoBinding} from "@/bubble/shader/utils/binding_counter";
 import constants from "@/bubble/shader/common/constants";
+import {BindGroupId} from "@/bubble/shader/groups";
 
 export default () => wgsl`
 ${constants()}
@@ -11,7 +12,7 @@ struct MaterialInfo {
     metallic: f32,
 }
 
-@group(0) @binding(${autoBinding(0)}) var<uniform> material: MaterialInfo;
+@group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var<uniform> material: MaterialInfo;
 
 // Cook-Torrance BRDF
 
