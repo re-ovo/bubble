@@ -21,6 +21,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url)),
+            '@bubblejs/bubble': fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         }
     }
 })

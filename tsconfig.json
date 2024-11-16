@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
     "baseUrl": "./",
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -18,11 +17,12 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "node"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@bubblejs/bubble": ["src/index.ts"]
     },
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src", "demos"],
   "exclude": ["**/*.test.ts", "node_modules", "test/**", ".history/**"],
   "references": [
     {
