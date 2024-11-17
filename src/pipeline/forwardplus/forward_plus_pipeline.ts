@@ -4,6 +4,7 @@ import {MeshRendererComponent} from "@/node/renderer/mesh_renderer";
 import {Material} from "@/node/material/material";
 import type RenderContext from "@/pipeline/context";
 import type {Entity} from "@/core/entity";
+import {UniformBuffer} from "@/resource";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     render(context: RenderContext, cameras: Camera[]): void {
@@ -17,6 +18,7 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
     }
 
     depthTexture: GPUTexture | null = null;
+    cameraUniformBuffer= new UniformBuffer.ofSize()
 
     renderCamera(context: RenderContext, camera: Camera): void {
         // context.setupCamera(camera);
