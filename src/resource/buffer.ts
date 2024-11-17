@@ -1,11 +1,16 @@
 import type {TypedArray} from "@/core/types";
 import type {DirtyObject} from "@/core/dirty";
-import {makeStructuredView, type StructDefinition, type VariableDefinition} from "webgpu-utils";
+import {
+    makeShaderDataDefinitions,
+    makeStructuredView,
+    type StructDefinition,
+    type VariableDefinition
+} from "webgpu-utils";
 
 class BufferResource implements DirtyObject<BufferDirtyFlag> {
     private _data: ArrayBuffer;
     private readonly _usage: GPUBufferUsageFlags;
-    private _dirtyFlags: BufferDirtyFlag = BufferDirtyFlag.DATA;
+    private _dirtyFlags: BufferDirtyFlag = BufferDirtyFlag.ALL;
 
     constructor(data: ArrayBuffer, usage: GPUBufferUsageFlags) {
         this._data = data;
@@ -61,7 +66,9 @@ class BufferResource implements DirtyObject<BufferDirtyFlag> {
 }
 
 enum BufferDirtyFlag {
-    DATA = 1,
+    DATA = 1, // the data need to be uploaded to the GPUBuffer
+    SIZE = 2, // the size of the buffer has changed, need to recreate the GPUBuffer
+    ALL = DATA | SIZE,
 }
 
 class UniformBuffer extends BufferResource {
@@ -71,6 +78,13 @@ class UniformBuffer extends BufferResource {
 
     static ofSize(size: number): UniformBuffer {
         return new UniformBuffer(new ArrayBuffer(size));
+    }
+
+    static ofDefinition(def: string): UniformBuffer {
+        const defs = makeShaderDataDefinitions(def);
+        const variable = defs.uniforms[0];
+        const size = variable.size;
+        return UniformBuffer.ofSize(size);
     }
 }
 
