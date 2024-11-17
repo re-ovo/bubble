@@ -2,7 +2,7 @@ import type {TypedArray} from "@/core/types";
 import type {DirtyObject} from "@/core/dirty";
 import {makeStructuredView, type StructDefinition, type VariableDefinition} from "webgpu-utils";
 
-class Buffer implements DirtyObject<BufferDirtyFlag> {
+class BufferResource implements DirtyObject<BufferDirtyFlag> {
     private _data: ArrayBuffer;
     private readonly _usage: GPUBufferUsageFlags;
     private _dirtyFlags: BufferDirtyFlag = BufferDirtyFlag.DATA;
@@ -64,7 +64,7 @@ enum BufferDirtyFlag {
     DATA = 1,
 }
 
-class UniformBuffer extends Buffer {
+class UniformBuffer extends BufferResource {
     constructor(data: ArrayBuffer) {
         super(data, GPUBufferUsage.UNIFORM);
     }
@@ -74,10 +74,10 @@ class UniformBuffer extends Buffer {
     }
 }
 
-class StorageBuffer extends Buffer {
+class StorageBuffer extends BufferResource {
     constructor(data: ArrayBuffer) {
         super(data, GPUBufferUsage.STORAGE);
     }
 }
 
-export {Buffer, BufferDirtyFlag, UniformBuffer, StorageBuffer};
+export {BufferResource, BufferDirtyFlag, UniformBuffer, StorageBuffer};

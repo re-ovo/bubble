@@ -7,7 +7,7 @@ import {
     VertexAttribute,
     VertexAttributeDirtyFlag
 } from "@/resource/attribute";
-import {Buffer, BufferDirtyFlag, UniformBuffer} from "@/resource/buffer";
+import {BufferResource, BufferDirtyFlag, UniformBuffer} from "@/resource/buffer";
 import type {Shader} from "@/shader/shader";
 import {RenderPipelineBuilder} from "@/pipeline/builder/render_pipeline_builder";
 import type {Material} from "@/node/material/material";
@@ -18,7 +18,7 @@ class RenderCache {
 
     private _vertexBufferCache: WeakMap<VertexAttribute | IndexBuffer, AllocatedVertexAttribute>;
     private _textureCache: WeakMap<Texture, AllocatedTexture>;
-    private _bufferCache: WeakMap<Buffer, AllocatedBuffer>;
+    private _bufferCache: WeakMap<BufferResource, AllocatedBuffer>;
     private _shaderCache: WeakMap<Shader, GPUShaderModule>;
     private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
     private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
@@ -118,7 +118,7 @@ class RenderCache {
         return allocated;
     }
 
-    requestBuffer(buffer: Buffer): AllocatedBuffer {
+    requestBuffer(buffer: BufferResource): AllocatedBuffer {
         let allocated = this._bufferCache.get(buffer);
         if (!allocated) {
             const gpuBuffer = this.device.createBuffer({
