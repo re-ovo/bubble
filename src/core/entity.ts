@@ -25,7 +25,7 @@ class Entity {
 
     addChild(child: Entity) {
         if (child._parent) {
-            console.warn(`Entity ${child.name} already has a parent, removing it from the previous parent.`);
+            // console.warn(`Entity ${child.name} already has a parent ${this.name}, removing it from the previous parent.`);
             child._parent.removeChild(child);
         }
 

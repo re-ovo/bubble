@@ -65,7 +65,7 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
     for (const node of gltf.nodes) {
         // Node Self
         const nodeEntity = new Entity(node.name ?? 'Node')
-        const nodeTransform = nodeEntity.getComponent(Transform)!
+        const nodeTransform = nodeEntity.transform
         if (node.matrix) {
             const matrix4 = mat4.create(...node.matrix)
             nodeTransform.setByMatrix(matrix4)

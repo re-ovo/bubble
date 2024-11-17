@@ -8,6 +8,7 @@ import {
     Scene, StandardMaterial
 } from "@bubblejs/bubble";
 import {Pane} from "tweakpane";
+import {lookupModels} from "../panel";
 
 const canvasRef = document.querySelector('#canvas') as HTMLCanvasElement;
 canvasRef.width = canvasRef.clientWidth;
@@ -23,6 +24,8 @@ const pane = new Pane();
 
 let scene = new Scene()
 let camera = new Entity('Camera')
+lookupModels(pane, scene);
+
 let cameraComponent = camera.addComponent(CameraComponent)
 cameraComponent.camera = new PerspectiveCamera(
     45,
