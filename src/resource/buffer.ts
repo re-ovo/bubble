@@ -6,6 +6,7 @@ import {
     type StructDefinition,
     type VariableDefinition
 } from "webgpu-utils";
+import {providerWGSLCounterScope} from "@/shader";
 
 class BufferResource implements DirtyObject<BufferDirtyFlag> {
     private _data: ArrayBuffer;
@@ -80,9 +81,11 @@ class UniformBuffer extends BufferResource {
         return new UniformBuffer(new ArrayBuffer(size));
     }
 
-    static ofDefinition(def: string): UniformBuffer {
-        const defs = makeShaderDataDefinitions(def);
-        const variable = defs.uniforms[0];
+    static ofDefinition(def: () => string): UniformBuffer {
+        const defs = providerWGSLCounterScope(() => {
+            return makeShaderDataDefinitions(def());
+        })
+        const variable = defs.uniforms[Object.keys(defs.uniforms)[0]];
         const size = variable.size;
         return UniformBuffer.ofSize(size);
     }
