@@ -22,6 +22,8 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
     private readonly _localTransformMatrix: Mat4;
     private readonly _transformMatrixInverse: Mat4;
 
+    private readonly _worldPosition: Vec3;
+
     private _dirtyFlag: TransformDirtyFlag = TransformDirtyFlag.All;
 
     // cache for fps camera control, avoid creating new quaternion every frame
@@ -42,6 +44,8 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
         this._localTransformMatrix = mat4.create();
         this._transformMatrix = mat4.create();
         this._transformMatrixInverse = mat4.create();
+
+        this._worldPosition = vec3.create(0, 0, 0);
 
         this.updateLocalMatrix()
         this.updateWorldMatrix()
@@ -72,6 +76,11 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
     get localTransformMatrix(): Mat4 {
         this.updateLocalMatrix();
         return this._localTransformMatrix;
+    }
+
+    get worldPosition(): Vec3 {
+        this.updateWorldMatrix();
+        return this._worldPosition;
     }
 
     set localPosition(value: Vec3) {
@@ -158,6 +167,7 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
                 mat4.copy(this.localTransformMatrix, this._transformMatrix);
             }
             mat4.inverse(this._transformMatrix, this._transformMatrixInverse);
+            vec3.transformMat4(this._localPosition, this._transformMatrix, this._worldPosition);
             this.clearDirty(TransformDirtyFlag.WorldMatrix);
         }
     }

@@ -8,7 +8,7 @@ import type {Scene} from "@/core/entity";
  */
 class RenderContext {
     public readonly device: GPUDevice;
-    public readonly allocator: RenderCache;
+    public readonly renderCache: RenderCache;
 
     private _targetView: GPUTextureView | null = null;
     private _targetFormat: GPUTextureFormat | null = null;
@@ -21,7 +21,7 @@ class RenderContext {
 
     constructor(device: GPUDevice) {
         this.device = device
-        this.allocator = new RenderCache(this)
+        this.renderCache = new RenderCache(this)
         this._commandEncoder = this.device.createCommandEncoder();
     }
 
