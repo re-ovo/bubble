@@ -8,5 +8,5 @@ struct ModelInfo {
     modelMatrixInverse: mat4x4<f32>,
 }
 
-@group(${BindGroupId.MODEL}) @binding(${autoBinding(BindGroupId.MODEL)}) var<uniform> modelInfo: ModelInfo;
+${autoBinding(BindGroupId.MODEL)} var<uniform> modelInfo: ModelInfo;
 `

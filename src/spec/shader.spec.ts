@@ -51,13 +51,13 @@ describe("WGSL Shader Processor", () => {
                   @location(${autoLocation()}) position: vec4<f32>
                 };
                 
-                @group(0) @binding(${autoBinding(0)}) struct TestInterpolation2 {}
+                ${autoBinding(0)} struct TestInterpolation2 {}
                 
-                @group(0) @binding(${autoBinding(0)}) struct TestInterpolation3 {}
+                ${autoBinding(0)} struct TestInterpolation3 {}
                 
-                @group(1) @binding(${autoBinding(1)}) struct TestInterpolation4 {}
+                ${autoBinding(1)} struct TestInterpolation4 {}
                 
-                @group(0) @binding(${autoBinding(0)}) struct TestInterpolation5 {}
+                ${autoBinding(0)} struct TestInterpolation5 {}
                 
                 ${camera_input()}
             `

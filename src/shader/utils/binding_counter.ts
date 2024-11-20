@@ -35,9 +35,10 @@ class CounterContext {
     }
 }
 
-export function autoBinding(group: BindGroupId): number {
+export function autoBinding(group: BindGroupId): string {
     if(counterContext == null) throw new Error('counterContext is null');
-    return counterContext.allocateBindingGroup(group);
+    const binding =  counterContext.allocateBindingGroup(group);
+    return `@group(${group}) @binding(${binding})`;
 }
 
 export function autoLocation(): number {
@@ -48,7 +49,7 @@ export function autoLocation(): number {
 export function textureAndSampler(name: string, type: string): string {
     // group 1 is the texture, group 2 is the sampler
     return wgsl`
-    @group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var ${name}: ${type};
-    @group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var ${name}Sampler: sampler;
+    ${autoBinding(BindGroupId.MATERIAL)} var ${name}: ${type};
+    ${autoBinding(BindGroupId.MATERIAL)} var ${name}Sampler: sampler;
     `
 }

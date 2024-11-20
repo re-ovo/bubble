@@ -12,7 +12,7 @@ struct MaterialInfo {
     metallic: f32,
 }
 
-@group(${BindGroupId.MATERIAL}) @binding(${autoBinding(BindGroupId.MATERIAL)}) var<uniform> material: MaterialInfo;
+${autoBinding(BindGroupId.MATERIAL)} var<uniform> material: MaterialInfo;
 
 // Cook-Torrance BRDF
 

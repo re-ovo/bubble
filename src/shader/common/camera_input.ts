@@ -9,5 +9,5 @@ struct CameraInput {
     cameraPosition: vec3<f32>,
 }
 
-@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<uniform> camera: CameraInput;
+${autoBinding(BindGroupId.PASS)} var<uniform> camera: CameraInput;
 `

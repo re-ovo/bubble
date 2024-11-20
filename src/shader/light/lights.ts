@@ -31,8 +31,8 @@ struct AmbientLight {
     intensity: f32,
 };
 
-@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<uniform> directionalLight: DirectionalLight;
-@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<uniform> ambientLight: AmbientLight;
-@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<storage> pointLights: array<PointLight>;
-@group(${BindGroupId.PASS}) @binding(${autoBinding(BindGroupId.PASS)}) var<storage> spotLights: array<SpotLight>;
+${autoBinding(BindGroupId.PASS)}var<uniform> directionalLight: DirectionalLight;
+${autoBinding(BindGroupId.PASS)} var<uniform> ambientLight: AmbientLight;
+${autoBinding(BindGroupId.PASS)} var<storage> pointLights: array<PointLight>;
+${autoBinding(BindGroupId.PASS)} var<storage> spotLights: array<SpotLight>;
 `;
