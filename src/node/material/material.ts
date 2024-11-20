@@ -44,7 +44,7 @@ export class Material {
         if (uniform) {
             return uniform;
         }
-        throw new Error(`Uniform ${name} not found.`);
+        return null;
     }
 
     hasUniform(name: string): boolean {

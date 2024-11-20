@@ -1,13 +1,8 @@
 import type RenderContext from "@/pipeline/context";
 import {type Texture, Texture2D, TextureDirtyFlag} from "@/resource/texture";
 import {numMipLevels} from "webgpu-utils";
-import {
-    IndexBuffer,
-    IndexBufferDirtyFlag,
-    VertexAttribute,
-    VertexAttributeDirtyFlag
-} from "@/resource/attribute";
-import {BufferResource, BufferDirtyFlag, UniformBuffer} from "@/resource/buffer";
+import {IndexBuffer, IndexBufferDirtyFlag, VertexAttribute, VertexAttributeDirtyFlag} from "@/resource/attribute";
+import {BufferDirtyFlag, BufferResource, UniformBuffer} from "@/resource/buffer";
 import type {Shader} from "@/shader/shader";
 import {RenderPipelineBuilder} from "@/pipeline/builder/render_pipeline_builder";
 import type {Material} from "@/node/material/material";
@@ -23,7 +18,7 @@ class RenderCache {
     private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
     private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
     private _bindGroupsCache: WeakMap<Material, {groupId: number, groupVal: GPUBindGroup}[]>;
-    private _uniformBufferCache: WeakMap<Material, UniformBuffer>;
+    private _uniformBufferCache: WeakMap<Material, Map<string, UniformBuffer>>;
 
     constructor(context: RenderContext) {
         this._context = context;
@@ -181,10 +176,12 @@ class RenderCache {
             const layout = this.requestLayout(material.shader).pipelineLayout;
             pipeline = new RenderPipelineBuilder()
                 .setShader(material.shader)
+                .addRenderTarget(this._context.targetFormat)
+                .addRenderTarget('depth24plus')
                 .setCullMode(material.cullMode)
                 .setVertexAttributes(mesh.attributes)
                 .setPipelineLayout(layout)
-                .build(this.device);
+                .build(this._context);
             this._renderPipelineCache.set(
                 material.shader,
                 pipeline
@@ -193,24 +190,37 @@ class RenderCache {
         return pipeline;
     }
 
-    requestUniformBufferFromMaterial(material: Material): UniformBuffer {
-        let buffer = this._uniformBufferCache.get(material);
+    requestUniformBufferFromMaterial(
+        material: Material,
+        variableName: string,
+    ): UniformBuffer {
+        let materialBuffers = this._uniformBufferCache.get(material);
+        if(!materialBuffers) {
+            materialBuffers = new Map();
+            this._uniformBufferCache.set(material, materialBuffers);
+        }
+        let buffer = materialBuffers.get(variableName);
         if(!buffer) {
-            // TODO: support multiple uniform buffers
-            throw new Error('Not implemented yet');
+            const variable = material.shader.uniforms[variableName];
+            const value = material.getUniform(variableName);
+            buffer = UniformBuffer.ofSize(variable.size);
+            buffer.writeStructuredData(value, variable);
+            materialBuffers.set(variableName, buffer);
         }
         return buffer;
     }
 
-    requestBindGroup(material: Material): {groupId: number, groupVal: GPUBindGroup}[] {
+    requestBindGroup(
+        material: Material,
+    ): {groupId: number, groupVal: GPUBindGroup}[] {
         let bindGroups = this._bindGroupsCache.get(material);
         if (!bindGroups) {
-            const layout = this.requestLayout(material.shader);
+            const allocatedLayout = this.requestLayout(material.shader);
             bindGroups = material.shader.bindingGroups.map((groupMeta, groupIndex) => {
                 return {
                     groupId: groupIndex,
                     groupVal: this.device.createBindGroup({
-                        layout: layout.bindGroupLayouts[groupIndex],
+                        layout: allocatedLayout.bindGroupLayouts[groupIndex],
                         entries: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
                             const bindingVarName = bindingMeta.name
                             let resource: GPUBindingResource
@@ -221,7 +231,7 @@ class RenderCache {
                                 resource = this.requestTexture(material.getTexture(textureName)).sampler
                             } else {
                                 // buffer (uniform, storage)
-                                const uniformBuffer = this.requestUniformBufferFromMaterial(material)
+                                const uniformBuffer = this.requestUniformBufferFromMaterial(material, bindingVarName)
                                 resource = this.requestBuffer(uniformBuffer)
                             }
                             return {

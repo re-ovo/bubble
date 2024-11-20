@@ -94,8 +94,8 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         })
 
         const bindGroup = context.renderCache.requestBindGroup(material)
-        bindGroup.forEach((group, index) => {
-            passEncoder.setBindGroup(group.groupId, group.groupVal)
+        bindGroup.forEach(({groupId, groupVal}) => {
+            passEncoder.setBindGroup(groupId, groupVal)
         })
 
         if (mesh.indices) {

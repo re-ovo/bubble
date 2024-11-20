@@ -1,6 +1,8 @@
 import type {Shader} from "@/shader/shader";
 import {uuid_v4} from "@/math/maths";
 import type {VertexAttribute} from "@/resource/attribute";
+import RenderContext from "@/pipeline/context";
+import {c} from "vite/dist/node/types.d-aGj9QkWt";
 
 export class RenderPipelineBuilder {
     private _label: string;
@@ -95,7 +97,7 @@ export class RenderPipelineBuilder {
         return this;
     }
 
-    build(device: GPUDevice): GPURenderPipeline {
+    build(context: RenderContext): GPURenderPipeline {
         if (!this._shader) {
             throw new Error('Shader is not set');
         }
@@ -111,11 +113,8 @@ export class RenderPipelineBuilder {
         if (!this._pipelineLayout) {
             throw new Error('Pipeline layout is not set');
         }
-        const shaderModule = device.createShaderModule({
-            code: this._shader.code,
-        })
-
-        return device.createRenderPipeline({
+        const shaderModule = context.renderCache.requestShaderModule(this._shader);
+        return context.device.createRenderPipeline({
             label: this._label,
             vertex: {
                 module: shaderModule,
