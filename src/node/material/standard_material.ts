@@ -10,58 +10,55 @@ export class StandardMaterial extends Material {
         super(new Shader(mesh_shader));
 
         // default textures
-        this.addTexture("albedoMap", defaultBaseColor);
-        this.addTexture("normalMap", defaultNormalMap);
-        this.addTexture("metallicMap", defaultMetallicMap);
-        this.addTexture("roughnessMap", defaultRoughnessMap);
-        this.addTexture("emissiveMap", defaultEmissiveMap);
-        this.addTexture("occlusionMap", defaultOcclusionMap);
+        this.setTexture("albedoMap", defaultBaseColor);
+        this.setTexture("normalMap", defaultNormalMap);
+        this.setTexture("pbrMap", defaultMetallicMap);
+        this.setTexture("emissiveMap", defaultEmissiveMap);
+        this.setTexture("occlusionMap", defaultOcclusionMap);
 
         // default uniform values
-        this.setUniform("materialInfo", {
-            baseColorFactor: colors.newColor4f(1, 1, 1, 1),
-            metallicFactor: 0,
-            roughnessFactor: 0.5,
-            emissiveFactor: colors.newColor3f(0, 0, 0),
-            occlusionStrength: 1,
+        this.setUniform("material", {
+            color: colors.White,
+            roughness: 1.0, // 1.0 x any = any
+            metallic: 1.0, // 1.0 x any = any
         })
     }
 
     get color(): Color4f {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         return materialInfo.baseColorFactor;
     }
 
     set color(value: Color4f) {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         materialInfo.baseColorFactor = value;
-        this.setUniform("materialInfo", materialInfo);
+        this.setUniform("material", materialInfo);
     }
 
     get metallic(): number {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         return materialInfo.metallicFactor;
     }
 
     set metallic(value: number) {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         materialInfo.metallicFactor = value;
-        this.setUniform("materialInfo", materialInfo);
+        this.setUniform("material", materialInfo);
     }
 
     get roughness(): number {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         return materialInfo.roughnessFactor;
     }
 
     set roughness(value: number) {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         materialInfo.roughnessFactor = value;
-        this.setUniform("materialInfo", materialInfo);
+        this.setUniform("material", materialInfo);
     }
 
     get emissive(): Color3f {
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         return materialInfo.emissiveFactor;
     }
 
@@ -69,9 +66,9 @@ export class StandardMaterial extends Material {
         if (value.length !== 3) {
             throw new Error("Emissive factor must be a 3-component array.");
         }
-        const materialInfo = this.getUniform("materialInfo");
+        const materialInfo = this.getUniform("material");
         materialInfo.emissiveFactor = value;
-        this.setUniform("materialInfo", materialInfo);
+        this.setUniform("material", materialInfo);
     }
 }
 

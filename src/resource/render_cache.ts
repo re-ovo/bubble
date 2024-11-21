@@ -7,9 +7,11 @@ import type {Shader} from "@/shader/shader";
 import {RenderPipelineBuilder} from "@/pipeline/builder/render_pipeline_builder";
 import type {Material} from "@/node/material/material";
 import type {Mesh} from "@/node/mesh/mesh";
+import {RendererComponent} from "@/node";
+import {TransformDirtyFlag} from "@/core";
 
 class RenderCache {
-    private _context: RenderContext;
+    private readonly _context: RenderContext;
 
     private _vertexBufferCache: WeakMap<VertexAttribute | IndexBuffer, AllocatedVertexAttribute>;
     private _textureCache: WeakMap<Texture, AllocatedTexture>;
@@ -17,8 +19,9 @@ class RenderCache {
     private _shaderCache: WeakMap<Shader, GPUShaderModule>;
     private _bindGroupLayoutCache: WeakMap<Shader, AllocatedLayout>;
     private _renderPipelineCache: WeakMap<Shader, GPURenderPipeline>;
-    private _bindGroupsCache: WeakMap<Material, {groupId: number, groupVal: GPUBindGroup}[]>;
+    private _bindGroupsCache: WeakMap<Material, { groupId: number, groupVal: GPUBindGroup }[]>;
     private _uniformBufferCache: WeakMap<Material, Map<string, UniformBuffer>>;
+    private _modelBindingDataCache: WeakMap<RendererComponent, UniformBuffer>;
 
     constructor(context: RenderContext) {
         this._context = context;
@@ -30,6 +33,7 @@ class RenderCache {
         this._renderPipelineCache = new WeakMap();
         this._bindGroupsCache = new WeakMap();
         this._uniformBufferCache = new WeakMap();
+        this._modelBindingDataCache = new WeakMap();
     }
 
     private get device() {
@@ -41,13 +45,13 @@ class RenderCache {
         if (!allocated) {
             const usage = attribute instanceof IndexBuffer ? GPUBufferUsage.INDEX : GPUBufferUsage.VERTEX;
             const buffer = this.device.createBuffer({
-                size: attribute.data.byteLength,
+                size: attribute.byteLength,
                 usage: usage | GPUBufferUsage.COPY_DST,
             });
             allocated = {
                 buffer,
                 offset: 0,
-                size: attribute.data.byteLength,
+                size: attribute.byteLength,
                 stride: attribute instanceof VertexAttribute ? attribute.itemSize : 0, // only for vertex buffer
             };
             this._vertexBufferCache.set(attribute, allocated);
@@ -61,10 +65,6 @@ class RenderCache {
             if (attribute.isDirty(IndexBufferDirtyFlag.DATA)) {
                 this.device.queue.writeBuffer(allocated.buffer, 0, attribute.data);
                 attribute.clearDirty(IndexBufferDirtyFlag.DATA);
-            }
-            if (attribute.isDirty(IndexBufferDirtyFlag.COUNT)) {
-                allocated.size = attribute.count;
-                attribute.clearDirty(IndexBufferDirtyFlag.COUNT);
             }
         }
         return allocated;
@@ -83,8 +83,8 @@ class RenderCache {
             const texture = this.device.createTexture({
                 size: texture2d.size,
                 format: texture2d.format,
-                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-                mipLevelCount: numMipLevels(texture2d.size),
+                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+                // mipLevelCount: numMipLevels(texture2d.size),
             });
             const view = texture.createView();
 
@@ -123,7 +123,7 @@ class RenderCache {
             allocated = {
                 buffer: gpuBuffer,
                 offset: 0,
-                size: buffer.data.byteLength,
+                size: buffer.byteLength,
             };
             this._bufferCache.set(buffer, allocated);
         }
@@ -177,7 +177,11 @@ class RenderCache {
             pipeline = new RenderPipelineBuilder()
                 .setShader(material.shader)
                 .addRenderTarget(this._context.targetFormat)
-                .addRenderTarget('depth24plus')
+                .setDepthStencil({
+                    format: 'depth24plus',
+                    depthWriteEnabled: true,
+                    depthCompare: 'less',
+                })
                 .setCullMode(material.cullMode)
                 .setVertexAttributes(mesh.attributes)
                 .setPipelineLayout(layout)
@@ -193,16 +197,19 @@ class RenderCache {
     requestUniformBufferFromMaterial(
         material: Material,
         variableName: string,
-    ): UniformBuffer {
+    ): UniformBuffer | null {
         let materialBuffers = this._uniformBufferCache.get(material);
-        if(!materialBuffers) {
+        if (!materialBuffers) {
             materialBuffers = new Map();
             this._uniformBufferCache.set(material, materialBuffers);
         }
         let buffer = materialBuffers.get(variableName);
-        if(!buffer) {
+        if (!buffer) {
             const variable = material.shader.uniforms[variableName];
             const value = material.getUniform(variableName);
+            if (value === undefined) {
+                return null; // no value for this uniform
+            }
             buffer = UniformBuffer.ofSize(variable.size);
             buffer.writeStructuredData(value, variable);
             materialBuffers.set(variableName, buffer);
@@ -211,40 +218,91 @@ class RenderCache {
     }
 
     requestBindGroup(
-        material: Material,
-    ): {groupId: number, groupVal: GPUBindGroup}[] {
+        renderer: RendererComponent,
+        cameraProperties: UniformBuffer,
+    ): { groupId: number, groupVal: GPUBindGroup }[] {
+        const material = renderer.material;
+
         let bindGroups = this._bindGroupsCache.get(material);
-        if (!bindGroups) {
-            const allocatedLayout = this.requestLayout(material.shader);
-            bindGroups = material.shader.bindingGroups.map((groupMeta, groupIndex) => {
+
+        const groupDesc = material.shader.bindingGroups
+            .map((groupMeta, groupIndex) => {
                 return {
                     groupId: groupIndex,
-                    groupVal: this.device.createBindGroup({
-                        layout: allocatedLayout.bindGroupLayouts[groupIndex],
-                        entries: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
-                            const bindingVarName = bindingMeta.name
-                            let resource: GPUBindingResource
-                            if (bindingMeta.type.startsWith('texture')) {
-                                resource = this.requestTexture(material.getTexture(bindingVarName)).view
-                            } else if (bindingMeta.type.startsWith('sampler')) {
-                                const textureName = bindingVarName.slice(0, -7) // remove 'Sampler' suffix
-                                resource = this.requestTexture(material.getTexture(textureName)).sampler
-                            } else {
-                                // buffer (uniform, storage)
-                                const uniformBuffer = this.requestUniformBufferFromMaterial(material, bindingVarName)
-                                resource = this.requestBuffer(uniformBuffer)
+                    groupVal: groupMeta.bindings.map((bindingMeta, bindingIndex) => {
+                        const bindingVarName = bindingMeta.name
+                        let resource: GPUBindingResource
+                        if (bindingMeta.type.startsWith('texture')) {
+                            resource = this.requestTexture(material.getTexture(bindingVarName)).view
+                        } else if (bindingMeta.type.startsWith('sampler')) {
+                            const textureName = bindingVarName.slice(0, -7) // remove 'Sampler' suffix
+                            resource = this.requestTexture(material.getTexture(textureName)).sampler
+                        } else if (bindingVarName === 'modelInfo') {
+                            resource = this.requestBuffer(
+                                this._requestModelBindingData(renderer)
+                            )
+                        } else {
+                            // buffer (uniform, storage)
+                            let uniformBuffer = this.requestUniformBufferFromMaterial(
+                                material,
+                                bindingVarName,
+                            )
+                            if (!uniformBuffer && bindingVarName === 'camera') {
+                                uniformBuffer = cameraProperties
                             }
+                            if (!uniformBuffer) throw new Error(`No buffer found for ${bindingVarName}`)
+                            resource = this.requestBuffer(uniformBuffer)
+                        }
+                        return {
+                            binding: bindingIndex,
+                            resource: resource,
+                        }
+                    })
+                }
+            });
+
+        if (!bindGroups) {
+            const allocatedLayout = this.requestLayout(material.shader);
+            bindGroups = groupDesc.map((group) => {
+                return {
+                    groupId: group.groupId,
+                    groupVal: this.device.createBindGroup({
+                        layout: allocatedLayout.bindGroupLayouts[group.groupId],
+                        entries: group.groupVal.map((binding) => {
                             return {
-                                binding: bindingIndex,
-                                resource: resource,
+                                binding: binding.binding,
+                                resource: binding.resource,
                             }
                         })
                     })
                 }
-            })
+            });
             this._bindGroupsCache.set(material, bindGroups);
         }
+
         return bindGroups;
+    }
+
+    private _requestModelBindingData(
+        renderer: RendererComponent,
+    ): UniformBuffer {
+        const transform = renderer.entity.transform;
+        let data = this._modelBindingDataCache.get(renderer);
+        if (!data) {
+            const variable = renderer.material.shader.uniforms['modelInfo'];
+            const uniformBuffer = UniformBuffer.ofSize(variable.size);
+            this._modelBindingDataCache.set(renderer, uniformBuffer);
+            data = uniformBuffer;
+        }
+        if (transform.isDirty(TransformDirtyFlag.UPLOAD_DATA)) {
+            const variable = renderer.material.shader.uniforms['modelInfo'];
+            data.writeStructuredData({
+                modelMatrix: transform.transformMatrix,
+                modelMatrixInverse: transform.transformMatrixInverse,
+            }, variable)
+            transform.clearDirty(TransformDirtyFlag.UPLOAD_DATA);
+        }
+        return data;
     }
 }
 

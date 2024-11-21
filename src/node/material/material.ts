@@ -15,7 +15,7 @@ export class Material {
         this._cullMode = 'back';
     }
 
-    addTexture(variableName: string, texture: Texture) {
+    setTexture(variableName: string, texture: Texture) {
         this.textures.set(variableName, texture);
     }
 
@@ -44,7 +44,7 @@ export class Material {
         if (uniform) {
             return uniform;
         }
-        return null;
+        return undefined;
     }
 
     hasUniform(name: string): boolean {

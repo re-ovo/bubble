@@ -39,9 +39,9 @@ fn vs(input: VertexInput) -> VertexOutput {
 
 ${gamma_correct()}
 
-${textureAndSampler('baseColorTexture', 'texture_2d<f32>')}
-${textureAndSampler('normalTexture', 'texture_2d<f32>')}
-${textureAndSampler('pbrTexture', 'texture_2d<f32>')}
+${textureAndSampler('albedoMap', 'texture_2d<f32>')}
+${textureAndSampler('normalMap', 'texture_2d<f32>')}
+${textureAndSampler('pbrMap', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
@@ -53,10 +53,10 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let L = normalize(lightDirection);
     let H = normalize(V + L);
 
-    let metallic = material.metallic * textureSample(pbrTexture, pbrTextureSampler, input.uv).b;
-    let roughness = material.roughness * textureSample(pbrTexture, pbrTextureSampler, input.uv).g;
+    let metallic = material.metallic * textureSample(pbrMap, pbrMapSampler, input.uv).b;
+    let roughness = material.roughness * textureSample(pbrMap, pbrMapSampler, input.uv).g;
     
-    var albedo = textureSample(baseColorTexture, baseColorTextureSampler, input.uv).xyz;
+    var albedo = textureSample(albedoMap, albedoMapSampler, input.uv).xyz;
     albedo *= material.color.rgb; // multiply by color factor
     
     let F0 = mix(vec3<f32>(0.04), albedo, metallic);
@@ -65,7 +65,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     
     let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
-    let alpha = material.color.a * textureSample(baseColorTexture, baseColorTextureSampler, input.uv).a;
+    let alpha = material.color.a * textureSample(albedoMap, albedoMapSampler, input.uv).a;
     
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
 }

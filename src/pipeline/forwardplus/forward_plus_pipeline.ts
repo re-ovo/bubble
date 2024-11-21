@@ -2,9 +2,10 @@ import {MeshRendererComponent, RendererComponent} from "@/node";
 import type {Camera} from "@/node/camera/camera";
 import type RenderContext from "@/pipeline/context";
 import {ScriptablePipeline} from "@/pipeline/pipeline";
-import {UniformBuffer} from "@/resource";
-import camera_input from "@/shader/common/camera_input";
+import {BufferDirtyFlag, UniformBuffer} from "@/resource";
+import camera_input, {cameraVariable} from "@/shader/common/camera_input";
 import {RendererList} from "@/pipeline/renderer_list";
+import {TransformDirtyFlag} from "@/core";
 
 export class ForwardPlusPipeline extends ScriptablePipeline {
     private _rendererList: RendererList | null = null;
@@ -46,6 +47,18 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         }
         this._rendererList.update();
 
+
+        // set camera uniform buffer
+        if(camera.parent!.entity!.transform!.isDirty(TransformDirtyFlag.UPLOAD_DATA)) {
+            this.cameraUniformBuffer.writeStructuredData({
+                projectionMatrix: camera.projectionMatrix,
+                viewMatrixInverse: camera.parent!.entity!.transform.transformMatrixInverse,
+                cameraPosition: camera.parent!.entity!.transform.worldPosition,
+            }, cameraVariable)
+            camera.parent!.entity!.transform.clearDirty(TransformDirtyFlag.UPLOAD_DATA)
+        }
+        // console.log(camera.parent!.entity!.transform.transformMatrixInverse)
+
         context.beginRenderPass({
             colorAttachments: [{
                 view: context.target,
@@ -74,7 +87,10 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         }
     }
 
-    renderMeshRenderer(context: RenderContext, renderer: MeshRendererComponent) {
+    renderMeshRenderer(
+        context: RenderContext,
+        renderer: MeshRendererComponent
+    ) {
         const mesh = renderer.mesh!;
         const material = renderer.material!;
         const passEncoder = context.renderPassEncoder;
@@ -82,18 +98,18 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         const pipeline = context.renderCache.requestRenderPipeline(material, mesh)
         passEncoder.setPipeline(pipeline);
 
-        mesh.attributes.forEach((attribute, name) => {
-            const buffer = context.renderCache.requestVertexBuffer(attribute)
-            const location = material.shader.attributes
-                .find((attribute) => attribute.name === name)?.location
-            if (location) {
-                passEncoder.setVertexBuffer(location, buffer.buffer, buffer.offset, buffer.size)
-            } else {
-                console.warn(`Attribute ${name} not found in shader`)
+        material.shader.attributes.forEach((attribute) => {
+            if (!mesh.attributes.has(attribute.name)) {
+                console.warn(`Attribute ${attribute.name} not found in mesh`)
             }
+            const buffer = context.renderCache.requestVertexBuffer(mesh.attributes.get(attribute.name)!)
+            passEncoder.setVertexBuffer(attribute.location, buffer.buffer, buffer.offset, buffer.size)
         })
 
-        const bindGroup = context.renderCache.requestBindGroup(material)
+        const bindGroup = context.renderCache.requestBindGroup(
+            renderer,
+            this.cameraUniformBuffer,
+        )
         bindGroup.forEach(({groupId, groupVal}) => {
             passEncoder.setBindGroup(groupId, groupVal)
         })

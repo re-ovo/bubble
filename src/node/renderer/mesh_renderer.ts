@@ -1,8 +1,13 @@
 import {RendererComponent} from "@/node/renderer/renderer";
-import type {Material} from "@/node/material/material";
-import type {Mesh} from "@/node/mesh/mesh";
+import {Mesh} from "@/node/mesh/mesh";
+import {Entity} from "@/core";
 
 export class MeshRendererComponent extends RendererComponent {
-    mesh?: Mesh;
-    material?: Material;
+    mesh: Mesh;
+    constructor(entity: Entity) {
+        super(entity);
+        this.mesh = defaultMesh;
+    }
 }
+
+const defaultMesh = new Mesh();

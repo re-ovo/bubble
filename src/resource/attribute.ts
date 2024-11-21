@@ -18,6 +18,10 @@ class VertexAttribute implements DirtyObject<VertexAttributeDirtyFlag> {
         this.stepMode = stepMode ?? 'vertex';
     }
 
+    get byteLength() {
+        return this.data.byteLength;
+    }
+
     get stride() {
         return this.data.BYTES_PER_ELEMENT * this.itemSize;
     }
@@ -57,6 +61,10 @@ class IndexBuffer implements DirtyObject<IndexBufferDirtyFlag> {
         }
     }
 
+    get byteLength() {
+        return this.data.byteLength;
+    }
+
     get isUint16() {
         return this.data instanceof Uint16Array;
     }
@@ -84,8 +92,7 @@ enum VertexAttributeDirtyFlag {
 
 enum IndexBufferDirtyFlag {
     DATA = 1 << 0, // Data has changed
-    COUNT = 1 << 1, // Count has changed
-    ALL = DATA | COUNT,
+    ALL = DATA,
 }
 
 export {VertexAttribute, IndexBuffer, VertexAttributeDirtyFlag, IndexBufferDirtyFlag};

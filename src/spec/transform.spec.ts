@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {mat4} from "wgpu-matrix";
+import {mat4, vec3} from "wgpu-matrix";
 import {isMatrixOrthogonal} from "@/math/maths";
 import {Transform} from "@/core/transform";
 import {Entity} from "@/core/entity";
@@ -34,5 +34,26 @@ describe("transform", () => {
         )
         transform.setByMatrix(matrix)
         //expect(mat4.equalsApproximately(transform.localTransformMatrix, matrix)).toBeTruthy()
+    })
+
+    it('test entity hierarchy', () => {
+        const a = new Entity('a')
+        const b = new Entity('b')
+        const c = new Entity('c')
+
+        a.addChild(b)
+        b.addChild(c)
+
+        a.transform.localPosition = vec3.create(1, 0, 0)
+        b.transform.localPosition = vec3.create(0, 1, 0)
+        c.transform.localPosition = vec3.create(0, 0, 1)
+
+        expect(vec3.equalsApproximately(a.transform.localPosition, vec3.create(1, 0, 0))).toBeTruthy()
+        expect(vec3.equalsApproximately(b.transform.localPosition, vec3.create(0, 1, 0))).toBeTruthy()
+        expect(vec3.equalsApproximately(c.transform.localPosition, vec3.create(0, 0, 1))).toBeTruthy()
+
+        expect(vec3.equalsApproximately(a.transform.worldPosition, vec3.create(1, 0, 0))).toBeTruthy()
+        expect(vec3.equalsApproximately(b.transform.worldPosition, vec3.create(1, 1, 0))).toBeTruthy()
+        expect(vec3.equalsApproximately(c.transform.worldPosition, vec3.create(1, 1, 1))).toBeTruthy()
     })
 })

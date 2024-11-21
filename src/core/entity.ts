@@ -30,8 +30,13 @@ class Entity {
         }
 
         child._parent = this;
+        this.transform.setNeedsUpdateWorldMatrix();
         this._children.push(child);
         return child;
+    }
+
+    addChildren(children: Entity[]) {
+        children.forEach(child => this.addChild(child));
     }
 
     removeChild(child: Entity) {

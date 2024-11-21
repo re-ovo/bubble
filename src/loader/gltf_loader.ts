@@ -98,7 +98,7 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
                 );
             }
             primitives.forEach(primitive => {
-                nodeEntity.addChild(primitive)
+                primitive.setParent(nodeEntity)
             })
         }
     }
@@ -118,9 +118,16 @@ async function convertToEntities(gltf: GLTFPostprocessed, onEntityLoaded: (entit
         }
     }
 
-    console.log('Loaded', entities.length, 'entities')
+    // remove all entities with parent, only keep root entities
+    const rootEntities = entities.filter(entity => !entity.parent)
 
-    return entities
+    rootEntities.forEach(entity => {
+        console.log(entity)
+    })
+
+    console.log('Loaded', rootEntities.length, 'entities')
+
+    return rootEntities
 }
 
 
@@ -192,7 +199,7 @@ async function convertPrimitive(
                 textureCache,
                 'rgba8unorm-srgb',
             )
-            material.addTexture('baseColorTexture', texture)
+            material.setTexture('albedoMap', texture)
         }
         // PBR Metallic Roughness
         if (primitive.material.pbrMetallicRoughness.metallicRoughnessTexture) {
@@ -201,7 +208,7 @@ async function convertPrimitive(
                 textureCache,
                 'rgba8unorm',
             )
-            material.addTexture('pbrTexture', texture)
+            material.setTexture('pbrMap', texture)
         }
     }
     if (primitive.material && primitive.material.normalTexture) {
@@ -210,7 +217,7 @@ async function convertPrimitive(
             textureCache,
             'rgba8unorm',
         )
-        material.addTexture('normalTexture', texture)
+        material.setTexture('normalMap', texture)
     }
 
     entities.push(entity)

@@ -163,12 +163,15 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
                     this.localTransformMatrix,
                     this._transformMatrix
                 );
+                vec3.transformMat4(this._localPosition, this.entity.parent.transform.transformMatrix, this._worldPosition);
             } else {
                 mat4.copy(this.localTransformMatrix, this._transformMatrix);
+                vec3.copy(this._localPosition, this._worldPosition);
             }
             mat4.inverse(this._transformMatrix, this._transformMatrixInverse);
-            vec3.transformMat4(this._localPosition, this._transformMatrix, this._worldPosition);
+
             this.clearDirty(TransformDirtyFlag.WorldMatrix);
+            this.setDirty(TransformDirtyFlag.UPLOAD_DATA);// 世界矩阵更新后需要上传数据
         }
     }
 
@@ -233,7 +236,8 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
 enum TransformDirtyFlag {
     LocalMatrix = 1 << 0,
     WorldMatrix = 1 << 1,
-    All = LocalMatrix | WorldMatrix,
+    UPLOAD_DATA = 1 << 2,
+    All = LocalMatrix | WorldMatrix | UPLOAD_DATA,
 }
 
 export {Transform, TransformDirtyFlag};

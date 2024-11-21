@@ -16,7 +16,7 @@ export class RenderPipelineBuilder {
     private _primitive: GPUPrimitiveState = {}
 
     // depth stencil state
-    private _depthStencil: GPUDepthStencilState | null = null;
+    private _depthStencil: GPUDepthStencilState | undefined;
 
     constructor(label?: string) {
         this._label = label ?? `RenderPipeline[${uuid_v4()}]`;
@@ -114,7 +114,7 @@ export class RenderPipelineBuilder {
             throw new Error('Pipeline layout is not set');
         }
         const shaderModule = context.renderCache.requestShaderModule(this._shader);
-        return context.device.createRenderPipeline({
+        const descriptor: GPURenderPipelineDescriptor = {
             label: this._label,
             vertex: {
                 module: shaderModule,
@@ -126,6 +126,9 @@ export class RenderPipelineBuilder {
             },
             layout: this._pipelineLayout,
             primitive: this._primitive,
-        });
+            depthStencil: this._depthStencil
+        }
+        console.log(descriptor);
+        return context.device.createRenderPipeline(descriptor);
     }
 }

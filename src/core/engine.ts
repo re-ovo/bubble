@@ -60,7 +60,7 @@ export class RenderEngine {
         this._renderPipeline = options.pipelineProvider?.() ?? new ForwardPlusPipeline();
         console.log("WebGPU initialized.");
         console.log("Preferred format: ", this.preferredFormat);
-        console.table(this.device.limits)
+        // console.table(this.device.limits)
     }
 
     resize(width: number, height: number) {

@@ -20,8 +20,12 @@ export function lookupModels(pane: FolderApi, scene: Scene) {
         set value(value: string) {
             this._value = value
             if (value) {
-                loadGltfModel(value).then((model) => {
-                    model.forEach((m) => scene.addChild(m))
+                new Promise(async (resolve) => {
+                    const entities = await loadGltfModel(value)
+                    scene.addChildren(entities)
+                    resolve(entities)
+                }).then(r => {
+                    console.log('loaded', value)
                 })
             }
         }

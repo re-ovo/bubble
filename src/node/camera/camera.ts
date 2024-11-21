@@ -16,7 +16,6 @@ export class CameraComponent extends Component {
 
     update(deltaTime: number) {
         if (!this._camera) throw new Error("Camera not set in CameraComponent, did you forget to add?");
-
     }
 }
 
