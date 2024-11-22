@@ -46,7 +46,7 @@ ${textureAndSampler('pbrMap', 'texture_2d<f32>')}
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
     let lightDirection = vec3<f32>(0.5, 0.5, 0.5);
-    let lightRadiance = vec3<f32>(4.0);
+    let lightRadiance = vec3<f32>(10.0);
     
     let N = normalize(input.normal);
     let V = normalize(camera.cameraPosition - input.fragPos);
@@ -66,7 +66,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
     let alpha = material.color.a * textureSample(albedoMap, albedoMapSampler, input.uv).a;
-    
+   
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
 }
 `

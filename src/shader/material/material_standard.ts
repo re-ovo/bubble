@@ -10,6 +10,7 @@ struct MaterialInfo {
     color: vec4<f32>,
     roughness: f32,
     metallic: f32,
+    emission: vec3<f32>,
 }
 
 ${autoBinding(BindGroupId.MATERIAL)} var<uniform> material: MaterialInfo;

@@ -46,9 +46,6 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
         this._transformMatrixInverse = mat4.create();
 
         this._worldPosition = vec3.create(0, 0, 0);
-
-        this.updateLocalMatrix()
-        this.updateWorldMatrix()
     }
 
     get localPosition(): Vec3 {
@@ -152,6 +149,7 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
             mat4.mul(this._localTransformMatrix, this._scaleMatrix, this._localTransformMatrix);
 
             this.clearDirty(TransformDirtyFlag.LocalMatrix);
+            this.setNeedsUpdateWorldMatrix();
         }
     }
 

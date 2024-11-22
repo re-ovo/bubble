@@ -21,53 +21,63 @@ export class StandardMaterial extends Material {
             color: colors.White,
             roughness: 1.0, // 1.0 x any = any
             metallic: 1.0, // 1.0 x any = any
+            emission: colors.newColor3f(0, 0, 0),
         })
     }
 
     get color(): Color4f {
         const materialInfo = this.getUniform("material");
-        return materialInfo.baseColorFactor;
+        return materialInfo.color;
     }
 
     set color(value: Color4f) {
+        if (value.length !== 4) {
+            throw new Error("Color must be a 4-component array.");
+        }
         const materialInfo = this.getUniform("material");
-        materialInfo.baseColorFactor = value;
+        materialInfo.color = value;
         this.setUniform("material", materialInfo);
     }
 
     get metallic(): number {
         const materialInfo = this.getUniform("material");
-        return materialInfo.metallicFactor;
+        return materialInfo.metallic;
     }
 
     set metallic(value: number) {
+        if (value < 0 || value > 1) {
+            throw new Error("Metallic factor must be between 0 and 1.");
+        }
         const materialInfo = this.getUniform("material");
-        materialInfo.metallicFactor = value;
+        materialInfo.metallic = value;
         this.setUniform("material", materialInfo);
     }
 
     get roughness(): number {
         const materialInfo = this.getUniform("material");
-        return materialInfo.roughnessFactor;
+        return materialInfo.roughness;
     }
 
     set roughness(value: number) {
+        if (value < 0 || value > 1) {
+            throw new Error("Roughness factor must be between 0 and 1.");
+        }
         const materialInfo = this.getUniform("material");
-        materialInfo.roughnessFactor = value;
+        materialInfo.roughness = value;
         this.setUniform("material", materialInfo);
     }
 
-    get emissive(): Color3f {
+    get emission(): Color3f {
         const materialInfo = this.getUniform("material");
-        return materialInfo.emissiveFactor;
+        return materialInfo.emission;
     }
 
-    set emissive(value: Color3f) {
+    set emission(value: Color3f) {
         if (value.length !== 3) {
-            throw new Error("Emissive factor must be a 3-component array.");
+            throw new Error("emission factor must be a 3-component array.");
         }
         const materialInfo = this.getUniform("material");
-        materialInfo.emissiveFactor = value;
+        materialInfo.emission = value;
         this.setUniform("material", materialInfo);
     }
 }
