@@ -60,8 +60,6 @@ export class RendererList {
 
             return aMaterial.blendMode - bMaterial.blendMode // Sort in ascending order (opaque first)
         })
-
-        console.log(this._renderers.map(r => r.material.blendMode))
     }
 
     get renderObjects() {
