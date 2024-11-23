@@ -1,8 +1,8 @@
-import {MeshRendererComponent, RendererComponent} from "@/node";
+import {CameraDirtyFlag, MeshRendererComponent, RendererComponent} from "@/node";
 import type {Camera} from "@/node/camera/camera";
 import type RenderContext from "@/pipeline/context";
 import {ScriptablePipeline} from "@/pipeline/pipeline";
-import {BufferDirtyFlag, UniformBuffer} from "@/resource";
+import {UniformBuffer} from "@/resource";
 import camera_input, {cameraVariable} from "@/shader/common/camera_input";
 import {RendererList} from "@/pipeline/renderer_list";
 import {TransformDirtyFlag} from "@/core";
@@ -47,15 +47,16 @@ export class ForwardPlusPipeline extends ScriptablePipeline {
         }
         this._rendererList.update();
 
-
         // set camera uniform buffer
-        if(camera.parent!.entity!.transform!.isDirty(TransformDirtyFlag.UPLOAD_DATA)) {
+        if (camera.parent!.entity!.transform!.isDirty(TransformDirtyFlag.UPLOAD_DATA) || camera.isDirty(CameraDirtyFlag.PROJECTION_MATRIX)) {
             this.cameraUniformBuffer.writeStructuredData({
                 projectionMatrix: camera.projectionMatrix,
                 viewMatrixInverse: camera.parent!.entity!.transform.transformMatrixInverse,
                 cameraPosition: camera.parent!.entity!.transform.worldPosition,
             }, cameraVariable)
+
             camera.parent!.entity!.transform.clearDirty(TransformDirtyFlag.UPLOAD_DATA)
+            camera.clearDirty(CameraDirtyFlag.PROJECTION_MATRIX)
         }
         // console.log(camera.parent!.entity!.transform.transformMatrixInverse)
 

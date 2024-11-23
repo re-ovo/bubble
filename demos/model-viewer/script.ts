@@ -45,6 +45,26 @@ let mr = cubeEntity.addComponent(MeshRendererComponent)
 mr.mesh = createCubeMesh()
 mr.material = new StandardMaterial()
 
+// Resize Observer
+const resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+        let {width, height} = entry.contentRect;
+        width = Math.floor(width);
+        height = Math.floor(height);
+        canvasRef.width = width;
+        canvasRef.height = height;
+        engine.resize(width, height);
+
+        if (cameraComponent.camera) {
+            if(cameraComponent.camera instanceof PerspectiveCamera) {
+                cameraComponent.camera.aspect = width / height
+            }
+            cameraComponent.camera.updateProjectionMatrix()
+        }
+    }
+});
+resizeObserver.observe(canvasRef);
+
 const draw = () => {
     engine.render(scene, cameraComponent.camera!)
     requestAnimationFrame(draw);

@@ -16,6 +16,7 @@ import {Texture, Texture2D} from "@/resource/texture";
 import {convertUint8ArrayToImageBitmap} from "@/loader/texture_loader";
 import {Entity} from "@/core/entity";
 import {Transform} from "@/core/transform";
+import {MaterialBlendMode} from "@/node";
 
 /**
  * 从 glTF 示例仓库加载模型
@@ -183,7 +184,7 @@ async function convertPrimitive(
     ) : colors.White
     material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
     material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
-    // material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
+    material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
     // material.doubleSided = primitive.material?.doubleSided ?? false
 
     // Textures
@@ -272,8 +273,7 @@ const WrapValueMapping: Record<number, GPUAddressMode> = {
     10497: 'repeat' // REPEAT
 }
 
-// const BlendModeMapping: Record<string, MaterialBlendMode> = {
-//     'OPAQUE': MaterialBlendMode.OPAQUE,
-//     'MASK': MaterialBlendMode.MASK,
-//     'BLEND': MaterialBlendMode.BLEND
-// }
+const BlendModeMapping: Record<string, MaterialBlendMode> = {
+    'OPAQUE': MaterialBlendMode.OPAQUE,
+    'BLEND': MaterialBlendMode.BLEND
+}

@@ -7,12 +7,14 @@ export class Material {
     readonly uniforms: Map<string, any>;
     readonly textures: Map<string, Texture>;
     private _cullMode: GPUCullMode = 'back';
+    private _blendMode: MaterialBlendMode;
 
     constructor(shader: Shader) {
         this.shader = shader;
         this.uniforms = new Map();
         this.textures = new Map();
         this._cullMode = 'back';
+        this._blendMode = MaterialBlendMode.OPAQUE;
     }
 
     setTexture(variableName: string, texture: Texture) {
@@ -58,9 +60,21 @@ export class Material {
     get cullMode(): GPUCullMode {
         return this._cullMode;
     }
+
+    set cullMode(value: GPUCullMode) {
+        this._cullMode = value;
+    }
+
+    get blendMode(): MaterialBlendMode {
+        return this._blendMode;
+    }
+
+    set blendMode(value: MaterialBlendMode) {
+        this._blendMode = value;
+    }
 }
 
 export enum MaterialBlendMode {
-    OPAQUE = 'OPAQUE',
-    BLEND = 'BLEND',
+    OPAQUE,
+    BLEND,
 }

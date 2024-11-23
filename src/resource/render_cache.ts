@@ -1,11 +1,10 @@
 import type RenderContext from "@/pipeline/context";
 import {type Texture, Texture2D, TextureDirtyFlag} from "@/resource/texture";
-import {numMipLevels} from "webgpu-utils";
 import {IndexBuffer, IndexBufferDirtyFlag, VertexAttribute, VertexAttributeDirtyFlag} from "@/resource/attribute";
 import {BufferDirtyFlag, BufferResource, UniformBuffer} from "@/resource/buffer";
 import type {Shader} from "@/shader/shader";
 import {RenderPipelineBuilder} from "@/pipeline/builder/render_pipeline_builder";
-import type {Material} from "@/node/material/material";
+import {Material, MaterialBlendMode} from "@/node/material/material";
 import type {Mesh} from "@/node/mesh/mesh";
 import {RendererComponent} from "@/node";
 import {TransformDirtyFlag} from "@/core";
@@ -174,12 +173,24 @@ class RenderCache {
         let pipeline = this._renderPipelineCache.get(material.shader);
         if (!pipeline) {
             const layout = this.requestLayout(material.shader).pipelineLayout;
+            const blend : GPUBlendState = {
+                color: {
+                    srcFactor: 'src-alpha',
+                    dstFactor: 'one-minus-src-alpha',
+                    operation: 'add',
+                },
+                alpha: {
+                    srcFactor: 'src-alpha',
+                    dstFactor: 'one-minus-src-alpha',
+                    operation: 'add',
+                },
+            }
             pipeline = new RenderPipelineBuilder()
                 .setShader(material.shader)
-                .addRenderTarget(this._context.targetFormat)
+                .addRenderTarget(this._context.targetFormat, blend)
                 .setDepthStencil({
                     format: 'depth24plus',
-                    depthWriteEnabled: true,
+                    depthWriteEnabled: material.blendMode === MaterialBlendMode.OPAQUE, // disable depth write for transparent objects
                     depthCompare: 'less',
                 })
                 .setCullMode(material.cullMode)

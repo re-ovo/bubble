@@ -1,6 +1,7 @@
 import {type Mat4, mat4} from "wgpu-matrix";
 import {angleToRadians} from "@/math/maths";
 import {Component} from "@/core/component";
+import {DirtyObject} from "@/core";
 
 export class CameraComponent extends Component {
     private _camera: Camera | null = null;
@@ -19,12 +20,25 @@ export class CameraComponent extends Component {
     }
 }
 
-export abstract class Camera {
+export abstract class Camera implements DirtyObject<CameraDirtyFlag> {
+    private _dirtyFlag: CameraDirtyFlag = CameraDirtyFlag.ALL;
     parent: CameraComponent | null = null;
 
     abstract readonly projectionMatrix: Mat4;
 
     abstract updateProjectionMatrix(): void;
+
+    setDirty(flag: CameraDirtyFlag) {
+        this._dirtyFlag |= flag;
+    }
+
+    clearDirty(flag: CameraDirtyFlag) {
+        this._dirtyFlag &= ~flag;
+    }
+
+    isDirty(flag: CameraDirtyFlag): boolean {
+        return (this._dirtyFlag & flag) !== 0;
+    }
 }
 
 export class PerspectiveCamera extends Camera {
@@ -60,6 +74,7 @@ export class PerspectiveCamera extends Camera {
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
+        this.setDirty(CameraDirtyFlag.PROJECTION_MATRIX);
     }
 }
 
@@ -104,6 +119,11 @@ export class OrthographicCamera extends Camera {
             this.far,
             this.projectionMatrix, // avoid memory allocation
         )
+        this.setDirty(CameraDirtyFlag.PROJECTION_MATRIX);
     }
 }
 
+export enum CameraDirtyFlag {
+    PROJECTION_MATRIX = 1 << 0,
+    ALL = PROJECTION_MATRIX,
+}

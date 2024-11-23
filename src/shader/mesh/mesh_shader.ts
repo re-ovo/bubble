@@ -45,8 +45,8 @@ ${textureAndSampler('pbrMap', 'texture_2d<f32>')}
 
 @fragment
 fn fs(input: VertexOutput) -> @location(0) vec4f {
-    let lightDirection = vec3<f32>(0.5, 0.5, 0.5);
-    let lightRadiance = vec3<f32>(10.0);
+    let lightDirection = vec3<f32>(-0.5, 0.5, 0.5);
+    let lightRadiance = vec3<f32>(5.0);
     
     let N = normalize(input.normal);
     let V = normalize(camera.cameraPosition - input.fragPos);

@@ -50,8 +50,18 @@ export class RendererList {
                 bPosition
             )
 
-            return aDistance - bDistance
+            return aDistance - bDistance // Sort in ascending order (closest first)
         })
+
+        // Sort the renderers based on their material blend mode
+        this._renderers.sort((a, b) => {
+            const aMaterial = a.material
+            const bMaterial = b.material
+
+            return aMaterial.blendMode - bMaterial.blendMode // Sort in ascending order (opaque first)
+        })
+
+        console.log(this._renderers.map(r => r.material.blendMode))
     }
 
     get renderObjects() {
