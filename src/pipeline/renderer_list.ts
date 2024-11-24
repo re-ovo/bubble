@@ -1,4 +1,4 @@
-import { Camera, RendererComponent } from "@/node";
+import {Camera, MaterialBlendMode, RendererComponent} from "@/node";
 import RenderContext from "./context";
 import {vec3} from "wgpu-matrix";
 
@@ -36,30 +36,34 @@ export class RendererList {
             }
         })
 
-        // Sort the renderers based on their distance to the camera
+        const cameraPosition = this._camera.parent!.entity.transform.worldPosition;
+        // Sort the renderers based on their material blend mode and distance to the camera
         this._renderers.sort((a, b) => {
-            const aPosition = a.entity.transform.worldPosition
-            const bPosition = b.entity.transform.worldPosition
+            const aMaterial = a.material;
+            const bMaterial = b.material;
+
+            // First, sort by blend mode (opaque first)
+            if (aMaterial.blendMode !== bMaterial.blendMode) {
+                return aMaterial.blendMode - bMaterial.blendMode;
+            }
+
+            // If blend mode is the same, sort by distance to the camera (farther first for transparent objects)
+            const aPosition = a.entity.transform.worldPosition;
+            const bPosition = b.entity.transform.worldPosition;
 
             const aDistance = vec3.distance(
-                this._camera.parent!.entity.transform.worldPosition,
+                cameraPosition,
                 aPosition
-            )
+            );
             const bDistance = vec3.distance(
-                this._camera.parent!.entity.transform.worldPosition,
+                cameraPosition,
                 bPosition
-            )
+            );
 
-            return aDistance - bDistance // Sort in ascending order (closest first)
-        })
+            return bMaterial.blendMode === MaterialBlendMode.BLEND ? bDistance - aDistance : aDistance - bDistance;
+        });
 
-        // Sort the renderers based on their material blend mode
-        this._renderers.sort((a, b) => {
-            const aMaterial = a.material
-            const bMaterial = b.material
-
-            return aMaterial.blendMode - bMaterial.blendMode // Sort in ascending order (opaque first)
-        })
+        // console.log(this._renderers.map(item => `${item.material.blendMode} / ${vec3.distance(cameraPosition, item.entity.transform.worldPosition)}`));
     }
 
     get renderObjects() {
