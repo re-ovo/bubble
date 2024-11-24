@@ -128,7 +128,7 @@ export class RenderPipelineBuilder {
             primitive: this._primitive,
             depthStencil: this._depthStencil
         }
-        console.log(descriptor);
+        // console.log(descriptor);
         return context.device.createRenderPipeline(descriptor);
     }
 }
