@@ -185,6 +185,7 @@ async function convertPrimitive(
     material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
     material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
     material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
+    material.cullMode = primitive.material?.doubleSided ? 'none' : 'back'
     // material.doubleSided = primitive.material?.doubleSided ?? false
 
     // Textures
@@ -251,6 +252,12 @@ async function loadTexture(
     // texture.magFilter = FilterValueMapping[info.texture.sampler.magFilter] ?? 'linear'
     // texture.addressModeU = WrapValueMapping[info.texture.sampler.wrapS] ?? 'repeat'
     // texture.addressModeV = WrapValueMapping[info.texture.sampler.wrapT] ?? 'repeat'
+    texture.sampler = {
+        minFilter: FilterValueMapping[info.texture.sampler.minFilter] ?? 'linear',
+        magFilter: FilterValueMapping[info.texture.sampler.magFilter] ?? 'linear',
+        addressModeU: WrapValueMapping[info.texture.sampler.wrapS] ?? 'repeat',
+        addressModeV: WrapValueMapping[info.texture.sampler.wrapT] ?? 'repeat',
+    }
 
     if (info.index !== undefined) {
         textureCache.set(info.index, texture)

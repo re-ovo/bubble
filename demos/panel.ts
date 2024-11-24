@@ -9,6 +9,7 @@ export function lookupModels(pane: FolderApi, scene: Scene) {
             const value = path
             return {text, value}
         })
+        .sort((a, b) => a.text!.localeCompare(b.text!) || 0)
 
     const model = {
         _value: '',

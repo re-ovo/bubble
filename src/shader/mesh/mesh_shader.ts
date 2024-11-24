@@ -23,6 +23,13 @@ struct VertexOutput {
   @location(2) fragPos: vec3f,
 }
 
+struct FragmentInput {
+    @location(0) normal: vec3f,
+    @location(1) uv: vec2f,
+    @location(2) fragPos: vec3f,
+    @builtin(front_facing) isFrontFacing: bool,
+}
+
 @vertex
 fn vs(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
@@ -43,12 +50,16 @@ ${textureAndSampler('albedoMap', 'texture_2d<f32>')}
 ${textureAndSampler('normalMap', 'texture_2d<f32>')}
 ${textureAndSampler('pbrMap', 'texture_2d<f32>')}
 
+fn get_normal(input: FragmentInput) -> vec3f {
+    return select(-normalize(input.normal), normalize(input.normal), input.isFrontFacing);
+}
+
 @fragment
-fn fs(input: VertexOutput) -> @location(0) vec4f {
+fn fs(input: FragmentInput) -> @location(0) vec4f {
     let lightDirection = vec3<f32>(-0.5, 0.5, 0.5);
     let lightRadiance = vec3<f32>(5.0);
     
-    let N = normalize(input.normal);
+    let N = get_normal(input);
     let V = normalize(camera.cameraPosition - input.fragPos);
     let L = normalize(lightDirection);
     let H = normalize(V + L);
@@ -66,7 +77,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4f {
     let ambient = vec3<f32>(0.1) * albedo;
     let color = ambient + Lo;
     let alpha = material.color.a * textureSample(albedoMap, albedoMapSampler, input.uv).a;
-   
+  
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
 }
 `
