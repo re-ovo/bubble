@@ -57,7 +57,7 @@ fn get_normal(input: FragmentInput) -> vec3f {
 @fragment
 fn fs(input: FragmentInput) -> @location(0) vec4f {
     let lightDirection = vec3<f32>(-0.5, 0.5, 0.5);
-    let lightRadiance = vec3<f32>(2.0);
+    let lightRadiance = vec3<f32>(10.0);
     
     let N = get_normal(input);
     let V = normalize(camera.cameraPosition - input.fragPos);

@@ -1,6 +1,6 @@
 import {Material} from "@/node/material/material";
 import {Shader} from "@/shader/shader";
-import mesh_shader from "@/shader/mesh/mesh_shader";
+import mesh_shader from "@/shader/mesh/standard_shader";
 import colors, {type Color3f, type Color4f} from "@/math/colors";
 import {createSolidColorTexture} from "@/loader/texture_loader";
 import {Texture2D} from "@/resource/texture";
