@@ -55,3 +55,13 @@ export class Texture2D extends Texture {
         this.data = data;
     }
 }
+
+export class RenderTexture extends Texture {
+    constructor(
+        size: GPUExtent3D,
+        format?: GPUTextureFormat,
+        sampler?: GPUSamplerDescriptor,
+    ) {
+        super(size, format, sampler);
+    }
+}

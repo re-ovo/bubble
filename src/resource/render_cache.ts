@@ -1,5 +1,5 @@
 import type RenderContext from "@/pipeline/context";
-import {type Texture, Texture2D, TextureDirtyFlag} from "@/resource/texture";
+import {RenderTexture, type Texture, Texture2D, TextureDirtyFlag} from "@/resource/texture";
 import {IndexBuffer, IndexBufferDirtyFlag, VertexAttribute, VertexAttributeDirtyFlag} from "@/resource/attribute";
 import {BufferDirtyFlag, BufferResource, UniformBuffer} from "@/resource/buffer";
 import type {Shader} from "@/shader/shader";
@@ -8,6 +8,7 @@ import {Material, MaterialBlendMode} from "@/node/material/material";
 import type {Mesh} from "@/node/mesh/mesh";
 import {RendererComponent} from "@/node";
 import {TransformDirtyFlag} from "@/core";
+import {generateMipmap, numMipLevels} from "webgpu-utils";
 
 class RenderCache {
     private readonly _context: RenderContext;
@@ -72,6 +73,8 @@ class RenderCache {
     requestTexture(texture: Texture): AllocatedTexture {
         if (texture instanceof Texture2D) {
             return this.allocateTexture2d(texture);
+        } else if(texture instanceof RenderTexture) {
+            return this.allocateRenderTexture(texture);
         }
         throw new Error('Unsupported texture type: ' + texture);
     }
@@ -83,7 +86,7 @@ class RenderCache {
                 size: texture2d.size,
                 format: texture2d.format,
                 usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-                // mipLevelCount: numMipLevels(texture2d.size),
+                mipLevelCount: numMipLevels(texture2d.size),
             });
             const view = texture.createView();
 
@@ -101,12 +104,43 @@ class RenderCache {
 
         if (texture2d.isDirty(TextureDirtyFlag.DATA)) {
             this.device.queue.copyExternalImageToTexture({source: texture2d.data}, {texture: allocated.texture}, texture2d.size);
+            generateMipmap(this._context.device, allocated.texture);
             texture2d.clearDirty(TextureDirtyFlag.DATA);
         }
 
         if (texture2d.isDirty(TextureDirtyFlag.SAMPLER)) {
             allocated.sampler = this.device.createSampler(texture2d.sampler);
             texture2d.clearDirty(TextureDirtyFlag.SAMPLER);
+        }
+
+        return allocated;
+    }
+
+    private allocateRenderTexture(renderTexture: RenderTexture): AllocatedTexture {
+        let allocated = this._textureCache.get(renderTexture);
+        if (!allocated) {
+            const texture = this.device.createTexture({
+                size: renderTexture.size,
+                format: renderTexture.format,
+                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+            const view = texture.createView();
+
+            const sampler = this.device.createSampler(renderTexture.sampler);
+            renderTexture.clearDirty(TextureDirtyFlag.SAMPLER);
+
+            allocated = {
+                texture,
+                view,
+                sampler,
+            };
+
+            this._textureCache.set(renderTexture, allocated);
+        }
+
+        if (renderTexture.isDirty(TextureDirtyFlag.SAMPLER)) {
+            allocated.sampler = this.device.createSampler(renderTexture.sampler);
+            renderTexture.clearDirty(TextureDirtyFlag.SAMPLER);
         }
 
         return allocated;
