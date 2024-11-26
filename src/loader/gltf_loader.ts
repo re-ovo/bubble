@@ -176,15 +176,15 @@ async function convertPrimitive(
 
     // Material Properties
     const baseColorFactor = primitive.material?.pbrMetallicRoughness?.baseColorFactor
-    material.color = baseColorFactor ? colors.newColor4f(
+    material.baseColorFactor = baseColorFactor ? colors.newColor4f(
         baseColorFactor[0],
         baseColorFactor[1],
         baseColorFactor[2],
         baseColorFactor[3]
     ) : colors.White
-    material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
-    material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
-    if(primitive.material?.emissiveFactor) material.emission = colors.newColor3f(
+    material.roughnessFactor = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
+    material.metallicFactor = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
+    if(primitive.material?.emissiveFactor) material.emissiveFactor = colors.newColor3f(
         primitive.material.emissiveFactor[0],
         primitive.material.emissiveFactor[1],
         primitive.material.emissiveFactor[2]

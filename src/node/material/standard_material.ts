@@ -25,12 +25,12 @@ export class StandardMaterial extends Material {
         })
     }
 
-    get color(): Color4f {
+    get baseColorFactor(): Color4f {
         const materialInfo = this.getUniform("material");
         return materialInfo.color;
     }
 
-    set color(value: Color4f) {
+    set baseColorFactor(value: Color4f) {
         if (value.length !== 4) {
             throw new Error("Color must be a 4-component array.");
         }
@@ -39,12 +39,12 @@ export class StandardMaterial extends Material {
         this.setUniform("material", materialInfo);
     }
 
-    get metallic(): number {
+    get metallicFactor(): number {
         const materialInfo = this.getUniform("material");
         return materialInfo.metallic;
     }
 
-    set metallic(value: number) {
+    set metallicFactor(value: number) {
         if (value < 0 || value > 1) {
             throw new Error("Metallic factor must be between 0 and 1.");
         }
@@ -53,12 +53,12 @@ export class StandardMaterial extends Material {
         this.setUniform("material", materialInfo);
     }
 
-    get roughness(): number {
+    get roughnessFactor(): number {
         const materialInfo = this.getUniform("material");
         return materialInfo.roughness;
     }
 
-    set roughness(value: number) {
+    set roughnessFactor(value: number) {
         if (value < 0 || value > 1) {
             throw new Error("Roughness factor must be between 0 and 1.");
         }
@@ -67,12 +67,12 @@ export class StandardMaterial extends Material {
         this.setUniform("material", materialInfo);
     }
 
-    get emission(): Color3f {
+    get emissiveFactor(): Color3f {
         const materialInfo = this.getUniform("material");
         return materialInfo.emission;
     }
 
-    set emission(value: Color3f) {
+    set emissiveFactor(value: Color3f) {
         if (value.length !== 3) {
             throw new Error("emission factor must be a 3-component array.");
         }
