@@ -184,6 +184,11 @@ async function convertPrimitive(
     ) : colors.White
     material.roughness = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.roughnessFactor ?? 1.0) : 0.5 // 0.5 if there is no PBR properties
     material.metallic = primitive.material?.pbrMetallicRoughness ? (primitive.material.pbrMetallicRoughness.metallicFactor ?? 1.0) : 0.0 // 0.0 if there is no PBR properties
+    if(primitive.material?.emissiveFactor) material.emission = colors.newColor3f(
+        primitive.material.emissiveFactor[0],
+        primitive.material.emissiveFactor[1],
+        primitive.material.emissiveFactor[2]
+    )
     material.blendMode = BlendModeMapping[primitive.material?.alphaMode ?? 'OPAQUE']
     material.cullMode = primitive.material?.doubleSided ? 'none' : 'back'
     // material.doubleSided = primitive.material?.doubleSided ?? false
@@ -220,6 +225,14 @@ async function convertPrimitive(
             'rgba8unorm',
         )
         material.setTexture('normalMap', texture)
+    }
+    if(primitive.material && primitive.material.emissiveTexture) {
+        const texture = await loadTexture(
+            primitive.material.emissiveTexture,
+            textureCache,
+            'rgba8unorm',
+        )
+        material.setTexture('emissiveMap', texture)
     }
 
     entities.push(entity)

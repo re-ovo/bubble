@@ -49,6 +49,7 @@ ${gamma_correct()}
 ${textureAndSampler('albedoMap', 'texture_2d<f32>')}
 ${textureAndSampler('normalMap', 'texture_2d<f32>')}
 ${textureAndSampler('pbrMap', 'texture_2d<f32>')}
+${textureAndSampler('emissiveMap', 'texture_2d<f32>')}
 
 fn get_normal(input: FragmentInput) -> vec3f {
     return select(-normalize(input.normal), normalize(input.normal), input.isFrontFacing);
@@ -75,7 +76,8 @@ fn fs(input: FragmentInput) -> @location(0) vec4f {
     Lo *= lightRadiance;
     
     let ambient = vec3<f32>(0.1) * albedo;
-    let color = ambient + Lo;
+    let emissive = textureSample(emissiveMap, emissiveMapSampler, input.uv).rgb * material.emission;
+    let color = emissive + ambient + Lo;
     let alpha = material.color.a * textureSample(albedoMap, albedoMapSampler, input.uv).a;
   
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
