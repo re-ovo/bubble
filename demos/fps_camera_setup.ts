@@ -1,7 +1,7 @@
 import {Entity, RenderEngine} from "@/core";
 import {CameraComponent, PerspectiveCamera} from "@/node";
 import {vec3} from "wgpu-matrix";
-import {FPSController} from "@/helper/controller";
+import {FPSController, OrbitController} from "@/helper/controller";
 import {Pane} from "tweakpane";
 
 export function setupFpsCamera(
@@ -21,16 +21,16 @@ export function setupFpsCamera(
         5000
     )
     cameraEntity.transform.localPosition = vec3.create(0, 0, 5)
-    cameraEntity.addComponent(FPSController).init(canvas)
+    cameraEntity.addComponent(OrbitController).init(canvas)
 
     // Pane
     const cameraFolder = pane.addFolder({
         title: 'Camera',
     })
-    cameraFolder.addBinding(cameraEntity.getComponent(FPSController)!, 'moveSpeed', {
-        min: 0,
-        max: 10,
-    })
+    // cameraFolder.addBinding(cameraEntity.getComponent(FPSController)!, 'moveSpeed', {
+    //     min: 0,
+    //     max: 10,
+    // })
     const cameraTransformDelegate = {
         get worldPos() {
             const pos = cameraEntity.transform.worldPosition

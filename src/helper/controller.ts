@@ -1,4 +1,4 @@
-import {vec3} from "wgpu-matrix";
+import {quat, vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/math/maths";
 import {Component} from "@/core/component";
 
@@ -92,5 +92,76 @@ export class FPSController extends Component {
                 this.entity.transform.translate(vec3.create(0, -speed, 0))
                 break;
         }
+    }
+}
+
+export class OrbitController extends Component {
+    moveSpeed = 0.01
+
+    center = vec3.create(0, 0, 0)
+
+    distance = 5
+    minDistance = 0.1
+    maxDistance = 150
+
+    init(element: HTMLCanvasElement) {
+        element.addEventListener('mousemove', (e) => {
+            if (e.buttons === 1) {
+                const position = this.entity.transform.localPosition
+
+                const dx = position[0] - this.center[0]
+                const dy = position[1] - this.center[1]
+                const dz = position[2] - this.center[2]
+
+                const deltaLat = e.movementX * this.moveSpeed
+                const deltaLon = e.movementY * this.moveSpeed
+
+                const lat = Math.atan2(dz, dx)
+                const lon = Math.atan2(dy, Math.sqrt(dx ** 2 + dz ** 2))
+
+                let newLat = lat + deltaLat
+                let newLon = lon + deltaLon
+
+                if (newLon >= Math.PI / 2 - 0.01) {
+                    newLon = Math.PI / 2 - 0.01
+                }
+                if (newLon <= -Math.PI / 2 + 0.01) {
+                    newLon = -Math.PI / 2 + 0.01
+                }
+
+                const x = this.center[0] + this.distance * Math.cos(newLon) * Math.cos(newLat)
+                const y = this.center[1] + this.distance * Math.sin(newLon)
+                const z = this.center[2] + this.distance * Math.cos(newLon) * Math.sin(newLat)
+
+                this.entity.transform.localPosition = vec3.create(x, y, z)
+                this.entity.transform.cameraAim(this.center)
+            }
+        })
+
+        element.addEventListener('wheel', (e) => {
+            this.distance += e.deltaY * this.moveSpeed
+            if (this.distance < this.minDistance) {
+                this.distance = this.minDistance
+            } else if (this.distance > this.maxDistance) {
+                this.distance = this.maxDistance
+            }
+
+            const position = this.entity.transform.localPosition
+
+            const dx = position[0] - this.center[0]
+            const dy = position[1] - this.center[1]
+            const dz = position[2] - this.center[2]
+
+            const lat = Math.atan2(dz, dx)
+            const lon = Math.atan2(dy, Math.sqrt(dx ** 2 + dz ** 2))
+
+            const x = this.center[0] + this.distance * Math.cos(lon) * Math.cos(lat)
+            const y = this.center[1] + this.distance * Math.sin(lon)
+            const z = this.center[2] + this.distance * Math.cos(lon) * Math.sin(lat)
+
+            this.entity.transform.localPosition = vec3.create(x, y, z)
+            this.entity.transform.cameraAim(this.center)
+        })
+
     }
 }

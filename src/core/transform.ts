@@ -98,6 +98,19 @@ class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
         this.setNeedsUpdateWorldMatrix()
     }
 
+    cameraAim(
+        target: Vec3,
+    ) {
+        const lookAt = mat4.cameraAim(
+            this.localPosition,
+            target,
+            vec3.create(0, 1, 0)
+        );
+        quat.fromMat(lookAt, this._localRotation);
+        this.setDirty(TransformDirtyFlag.LocalMatrix);
+        this.setNeedsUpdateWorldMatrix();
+    }
+
     // 返回指向摄像机前方的向量，不受旋转影响
     get forwardDirection(): Vec3 {
         // 默认指向z轴负方向

@@ -1,16 +1,6 @@
-import {
-    CameraComponent,
-    createCubeMesh,
-    Entity,
-    MeshRendererComponent,
-    PerspectiveCamera,
-    RenderEngine,
-    Scene, StandardMaterial
-} from "@bubblejs/bubble";
+import {createCubeMesh, Entity, MeshRendererComponent, RenderEngine, Scene, StandardMaterial} from "@bubblejs/bubble";
 import {Pane} from "tweakpane";
 import {lookupModels} from "../panel";
-import {vec3} from "wgpu-matrix";
-import {FPSController} from "@/helper/controller";
 import {setupFpsCamera} from "../fps_camera_setup";
 
 const canvasRef = document.querySelector('#canvas') as HTMLCanvasElement;
