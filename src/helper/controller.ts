@@ -1,4 +1,4 @@
-import {quat, vec3} from "wgpu-matrix";
+import {vec3} from "wgpu-matrix";
 import {angleToRadians} from "@/math/maths";
 import {Component} from "@/core/component";
 
