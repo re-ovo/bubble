@@ -1,6 +1,6 @@
-import type {Camera} from "@/node/camera/camera";
-import type {Disposable} from "@/core/dispose";
-import type RenderContext from "@/pipeline/context";
+import type { Camera } from '@/node/camera/camera';
+import type { Disposable } from '@/core/dispose';
+import type RenderContext from '@/pipeline/context';
 
 /**
  * 可编程渲染管线
@@ -23,7 +23,7 @@ import type RenderContext from "@/pipeline/context";
  *  ```
  */
 export abstract class ScriptablePipeline implements Disposable {
-    abstract render(context: RenderContext, cameras: Camera[]): void
+  abstract render(context: RenderContext, cameras: Camera[]): void;
 
-    abstract dispose(): void;
+  abstract dispose(): void;
 }

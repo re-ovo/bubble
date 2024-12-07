@@ -7,8 +7,5 @@
     "moduleResolution": "Node",
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "vite.config.*",
-    "vitest.config.*"
-  ]
+  "include": ["vite.config.*", "vitest.config.*"]
 }

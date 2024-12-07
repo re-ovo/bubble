@@ -1,7 +1,7 @@
 export class ComputePipelineBuilder {
-    // build(device: GPUDevice): GPUComputePipeline {
-    //     return device.createComputePipeline({
-    //
-    //     })
-    // }
+  // build(device: GPUDevice): GPUComputePipeline {
+  //     return device.createComputePipeline({
+  //
+  //     })
+  // }
 }

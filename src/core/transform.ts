@@ -1,254 +1,264 @@
-import type {Mat4, Quat, Vec3} from "wgpu-matrix";
-import {mat4, quat, vec3} from "wgpu-matrix";
-import {Component} from "@/core/component";
-import type {Entity} from "@/core/entity";
-import type {DirtyObject} from "@/core/dirty";
+import type { Mat4, Quat, Vec3 } from 'wgpu-matrix';
+import { mat4, quat, vec3 } from 'wgpu-matrix';
+import { Component } from '@/core/component';
+import type { Entity } from '@/core/entity';
+import type { DirtyObject } from '@/core/dirty';
 
 /**
  * Transform component
  *
  * Transform component is used to store the position, rotation and scale of an entity.
  */
-class Transform extends Component implements DirtyObject<TransformDirtyFlag>{
-    private readonly _localPosition: Vec3;
-    private readonly _localRotation: Quat;
-    private readonly _localScale: Vec3;
+class Transform extends Component implements DirtyObject<TransformDirtyFlag> {
+  private readonly _localPosition: Vec3;
+  private readonly _localRotation: Quat;
+  private readonly _localScale: Vec3;
 
-    private readonly _positionMatrix: Mat4;
-    private readonly _rotationMatrix: Mat4;
-    private readonly _scaleMatrix: Mat4;
+  private readonly _positionMatrix: Mat4;
+  private readonly _rotationMatrix: Mat4;
+  private readonly _scaleMatrix: Mat4;
 
-    private readonly _transformMatrix: Mat4;
-    private readonly _localTransformMatrix: Mat4;
-    private readonly _transformMatrixInverse: Mat4;
+  private readonly _transformMatrix: Mat4;
+  private readonly _localTransformMatrix: Mat4;
+  private readonly _transformMatrixInverse: Mat4;
 
-    private readonly _worldPosition: Vec3;
+  private readonly _worldPosition: Vec3;
 
-    private _dirtyFlag: TransformDirtyFlag = TransformDirtyFlag.All;
+  private _dirtyFlag: TransformDirtyFlag = TransformDirtyFlag.All;
 
-    // cache for fps camera control, avoid creating new quaternion every frame
-    private readonly _rotationYaw = quat.identity();
-    private readonly _rotationPitch = quat.identity();
+  // cache for fps camera control, avoid creating new quaternion every frame
+  private readonly _rotationYaw = quat.identity();
+  private readonly _rotationPitch = quat.identity();
 
-    constructor(entity: Entity) {
-        super(entity);
+  constructor(entity: Entity) {
+    super(entity);
 
-        this._localPosition = vec3.create(0, 0, 0);
-        this._localRotation = quat.identity();
-        this._localScale = vec3.create(1, 1, 1);
+    this._localPosition = vec3.create(0, 0, 0);
+    this._localRotation = quat.identity();
+    this._localScale = vec3.create(1, 1, 1);
 
-        this._positionMatrix = mat4.create();
-        this._rotationMatrix = mat4.create();
-        this._scaleMatrix = mat4.create();
+    this._positionMatrix = mat4.create();
+    this._rotationMatrix = mat4.create();
+    this._scaleMatrix = mat4.create();
 
-        this._localTransformMatrix = mat4.create();
-        this._transformMatrix = mat4.create();
-        this._transformMatrixInverse = mat4.create();
+    this._localTransformMatrix = mat4.create();
+    this._transformMatrix = mat4.create();
+    this._transformMatrixInverse = mat4.create();
 
-        this._worldPosition = vec3.create(0, 0, 0);
+    this._worldPosition = vec3.create(0, 0, 0);
+  }
+
+  get localPosition(): Vec3 {
+    return this._localPosition;
+  }
+
+  get localRotation(): Quat {
+    return this._localRotation;
+  }
+
+  get localScale(): Vec3 {
+    return this._localScale;
+  }
+
+  get transformMatrix(): Mat4 {
+    this.updateWorldMatrix();
+    return this._transformMatrix;
+  }
+
+  get transformMatrixInverse(): Mat4 {
+    this.updateWorldMatrix();
+    return this._transformMatrixInverse;
+  }
+
+  get localTransformMatrix(): Mat4 {
+    this.updateLocalMatrix();
+    return this._localTransformMatrix;
+  }
+
+  get worldPosition(): Vec3 {
+    this.updateWorldMatrix();
+    return this._worldPosition;
+  }
+
+  set localPosition(value: Vec3) {
+    vec3.copy(value, this._localPosition);
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+  }
+
+  set localRotation(value: Quat) {
+    quat.copy(value, this._localRotation);
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+  }
+
+  set localScale(value: Vec3) {
+    vec3.copy(value, this._localScale);
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+  }
+
+  cameraAim(target: Vec3) {
+    const lookAt = mat4.cameraAim(
+      this.localPosition,
+      target,
+      vec3.create(0, 1, 0),
+    );
+    quat.fromMat(lookAt, this._localRotation);
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+  }
+
+  // 返回指向摄像机前方的向量，不受旋转影响
+  get forwardDirection(): Vec3 {
+    // 默认指向z轴负方向
+    const forward = vec3.create(0, 0, -1);
+    // 旋转
+    vec3.transformQuat(forward, this._localRotation, forward);
+    // 此时forward可能受到摄像机的旋转影响，需要将y轴的旋转置为0
+    forward[1] = 0;
+    // 归一化
+    vec3.normalize(forward, forward);
+    return forward;
+  }
+
+  get rightDirection(): Vec3 {
+    const right = vec3.create(1, 0, 0);
+    vec3.transformQuat(right, this._localRotation, right);
+    right[1] = 0;
+    vec3.normalize(right, right);
+    return right;
+  }
+
+  rotateYawPitch(yaw: number, pitch: number) {
+    quat.fromAxisAngle(vec3.create(0, 1, 0), yaw, this._rotationYaw);
+    quat.fromAxisAngle(vec3.create(1, 0, 0), pitch, this._rotationPitch);
+
+    quat.mul(this._rotationYaw, this._localRotation, this._localRotation);
+    quat.mul(this._localRotation, this._rotationPitch, this._localRotation);
+
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+  }
+
+  translate(translation: Vec3): Transform {
+    vec3.add(this._localPosition, translation, this._localPosition);
+
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
+
+    return this;
+  }
+
+  updateLocalMatrix(force: boolean = false) {
+    if (this.isDirty(TransformDirtyFlag.LocalMatrix) || force) {
+      mat4.translation(this._localPosition, this._positionMatrix);
+      mat4.fromQuat(this._localRotation, this._rotationMatrix);
+      mat4.scaling(this._localScale, this._scaleMatrix);
+
+      mat4.mul(
+        this._positionMatrix,
+        this._rotationMatrix,
+        this._localTransformMatrix,
+      );
+      mat4.mul(
+        this._localTransformMatrix,
+        this._scaleMatrix,
+        this._localTransformMatrix,
+      );
+
+      this.clearDirty(TransformDirtyFlag.LocalMatrix);
+      this.setNeedsUpdateWorldMatrix();
     }
+  }
 
-    get localPosition(): Vec3 {
-        return this._localPosition;
-    }
-
-    get localRotation(): Quat {
-        return this._localRotation;
-    }
-
-    get localScale(): Vec3 {
-        return this._localScale;
-    }
-
-    get transformMatrix(): Mat4 {
-        this.updateWorldMatrix();
-        return this._transformMatrix;
-    }
-
-    get transformMatrixInverse(): Mat4 {
-        this.updateWorldMatrix();
-        return this._transformMatrixInverse;
-    }
-
-    get localTransformMatrix(): Mat4 {
-        this.updateLocalMatrix();
-        return this._localTransformMatrix;
-    }
-
-    get worldPosition(): Vec3 {
-        this.updateWorldMatrix();
-        return this._worldPosition;
-    }
-
-    set localPosition(value: Vec3) {
-        vec3.copy(value, this._localPosition);
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix()
-    }
-
-    set localRotation(value: Quat) {
-        quat.copy(value, this._localRotation);
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix()
-    }
-
-    set localScale(value: Vec3) {
-        vec3.copy(value, this._localScale);
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix()
-    }
-
-    cameraAim(
-        target: Vec3,
-    ) {
-        const lookAt = mat4.cameraAim(
-            this.localPosition,
-            target,
-            vec3.create(0, 1, 0)
+  updateWorldMatrix(force: boolean = false) {
+    if (this.isDirty(TransformDirtyFlag.WorldMatrix) || force) {
+      if (this.entity.parent) {
+        mat4.mul(
+          this.entity.parent.transform.transformMatrix,
+          this.localTransformMatrix,
+          this._transformMatrix,
         );
-        quat.fromMat(lookAt, this._localRotation);
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix();
+        vec3.transformMat4(
+          this._localPosition,
+          this.entity.parent.transform.transformMatrix,
+          this._worldPosition,
+        );
+      } else {
+        mat4.copy(this.localTransformMatrix, this._transformMatrix);
+        vec3.copy(this._localPosition, this._worldPosition);
+      }
+      mat4.inverse(this._transformMatrix, this._transformMatrixInverse);
+
+      this.clearDirty(TransformDirtyFlag.WorldMatrix);
+      this.setDirty(TransformDirtyFlag.UPLOAD_DATA); // 世界矩阵更新后需要上传数据
+    }
+  }
+
+  setByMatrix(matrix: Mat4): Transform {
+    const copy = mat4.clone(matrix);
+
+    // extract scale
+    mat4.getScaling(copy, this._localScale);
+    if (mat4.determinant(copy) < 0) {
+      this._localScale[0] *= -1;
     }
 
-    // 返回指向摄像机前方的向量，不受旋转影响
-    get forwardDirection(): Vec3 {
-        // 默认指向z轴负方向
-        const forward = vec3.create(0, 0, -1);
-        // 旋转
-        vec3.transformQuat(forward, this._localRotation, forward);
-        // 此时forward可能受到摄像机的旋转影响，需要将y轴的旋转置为0
-        forward[1] = 0;
-        // 归一化
-        vec3.normalize(forward, forward);
-        return forward;
-    }
+    // extract position
+    mat4.getTranslation(copy, this._localPosition);
+    copy[12] = 0;
+    copy[13] = 0;
+    copy[14] = 0;
 
-    get rightDirection(): Vec3 {
-        const right = vec3.create(1, 0, 0);
-        vec3.transformQuat(right, this._localRotation, right);
-        right[1] = 0;
-        vec3.normalize(right, right);
-        return right;
-    }
+    // remove scale
+    const invScaleX = 1 / this._localScale[0];
+    const invScaleY = 1 / this._localScale[1];
+    const invScaleZ = 1 / this._localScale[2];
+    copy[0] *= invScaleX;
+    copy[1] *= invScaleX;
+    copy[2] *= invScaleX;
+    copy[4] *= invScaleY;
+    copy[5] *= invScaleY;
+    copy[6] *= invScaleY;
+    copy[8] *= invScaleZ;
+    copy[9] *= invScaleZ;
+    copy[10] *= invScaleZ;
 
-    rotateYawPitch(yaw: number, pitch: number) {
-        quat.fromAxisAngle(vec3.create(0, 1, 0), yaw, this._rotationYaw);
-        quat.fromAxisAngle(vec3.create(1, 0, 0), pitch, this._rotationPitch);
+    // extract rotation
+    quat.fromMat(copy, this._localRotation);
 
-        quat.mul(this._rotationYaw, this._localRotation, this._localRotation);
-        quat.mul(this._localRotation, this._rotationPitch, this._localRotation);
+    this.setDirty(TransformDirtyFlag.LocalMatrix);
+    this.setNeedsUpdateWorldMatrix();
 
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix();
-    }
+    return this;
+  }
 
-    translate(translation: Vec3): Transform {
-        vec3.add(this._localPosition, translation, this._localPosition);
+  isDirty(flag: TransformDirtyFlag): boolean {
+    return (this._dirtyFlag & flag) !== 0;
+  }
 
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix();
+  clearDirty(flag: TransformDirtyFlag) {
+    this._dirtyFlag &= ~flag;
+  }
 
-        return this;
-    }
+  setDirty(flag: TransformDirtyFlag) {
+    this._dirtyFlag |= flag;
+  }
 
-    updateLocalMatrix(force: boolean = false) {
-        if(this.isDirty(TransformDirtyFlag.LocalMatrix) || force) {
-            mat4.translation(this._localPosition, this._positionMatrix);
-            mat4.fromQuat(this._localRotation, this._rotationMatrix);
-            mat4.scaling(this._localScale, this._scaleMatrix);
-
-            mat4.mul(this._positionMatrix, this._rotationMatrix, this._localTransformMatrix);
-            mat4.mul(this._localTransformMatrix, this._scaleMatrix, this._localTransformMatrix);
-
-            this.clearDirty(TransformDirtyFlag.LocalMatrix);
-            this.setNeedsUpdateWorldMatrix();
-        }
-    }
-
-    updateWorldMatrix(force: boolean = false) {
-        if(this.isDirty(TransformDirtyFlag.WorldMatrix) || force) {
-            if (this.entity.parent) {
-                mat4.mul(
-                    this.entity.parent.transform.transformMatrix,
-                    this.localTransformMatrix,
-                    this._transformMatrix
-                );
-                vec3.transformMat4(this._localPosition, this.entity.parent.transform.transformMatrix, this._worldPosition);
-            } else {
-                mat4.copy(this.localTransformMatrix, this._transformMatrix);
-                vec3.copy(this._localPosition, this._worldPosition);
-            }
-            mat4.inverse(this._transformMatrix, this._transformMatrixInverse);
-
-            this.clearDirty(TransformDirtyFlag.WorldMatrix);
-            this.setDirty(TransformDirtyFlag.UPLOAD_DATA);// 世界矩阵更新后需要上传数据
-        }
-    }
-
-    setByMatrix(matrix: Mat4): Transform {
-        const copy = mat4.clone(matrix);
-
-        // extract scale
-        mat4.getScaling(copy, this._localScale);
-        if (mat4.determinant(copy) < 0) {
-            this._localScale[0] *= -1;
-        }
-
-        // extract position
-        mat4.getTranslation(copy, this._localPosition);
-        copy[12] = 0;
-        copy[13] = 0;
-        copy[14] = 0;
-
-        // remove scale
-        const invScaleX = 1 / this._localScale[0];
-        const invScaleY = 1 / this._localScale[1];
-        const invScaleZ = 1 / this._localScale[2];
-        copy[0] *= invScaleX;
-        copy[1] *= invScaleX;
-        copy[2] *= invScaleX;
-        copy[4] *= invScaleY;
-        copy[5] *= invScaleY;
-        copy[6] *= invScaleY;
-        copy[8] *= invScaleZ;
-        copy[9] *= invScaleZ;
-        copy[10] *= invScaleZ;
-
-        // extract rotation
-        quat.fromMat(copy, this._localRotation);
-
-        this.setDirty(TransformDirtyFlag.LocalMatrix);
-        this.setNeedsUpdateWorldMatrix();
-
-        return this;
-    }
-
-    isDirty(flag: TransformDirtyFlag): boolean {
-        return (this._dirtyFlag & flag) !== 0;
-    }
-
-    clearDirty(flag: TransformDirtyFlag) {
-        this._dirtyFlag &= ~flag;
-    }
-
-    setDirty(flag: TransformDirtyFlag) {
-        this._dirtyFlag |= flag;
-    }
-
-    setNeedsUpdateWorldMatrix() {
-        this.entity.traverse((entity) => {
-            // world matrix need to be updated
-            entity.transform.setDirty(TransformDirtyFlag.WorldMatrix);
-        })
-    }
+  setNeedsUpdateWorldMatrix() {
+    this.entity.traverse((entity) => {
+      // world matrix need to be updated
+      entity.transform.setDirty(TransformDirtyFlag.WorldMatrix);
+    });
+  }
 }
 
 enum TransformDirtyFlag {
-    LocalMatrix = 1 << 0,
-    WorldMatrix = 1 << 1,
-    UPLOAD_DATA = 1 << 2,
-    All = LocalMatrix | WorldMatrix | UPLOAD_DATA,
+  LocalMatrix = 1 << 0,
+  WorldMatrix = 1 << 1,
+  UPLOAD_DATA = 1 << 2,
+  All = LocalMatrix | WorldMatrix | UPLOAD_DATA,
 }
 
-export {Transform, TransformDirtyFlag};
+export { Transform, TransformDirtyFlag };

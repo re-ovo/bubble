@@ -1,13 +1,13 @@
-import type {Entity} from "@/core/entity";
+import type { Entity } from '@/core/entity';
 
 abstract class Component {
-    readonly entity: Entity;
+  readonly entity: Entity;
 
-    constructor(entity: Entity) {
-        this.entity = entity;
-    }
+  constructor(entity: Entity) {
+    this.entity = entity;
+  }
 
-    update?(deltaTime: number): void;
+  update?(deltaTime: number): void;
 }
 
-export {Component};
+export { Component };

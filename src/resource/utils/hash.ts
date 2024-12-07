@@ -11,21 +11,20 @@
  *    return hash
  */
 
-
 export type Hash = number;
 
 const FNV_OFFSET_BASIS = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
 
 export function hash_number(v: number, prev: Hash = FNV_OFFSET_BASIS): Hash {
-    let hash = prev;
-    hash ^= v & 0xff;
-    hash = (hash * FNV_PRIME) >>> 0;
-    hash ^= (v >> 8) & 0xff;
-    hash = (hash * FNV_PRIME) >>> 0;
-    hash ^= (v >> 16) & 0xff;
-    hash = (hash * FNV_PRIME) >>> 0;
-    hash ^= (v >> 24) & 0xff;
-    hash = (hash * FNV_PRIME) >>> 0;
-    return hash;
+  let hash = prev;
+  hash ^= v & 0xff;
+  hash = (hash * FNV_PRIME) >>> 0;
+  hash ^= (v >> 8) & 0xff;
+  hash = (hash * FNV_PRIME) >>> 0;
+  hash ^= (v >> 16) & 0xff;
+  hash = (hash * FNV_PRIME) >>> 0;
+  hash ^= (v >> 24) & 0xff;
+  hash = (hash * FNV_PRIME) >>> 0;
+  return hash;
 }

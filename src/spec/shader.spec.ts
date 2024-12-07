@@ -1,17 +1,21 @@
-import {wgsl} from "@/shader/utils/processor";
-import {describe, expect, it} from "vitest";
-import {autoBinding, autoLocation, providerWGSLCounterScope} from "@/shader/utils/binding_counter";
-import camera_input from "@/shader/common/camera_input";
-import {Shader} from "@/shader/shader";
+import { wgsl } from '@/shader/utils/processor';
+import { describe, expect, it } from 'vitest';
+import {
+  autoBinding,
+  autoLocation,
+  providerWGSLCounterScope,
+} from '@/shader/utils/binding_counter';
+import camera_input from '@/shader/common/camera_input';
+import { Shader } from '@/shader/shader';
 
-describe("WGSL Shader Processor", () => {
-    it("test shader interpolation", () => {
-        const include = wgsl`
+describe('WGSL Shader Processor', () => {
+  it('test shader interpolation', () => {
+    const include = wgsl`
         struct TestInterpolation {
           @location(0) position: vec4<f32>
         };
-        `
-        const shader = () => wgsl`
+        `;
+    const shader = () => wgsl`
             ${include}
             
             @vertex
@@ -20,33 +24,33 @@ describe("WGSL Shader Processor", () => {
             }
         `;
 
-        expect(shader())
-            .contains("struct TestInterpolation {")
-            .and.contains("fn main(input: TestInterpolation) -> TestInterpolation {");
-    })
+    expect(shader())
+      .contains('struct TestInterpolation {')
+      .and.contains('fn main(input: TestInterpolation) -> TestInterpolation {');
+  });
 
-    it("test conditional marco", () => {
-        let condition = false;
+  it('test conditional marco', () => {
+    let condition = false;
 
-        const shader = () => wgsl`
+    const shader = () => wgsl`
         // just test for if
         #if ${condition}
             let a = 1;
         #else
             let a = 2;   
         #endif 
-        `
+        `;
 
-        condition = false;
-        expect(shader()).contains("let a = 2;").and.not.contains("let a = 1;");
+    condition = false;
+    expect(shader()).contains('let a = 2;').and.not.contains('let a = 1;');
 
-        condition = true;
-        expect(shader()).contains("let a = 1;").and.not.contains("let a = 2;");
-    })
+    condition = true;
+    expect(shader()).contains('let a = 1;').and.not.contains('let a = 2;');
+  });
 
-    it("test shader counter", () => {
-        let ws = providerWGSLCounterScope(() => {
-            return wgsl`
+  it('test shader counter', () => {
+    let ws = providerWGSLCounterScope(() => {
+      return wgsl`
                 struct TestInterpolation {
                   @location(${autoLocation()}) position: vec4<f32>
                 };
@@ -60,25 +64,27 @@ describe("WGSL Shader Processor", () => {
                 ${autoBinding(0)} struct TestInterpolation5 {}
                 
                 ${camera_input()}
-            `
-        })
+            `;
+    });
 
+    expect(ws).contains('@location(0) position: vec4<f32>');
 
-        expect(ws).contains('@location(0) position: vec4<f32>')
+    expect(ws).contains('@group(0) @binding(0) struct TestInterpolation2 {}');
 
-        expect(ws).contains('@group(0) @binding(0) struct TestInterpolation2 {}')
+    expect(ws).contains('@group(0) @binding(1) struct TestInterpolation3 {}');
 
-        expect(ws).contains('@group(0) @binding(1) struct TestInterpolation3 {}')
+    expect(ws).contains('@group(1) @binding(0) struct TestInterpolation4 {}');
 
-        expect(ws).contains('@group(1) @binding(0) struct TestInterpolation4 {}')
+    expect(ws).contains('@group(0) @binding(2) struct TestInterpolation5 {}');
 
-        expect(ws).contains('@group(0) @binding(2) struct TestInterpolation5 {}')
+    expect(ws).contains(
+      '@group(0) @binding(3) var<uniform> camera: CameraInput;',
+    );
+  });
 
-        expect(ws).contains('@group(0) @binding(3) var<uniform> camera: CameraInput;')
-    })
-
-    it("test shader attribute reflection", () => {
-        let shader = new Shader(() => wgsl`
+  it('test shader attribute reflection', () => {
+    let shader = new Shader(
+      () => wgsl`
         struct VertexInput {
            @builtin(vertex_index) index: u32,
            @builtin(instance_index) instance: u32,
@@ -119,65 +125,67 @@ describe("WGSL Shader Processor", () => {
             let v = camera.view;
             
         }
-      `)
-        expect(shader.attributes).toStrictEqual([
-            {
-                "attributeDesc": {
-                    "format": "float32x4",
-                    "offset": 0,
-                    "shaderLocation": 0,
-                },
-                "location": 0,
-                "name": "position",
-                "type": {
-                    "name": "vec4",
-                    "size": 16,
-                },
-            },
-            {
-                "attributeDesc": {
-                    "format": "float32x3",
-                    "offset": 0,
-                    "shaderLocation": 1,
-                },
-                "location": 1,
-                "name": "normal",
-                "type": {
-                    "name": "vec3",
-                    "size": 12,
-                },
-            },
-            {
-                "attributeDesc": {
-                    "format": "float32x2",
-                    "offset": 0,
-                    "shaderLocation": 2,
-                },
-                "location": 2,
-                "name": "uv",
-                "type": {
-                    "name": "vec2",
-                    "size": 8,
-                },
-            },
-            {
-                "attributeDesc": {
-                    "format": "sint32",
-                    "offset": 0,
-                    "shaderLocation": 3,
-                },
-                "location": 3,
-                "name": "awa",
-                "type": {
-                    "name": "i32",
-                    "size": 4,
-                },
-            },
-        ])
-    })
+      `,
+    );
+    expect(shader.attributes).toStrictEqual([
+      {
+        attributeDesc: {
+          format: 'float32x4',
+          offset: 0,
+          shaderLocation: 0,
+        },
+        location: 0,
+        name: 'position',
+        type: {
+          name: 'vec4',
+          size: 16,
+        },
+      },
+      {
+        attributeDesc: {
+          format: 'float32x3',
+          offset: 0,
+          shaderLocation: 1,
+        },
+        location: 1,
+        name: 'normal',
+        type: {
+          name: 'vec3',
+          size: 12,
+        },
+      },
+      {
+        attributeDesc: {
+          format: 'float32x2',
+          offset: 0,
+          shaderLocation: 2,
+        },
+        location: 2,
+        name: 'uv',
+        type: {
+          name: 'vec2',
+          size: 8,
+        },
+      },
+      {
+        attributeDesc: {
+          format: 'sint32',
+          offset: 0,
+          shaderLocation: 3,
+        },
+        location: 3,
+        name: 'awa',
+        type: {
+          name: 'i32',
+          size: 4,
+        },
+      },
+    ]);
+  });
 
-    it("test shader uniform reflection", () => {
-        const shader = new Shader(() => wgsl`
+  it('test shader uniform reflection', () => {
+    const shader = new Shader(
+      () => wgsl`
         struct CameraInput {
               view: mat4x4<f32>,
               projection: mat4x4<f32>,
@@ -201,6 +209,7 @@ describe("WGSL Shader Processor", () => {
             
         @vertex
         fn main() {}
-        `)
-    })
-})
+        `,
+    );
+  });
+});

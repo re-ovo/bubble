@@ -1,2 +1,2 @@
-export * from './mesh'
-export * from './shapes/index'
+export * from './mesh';
+export * from './shapes/index';

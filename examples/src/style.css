@@ -1,18 +1,18 @@
 body {
-    padding: 0;
-    margin: 0;
-    font-family: sans-serif;
-    min-height: 100vh;
-    width: 100%;
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+  min-height: 100vh;
+  width: 100%;
 }
 
 #app {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
+  display: block;
+  width: 100%;
+  height: 100%;
 }

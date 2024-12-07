@@ -1,9 +1,13 @@
-import {wgsl} from "@/shader/utils/processor";
-import {autoBinding, autoLocation, textureAndSampler} from "@/shader/utils/binding_counter";
-import material_standard from "@/shader/material/material_standard";
-import gamma_correct from "@/shader/common/gamma_correct";
-import camera_input from "@/shader/common/camera_input";
-import model_info from "@/shader/common/model_info";
+import { wgsl } from '@/shader/utils/processor';
+import {
+  autoBinding,
+  autoLocation,
+  textureAndSampler,
+} from '@/shader/utils/binding_counter';
+import material_standard from '@/shader/material/material_standard';
+import gamma_correct from '@/shader/common/gamma_correct';
+import camera_input from '@/shader/common/camera_input';
+import model_info from '@/shader/common/model_info';
 
 export default () => wgsl`
 ${camera_input()}
@@ -82,4 +86,4 @@ fn fs(input: FragmentInput) -> @location(0) vec4f {
   
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
 }
-`
+`;

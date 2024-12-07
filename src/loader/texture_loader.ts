@@ -5,21 +5,21 @@
  * @param mimeType the mime type of the image (optional)
  */
 export async function convertUint8ArrayToImageBitmap(
-    data: ArrayBuffer | ArrayBufferView,
-    mimeType?: string
+  data: ArrayBuffer | ArrayBufferView,
+  mimeType?: string,
 ): Promise<ImageBitmap> {
-    if(!data) throw new Error('data is required');
-    try {
-        return await createImageBitmap(
-            new Blob([data], {
-                type: mimeType,
-            }),
-            {colorSpaceConversion: 'none'}
-        )
-    } catch (e) {
-        console.error('Failed to create image bitmap', e)
-        throw e
-    }
+  if (!data) throw new Error('data is required');
+  try {
+    return await createImageBitmap(
+      new Blob([data], {
+        type: mimeType,
+      }),
+      { colorSpaceConversion: 'none' },
+    );
+  } catch (e) {
+    console.error('Failed to create image bitmap', e);
+    throw e;
+  }
 }
 
 /**
@@ -30,15 +30,15 @@ export async function convertUint8ArrayToImageBitmap(
  * @param color the color of the image
  */
 export function createSolidColorTexture(
-    width: number,
-    height: number,
-    color: string
+  width: number,
+  height: number,
+  color: string,
 ): ImageData {
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const context = canvas.getContext('2d')!
-    context.fillStyle = color
-    context.fillRect(0, 0, width, height)
-    return context.getImageData(0, 0, width, height)
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d')!;
+  context.fillStyle = color;
+  context.fillRect(0, 0, width, height);
+  return context.getImageData(0, 0, width, height);
 }

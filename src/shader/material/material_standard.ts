@@ -1,7 +1,7 @@
-import {wgsl} from "@/shader/utils/processor";
-import {autoBinding} from "@/shader/utils/binding_counter";
-import constants from "@/shader/common/constants";
-import {BindGroupId} from "@/shader/groups";
+import { wgsl } from '@/shader/utils/processor';
+import { autoBinding } from '@/shader/utils/binding_counter';
+import constants from '@/shader/common/constants';
+import { BindGroupId } from '@/shader/groups';
 
 export default () => wgsl`
 ${constants()}

@@ -1,2 +1,2 @@
-export * from './gltf_loader'
-export * from './texture_loader'
+export * from './gltf_loader';
+export * from './texture_loader';
