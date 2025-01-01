@@ -6,3 +6,4 @@ export * from './node/index';
 export * from './pipeline/index';
 export * from './resource/index';
 export * from './shader/index';
+export * from './utils/index';
