@@ -1,8 +1,8 @@
-import { wgsl } from '@/shader/utils/processor';
+import { wgsl } from '@/utils/processor';
 import {
   autoBinding,
   providerWGSLCounterScope,
-} from '@/shader/utils/binding_counter';
+} from '@/utils/binding_counter';
 import { BindGroupId } from '@/shader/groups';
 import { makeShaderDataDefinitions, VariableDefinition } from 'webgpu-utils';
 

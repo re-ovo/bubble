@@ -1,4 +1,4 @@
-import { wgsl } from '@/shader/utils/processor';
+import { wgsl } from '@/utils/processor';
 
 const GAMMA = 2.2;
 

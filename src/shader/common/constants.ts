@@ -1,4 +1,4 @@
-import { wgsl } from '@/shader/utils/processor';
+import { wgsl } from '@/utils/processor';
 
 export default () => wgsl`
 const PI: f32 = 3.14159265359;

@@ -1,10 +1,10 @@
-import { wgsl } from '@/shader/utils/processor';
+import { wgsl } from '@/utils/processor';
 import { describe, expect, it } from 'vitest';
 import {
   autoBinding,
   autoLocation,
   providerWGSLCounterScope,
-} from '@/shader/utils/binding_counter';
+} from '@/utils/binding_counter';
 import camera_input from '@/shader/common/camera_input';
 import { Shader } from '@/shader/shader';
 

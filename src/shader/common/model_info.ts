@@ -1,5 +1,5 @@
-import { wgsl } from '@/shader/utils/processor';
-import { autoBinding } from '@/shader/utils/binding_counter';
+import { wgsl } from '@/utils/processor';
+import { autoBinding } from '@/utils/binding_counter';
 import { BindGroupId } from '@/shader/groups';
 
 export default () => wgsl`

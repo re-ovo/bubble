@@ -1,9 +1,9 @@
-import { wgsl } from '@/shader/utils/processor';
+import { wgsl } from '@/utils/processor';
 import {
   autoBinding,
   autoLocation,
   textureAndSampler,
-} from '@/shader/utils/binding_counter';
+} from '@/utils/binding_counter';
 import material_standard from '@/shader/material/material_standard';
 import gamma_correct from '@/shader/common/gamma_correct';
 import camera_input from '@/shader/common/camera_input';

@@ -4,7 +4,7 @@ import {
   VariableInfo,
   WgslReflect,
 } from 'wgsl_reflect';
-import { providerWGSLCounterScope } from '@/shader/utils/binding_counter';
+import { providerWGSLCounterScope } from '@/utils/binding_counter';
 import {
   makeShaderDataDefinitions,
   type VariableDefinitions,

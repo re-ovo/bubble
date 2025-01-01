@@ -1,44 +1,3 @@
-const preprocessorSymbols = /#([^\s]*)(\s*)/gm;
-
-class ConditionalState {
-  elseIsValid = true;
-  branches: {
-    expression: boolean;
-    string: string;
-  }[] = [];
-
-  constructor(initialExpression: boolean) {
-    this.pushBranch('if', initialExpression);
-  }
-
-  pushBranch(token: string, expression: boolean) {
-    if (!this.elseIsValid) {
-      throw new Error(`#${token} not preceeded by an #if or #elif`);
-    }
-    this.elseIsValid = token === 'if' || token === 'elif';
-    this.branches.push({
-      expression: expression,
-      string: '',
-    });
-  }
-
-  appendStringToCurrentBranch(...strings: string[]) {
-    for (const string of strings) {
-      this.branches[this.branches.length - 1].string += string;
-    }
-  }
-
-  resolve() {
-    for (const branch of this.branches) {
-      if (branch.expression) {
-        // console.log(branch.string);
-        return branch.string;
-      }
-    }
-    return '';
-  }
-}
-
 // Template literal tag that handles simple preprocessor symbols for WGSL
 // shaders. Supports #if/elif/else/endif statements.
 export function wgsl(strings: TemplateStringsArray, ...values: any[]) {
@@ -135,6 +94,47 @@ export function wgsl(strings: TemplateStringsArray, ...values: any[]) {
   }
 
   return trimIndentation(state.resolve());
+}
+
+const preprocessorSymbols = /#([^\s]*)(\s*)/gm;
+
+class ConditionalState {
+  elseIsValid = true;
+  branches: {
+    expression: boolean;
+    string: string;
+  }[] = [];
+
+  constructor(initialExpression: boolean) {
+    this.pushBranch('if', initialExpression);
+  }
+
+  pushBranch(token: string, expression: boolean) {
+    if (!this.elseIsValid) {
+      throw new Error(`#${token} not preceeded by an #if or #elif`);
+    }
+    this.elseIsValid = token === 'if' || token === 'elif';
+    this.branches.push({
+      expression: expression,
+      string: '',
+    });
+  }
+
+  appendStringToCurrentBranch(...strings: string[]) {
+    for (const string of strings) {
+      this.branches[this.branches.length - 1].string += string;
+    }
+  }
+
+  resolve() {
+    for (const branch of this.branches) {
+      if (branch.expression) {
+        // console.log(branch.string);
+        return branch.string;
+      }
+    }
+    return '';
+  }
 }
 
 function trimIndentation(str: string): string {
