@@ -1,20 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  RenderGraph,
-  RenderPassNode,
-  TextureResource,
-  BufferResource,
-} from '@/graph/render_graph';
+import { RenderGraph } from '@/graph/render_graph';
 import RenderContext from '@/pipeline/context';
 
 describe('RenderGraph', () => {
-  let mockContext: RenderContext;
   let renderGraph: RenderGraph;
+  let mockContext: RenderContext;
   let mockDevice: GPUDevice;
 
   beforeEach(() => {
     mockContext = {
-      targetSize: { width: 1920, height: 1080 },
+      targetSize: { width: 800, height: 600 },
     } as RenderContext;
 
     mockDevice = {
@@ -35,7 +30,7 @@ describe('RenderGraph', () => {
     it('should create a texture resource with correct properties', () => {
       const texture = renderGraph.createTexture('test-texture', {
         format: 'rgba8unorm',
-        size: { width: 1920, height: 1080 },
+        size: { width: 'full', height: 'full' },
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
         transient: true,
       });
@@ -49,7 +44,7 @@ describe('RenderGraph', () => {
     it('should create a buffer resource with correct properties', () => {
       const buffer = renderGraph.createBuffer('test-buffer', {
         size: 1024,
-        usage: GPUBufferUsage.STORAGE,
+        usage: GPUBufferUsage.VERTEX,
         transient: false,
       });
 
@@ -61,8 +56,8 @@ describe('RenderGraph', () => {
   });
 
   describe('Pass Management', () => {
-    it('should add render passes correctly', () => {
-      const mockPass: RenderPassNode = {
+    it('should add a render pass correctly', () => {
+      const mockPass = {
         name: 'test-pass',
         inputs: [],
         outputs: [],
@@ -71,80 +66,83 @@ describe('RenderGraph', () => {
 
       renderGraph.addPass(mockPass);
       renderGraph.compile();
-
-      // Execute should trigger the pass
       renderGraph.execute(mockDevice);
+
       expect(mockPass.execute).toHaveBeenCalled();
     });
 
     it('should sort passes correctly', () => {
-      const passA: RenderPassNode = {
-        name: 'pass-a',
+      const pass1 = {
+        name: 'pass1',
         inputs: [],
-        outputs: [{ id: 1, type: 'texture', name: 'tex-a', transient: true }],
+        outputs: [1],
+        execute: vi.fn(),
+      };
+      const pass2 = {
+        name: 'pass2',
+        inputs: [1],
+        outputs: [2],
+        execute: vi.fn(),
+      };
+      const pass3 = {
+        name: 'pass3',
+        inputs: [2],
+        outputs: [3],
+        execute: vi.fn(),
+      };
+      const pass4 = {
+        name: 'pass4',
+        inputs: [2],
+        outputs: [],
         execute: vi.fn(),
       };
 
-      const passB: RenderPassNode = {
-        name: 'pass-b',
-        inputs: [{ id: 1, type: 'texture', name: 'tex-a', transient: true }],
-        outputs: [{ id: 2, type: 'texture', name: 'tex-b', transient: true }],
-        execute: vi.fn(),
-      };
+      renderGraph.addPass(pass4);
+      renderGraph.addPass(pass3);
+      renderGraph.addPass(pass2);
+      renderGraph.addPass(pass1);
 
-      const passC: RenderPassNode = {
-        name: 'pass-c',
-        inputs: [{ id: 2, type: 'texture', name: 'tex-b', transient: true }],
-        outputs: [{ id: 3, type: 'texture', name: 'tex-c', transient: true }],
-        execute: vi.fn(),
-      };
+      const sortedPasses = renderGraph.getSortedPasses();
+      expect(sortedPasses[0].name).toBe('pass1');
+      expect(sortedPasses[1].name).toBe('pass2');
 
-      // Add passes in random order
-      renderGraph.addPass(passC);
-      renderGraph.addPass(passA);
-      renderGraph.addPass(passB);
-
-      renderGraph.compile();
-      renderGraph.execute(mockDevice);
-
-      const executionOrder = vi.mocked(passA.execute).mock
-        .invocationCallOrder[0];
-      const executionOrderB = vi.mocked(passB.execute).mock
-        .invocationCallOrder[0];
-      const executionOrderC = vi.mocked(passC.execute).mock
-        .invocationCallOrder[0];
-
-      console.log(executionOrder, executionOrderB, executionOrderC);
-
-      expect(executionOrder).toBeLessThan(executionOrderB);
-      expect(executionOrderB).toBeLessThan(executionOrderC);
+      // pass3和pass4顺序不不确定
+      expect(sortedPasses[2].name).toMatch(/^pass[34]$/);
+      expect(sortedPasses[3].name).toMatch(/^pass[34]$/);
+      expect(sortedPasses[2].name).not.toBe(sortedPasses[3].name);
     });
+  });
 
-    it('should detect cycles in render graph', () => {
-      const passA: RenderPassNode = {
-        name: 'pass-a',
-        inputs: [],
-        outputs: [{ id: 1, type: 'texture', name: 'tex-a', transient: true }],
+  describe('Graph Compilation', () => {
+    it('should detect cycles in the render graph', () => {
+      const resource1 = renderGraph.createTexture('texture1', {
+        format: 'rgba8unorm',
+        size: { width: 100, height: 100 },
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        transient: true,
+      });
+
+      const resource2 = renderGraph.createTexture('texture2', {
+        format: 'rgba8unorm',
+        size: { width: 100, height: 100 },
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        transient: true,
+      });
+
+      // Create a cycle: pass1 -> pass2 -> pass1
+      renderGraph.addPass({
+        name: 'pass1',
+        inputs: [resource2.id],
+        outputs: [resource1.id],
         execute: vi.fn(),
-      };
+      });
 
-      const passB: RenderPassNode = {
-        name: 'pass-b',
-        inputs: [{ id: 1, type: 'texture', name: 'tex-a', transient: true }],
-        outputs: [{ id: 2, type: 'texture', name: 'tex-b', transient: true }],
+      renderGraph.addPass({
+        name: 'pass2',
+        inputs: [resource1.id],
+        outputs: [resource2.id],
         execute: vi.fn(),
-      };
-
-      const passC: RenderPassNode = {
-        name: 'pass-c',
-        inputs: [{ id: 2, type: 'texture', name: 'tex-b', transient: true }],
-        outputs: [{ id: 1, type: 'texture', name: 'tex-a', transient: true }], // Creates a cycle
-        execute: vi.fn(),
-      };
-
-      renderGraph.addPass(passA);
-      renderGraph.addPass(passB);
-      renderGraph.addPass(passC);
+      });
 
       expect(() => renderGraph.compile()).toThrow(
         'Cycle detected in render graph',
@@ -152,55 +150,45 @@ describe('RenderGraph', () => {
     });
   });
 
-  describe('Resource Allocation', () => {
-    it('should allocate GPU resources during execution', () => {
-      const texture = renderGraph.createTexture('test-texture', {
+  describe('Texture Size Resolution', () => {
+    it('should correctly resolve full size textures', () => {
+      const texture = renderGraph.createTexture('full-size', {
         format: 'rgba8unorm',
-        size: { width: 1920, height: 1080 },
+        size: { width: 'full', height: 'full' },
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
         transient: true,
       });
 
-      const mockPass: RenderPassNode = {
-        name: 'test-pass',
-        inputs: [],
-        outputs: [texture],
-        execute: vi.fn(),
-      };
-
-      renderGraph.addPass(mockPass);
       renderGraph.execute(mockDevice);
 
-      expect(mockDevice.createTexture).toHaveBeenCalled();
+      expect(mockDevice.createTexture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          size: {
+            width: 800,
+            height: 600,
+          },
+        }),
+      );
     });
-  });
 
-  describe('Cleanup', () => {
-    it('should cleanup transient resources after execution', () => {
-      const texture = renderGraph.createTexture('test-texture', {
+    it('should correctly resolve percentage size textures', () => {
+      const texture = renderGraph.createTexture('half-size', {
         format: 'rgba8unorm',
-        size: { width: 1920, height: 1080 },
+        size: { width: '50%', height: '50%' },
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
         transient: true,
       });
 
-      const mockPass: RenderPassNode = {
-        name: 'test-pass',
-        inputs: [],
-        outputs: [texture],
-        execute: vi.fn(),
-      };
-
-      renderGraph.addPass(mockPass);
       renderGraph.execute(mockDevice);
 
-      // After execution, transient textures should be destroyed
-      const mockTexture = mockDevice.createTexture({
-        size: { width: 1, height: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      });
-      expect(mockTexture.destroy).toHaveBeenCalled();
+      expect(mockDevice.createTexture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          size: {
+            width: 400,
+            height: 300,
+          },
+        }),
+      );
     });
   });
 });

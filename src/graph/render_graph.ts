@@ -3,6 +3,7 @@ import { Texture } from '@/resource';
 
 export type TextureId = number;
 export type BufferId = number;
+export type RGResourceHandle = TextureId | BufferId;
 
 export interface RenderResource {
   id: TextureId | BufferId;
@@ -38,8 +39,8 @@ export interface BufferResource extends RenderResource {
 
 export interface RenderPassNode {
   name: string;
-  inputs: RenderResource[]; // Resources this pass reads from
-  outputs: RenderResource[]; // Resources this pass writes to
+  inputs: RGResourceHandle[];
+  outputs: RGResourceHandle[];
   execute: (
     encoder: GPUCommandEncoder,
     resources: Map<number, RenderResource>,
@@ -58,6 +59,13 @@ export class RenderGraph {
 
   constructor(context: RenderContext) {
     this._context = context;
+  }
+
+  getSortedPasses() {
+    if (!this.isCompiled) {
+      this.compile();
+    }
+    return this.sortedPasses;
   }
 
   // Add a render pass to the graph
@@ -119,54 +127,61 @@ export class RenderGraph {
   }
 
   private topologicalSort(): RenderPassNode[] {
-    // Build adjacency list
-    const graph = new Map<string, Set<string>>();
-    const inDegree = new Map<string, number>();
+    // Create a map to store the in-degree of each pass
+    const inDegree = new Map<RenderPassNode, number>();
+    // Create an adjacency list representation of the graph
+    const graph = new Map<RenderPassNode, RenderPassNode[]>();
 
-    // Initialize
+    // Initialize the graph and in-degree counts
     for (const pass of this.passes) {
-      graph.set(pass.name, new Set());
-      inDegree.set(pass.name, 0);
+      inDegree.set(pass, 0);
+      graph.set(pass, []);
     }
 
-    // Build edges
+    // Build the graph by analyzing resource dependencies
     for (const pass of this.passes) {
-      for (const output of pass.outputs) {
-        for (const otherPass of this.passes) {
-          if (otherPass === pass) continue;
+      // Find passes that depend on this pass's outputs
+      for (const otherPass of this.passes) {
+        if (pass === otherPass) continue;
 
-          if (otherPass.inputs.some((input) => input.id === output.id)) {
-            graph.get(pass.name)!.add(otherPass.name);
-            inDegree.set(otherPass.name, inDegree.get(otherPass.name)! + 1);
-          }
+        // Check if otherPass uses any of pass's outputs
+        if (otherPass.inputs.some((input) => pass.outputs.includes(input))) {
+          graph.get(pass)!.push(otherPass);
+          inDegree.set(otherPass, inDegree.get(otherPass)! + 1);
         }
       }
     }
 
-    // Kahn's algorithm
-    const sorted: RenderPassNode[] = [];
-    const queue: string[] = Array.from(inDegree.entries())
-      .filter(([_, degree]) => degree === 0)
-      .map(([name]) => name);
+    // Perform topological sort using Kahn's algorithm
+    const result: RenderPassNode[] = [];
+    const queue: RenderPassNode[] = [];
+
+    // Add all nodes with in-degree 0 to queue
+    for (const [pass, degree] of inDegree) {
+      if (degree === 0) {
+        queue.push(pass);
+      }
+    }
 
     while (queue.length > 0) {
-      const passName = queue.shift()!;
-      const pass = this.passes.find((p) => p.name === passName)!;
-      sorted.push(pass);
+      const pass = queue.shift()!;
+      result.push(pass);
 
-      for (const neighbor of graph.get(passName)!) {
-        inDegree.set(neighbor, inDegree.get(neighbor)! - 1);
-        if (inDegree.get(neighbor) === 0) {
-          queue.push(neighbor);
+      // Reduce in-degree for all dependent passes
+      for (const dependent of graph.get(pass)!) {
+        inDegree.set(dependent, inDegree.get(dependent)! - 1);
+        if (inDegree.get(dependent) === 0) {
+          queue.push(dependent);
         }
       }
     }
 
-    if (sorted.length !== this.passes.length) {
+    // Check for cycles
+    if (result.length !== this.passes.length) {
       throw new Error('Cycle detected in render graph');
     }
 
-    return sorted;
+    return result;
   }
 
   private allocateResources(device: GPUDevice) {
@@ -250,4 +265,13 @@ export class RenderGraph {
     this.isCompiled = false;
     this.sortedPasses = [];
   }
+}
+
+function setupForwardPass(rg: RenderGraph, shadowMap: TextureId) {
+  const pass = rg.addPass({
+    name: 'forward',
+    inputs: [shadowMap],
+    outputs: [],
+    execute: (encoder, resources) => {},
+  });
 }
