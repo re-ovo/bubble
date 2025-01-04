@@ -61,6 +61,10 @@ export class RenderGraph {
     this._context = context;
   }
 
+  get context() {
+    return this._context;
+  }
+
   getSortedPasses() {
     if (!this.isCompiled) {
       this.compile();
@@ -253,8 +257,6 @@ export class RenderGraph {
 
   // 添加新的编译方法
   compile() {
-    if (this.isCompiled) return;
-
     // 分析依赖并排序通道
     this.sortedPasses = this.topologicalSort();
     this.isCompiled = true;
@@ -264,14 +266,6 @@ export class RenderGraph {
   reset() {
     this.isCompiled = false;
     this.sortedPasses = [];
+    this.cleanupTransientResources();
   }
-}
-
-function setupForwardPass(rg: RenderGraph, shadowMap: TextureId) {
-  const pass = rg.addPass({
-    name: 'forward',
-    inputs: [shadowMap],
-    outputs: [],
-    execute: (encoder, resources) => {},
-  });
 }
