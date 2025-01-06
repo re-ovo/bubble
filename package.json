@@ -33,6 +33,7 @@
     "@dimforge/rapier3d": "^0.14.0",
     "@loaders.gl/core": "^4.3.3",
     "@loaders.gl/gltf": "^4.3.3",
+    "naga-oil-wasm": "^0.1.1",
     "uuid": "^11.0.3",
     "webgpu-utils": "^1.9.3",
     "wgpu-matrix": "^3.3.0",
@@ -54,6 +55,8 @@
     "vite-plugin-circular-dependency": "^0.5.0",
     "vite-plugin-dts": "^4.4.0",
     "vite-plugin-ignore-public": "^0.0.3",
+    "vite-plugin-top-level-await": "^1.4.4",
+    "vite-plugin-wasm": "^3.4.1",
     "vitest": "^2.1.8",
     "vue-tsc": "^2.2.0"
   }

@@ -3,6 +3,8 @@ import dts from 'vite-plugin-dts';
 import { defineConfig } from 'vite';
 import circleDependency from 'vite-plugin-circular-dependency';
 import { IgnorePublicPlugin as ignorePublic } from 'vite-plugin-ignore-public';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,6 +14,8 @@ export default defineConfig({
     circleDependency({
       circleImportThrowErr: false,
     }),
+    wasm(),
+    topLevelAwait(),
   ],
   build: {
     sourcemap: true,
