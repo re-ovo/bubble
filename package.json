@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "dev": "tsc && vite",
+    "dev": "vite",
     "start": "vite --host --open",
     "build": "tsc && vite build",
     "build:types": "dts-bundle-generator --config ./dts-bundle-generator.config.ts",

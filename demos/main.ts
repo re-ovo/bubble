@@ -4,3 +4,15 @@ document.querySelector('#app')!.innerHTML = `
       <li><a href="/demos/model-viewer/index.html">Model Viewer</a></li>
     </ul>
 `;
+
+import { ShaderManager } from '@/shader/shader_lib';
+import standard from '@/shader/sources/mesh/standard.wgsl?raw';
+
+try {
+  console.log('test');
+  const shaderManager = ShaderManager.getInstance();
+  const code = shaderManager.process(standard, {});
+  console.log(code);
+} catch (e) {
+  console.error(e);
+}

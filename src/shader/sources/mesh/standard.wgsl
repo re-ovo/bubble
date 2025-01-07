@@ -1,30 +1,20 @@
-import { wgsl } from '@/utils/processor';
-import {
-  autoBinding,
-  autoLocation,
-  textureAndSampler,
-} from '@/utils/binding_counter';
-import material_standard from '@/shader/material/material_standard';
-import gamma_correct from '@/shader/common/gamma_correct';
-import camera_input from '@/shader/common/camera_input';
-import model_info from '@/shader/common/model_info';
-
-export default () => wgsl`
-${camera_input()}
-${model_info()}
-${material_standard()}
+#import bubble::tonemapping::gamma::gamma_correct
+#import bubble::common::camera::{camera}
+#import bubble::common::model::{modelInfo}
+#import bubble::common::converts::{mat4fToMat3f}
+#import bubble::brdf::cooktorrance::{material,calculateBRDF}
 
 struct VertexInput {
-  @location(${autoLocation()}) position: vec3f,
-  @location(${autoLocation()}) normal: vec3f,
-  @location(${autoLocation()}) uv: vec2f,
+    @location(0) position: vec3f,
+    @location(1) normal: vec3f,
+    @location(2) uv: vec2f,
 }
 
 struct VertexOutput {
-  @builtin(position) position: vec4f,
-  @location(0) normal: vec3f,
-  @location(1) uv: vec2f,
-  @location(2) fragPos: vec3f,
+    @builtin(position) position: vec4f,
+    @location(0) normal: vec3f,
+    @location(1) uv: vec2f,
+    @location(2) fragPos: vec3f,
 }
 
 struct FragmentInput {
@@ -48,16 +38,18 @@ fn vs(input: VertexInput) -> VertexOutput {
     return output;
 }
 
-${gamma_correct()}
-
-${textureAndSampler('albedoMap', 'texture_2d<f32>')}
-${textureAndSampler('normalMap', 'texture_2d<f32>')}
-${textureAndSampler('pbrMap', 'texture_2d<f32>')}
-${textureAndSampler('emissiveMap', 'texture_2d<f32>')}
-
 fn get_normal(input: FragmentInput) -> vec3f {
     return select(-normalize(input.normal), normalize(input.normal), input.isFrontFacing);
 }
+
+@group(1) @binding(auto) var albedoMap: texture_2d<f32>;
+@group(1) @binding(auto) var albedoMapSampler: sampler;
+@group(1) @binding(auto) var normalMap: texture_2d<f32>;
+@group(1) @binding(auto) var normalMapSampler: sampler;
+@group(1) @binding(auto) var pbrMap: texture_2d<f32>;
+@group(1) @binding(auto) var pbrMapSampler: sampler;
+@group(1) @binding(auto) var emissiveMap: texture_2d<f32>;
+@group(1) @binding(auto) var emissiveMapSampler: sampler;
 
 @fragment
 fn fs(input: FragmentInput) -> @location(0) vec4f {
@@ -86,4 +78,3 @@ fn fs(input: FragmentInput) -> @location(0) vec4f {
   
     return vec4<f32>(gamma_correct(vec3f(color)), alpha);
 }
-`;
