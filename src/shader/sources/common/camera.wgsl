@@ -5,5 +5,3 @@ struct CameraInput {
     viewMatrixInverse: mat4x4<f32>,
     cameraPosition: vec3<f32>,
 }
-
-@group(0) @binding(auto) var<uniform> camera: CameraInput;

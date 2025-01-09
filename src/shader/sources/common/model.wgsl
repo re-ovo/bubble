@@ -5,4 +5,3 @@ struct ModelInfo {
     modelMatrixInverse: mat4x4<f32>,
 }
 
-@group(1) @binding(auto) var<uniform> modelInfo: ModelInfo;

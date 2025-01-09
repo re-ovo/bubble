@@ -1,8 +1,8 @@
 #import bubble::tonemapping::gamma::gamma_correct
-#import bubble::common::camera::{camera}
-#import bubble::common::model::{modelInfo}
+#import bubble::common::camera::{CameraInput}
+#import bubble::common::model::{ModelInfo}
 #import bubble::common::converts::{mat4fToMat3f}
-#import bubble::brdf::cooktorrance::{material,calculateBRDF}
+#import bubble::brdf::cooktorrance::{MaterialInfo, calculateBRDF}
 
 struct VertexInput {
     @location(0) position: vec3f,
@@ -23,6 +23,10 @@ struct FragmentInput {
     @location(2) fragPos: vec3f,
     @builtin(front_facing) isFrontFacing: bool,
 }
+
+@group(0) @binding(auto) var<uniform> camera: CameraInput;
+@group(1) @binding(auto) var<uniform> modelInfo: ModelInfo;
+@group(1) @binding(auto) var<uniform> material: MaterialInfo;
 
 @vertex
 fn vs(input: VertexInput) -> VertexOutput {
