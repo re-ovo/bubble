@@ -95,6 +95,6 @@ export function createHashMap<K, V>(
           buckets.delete(hash);
         }
       }
-    }
+    },
   };
 }
