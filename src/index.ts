@@ -7,3 +7,5 @@ export * from './pipeline/index';
 export * from './resource/index';
 export * from './shader/index';
 export * from './utils/index';
+export * from './mesh/index';
+export * from './material/index';

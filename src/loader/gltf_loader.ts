@@ -7,9 +7,9 @@ import {
 } from '@loaders.gl/gltf';
 import { load } from '@loaders.gl/core';
 import { MeshRendererComponent } from '@/node/renderer/mesh_renderer';
-import { Mesh } from '@/node/mesh/mesh';
+import { Mesh } from '@/mesh/mesh';
 import { VertexAttribute } from '@/resource/attribute';
-import { StandardMaterial } from '@/node/material/standard_material';
+import { StandardMaterial } from '@/material/standard_material';
 import colors from '@/math/colors';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
 import { Texture, Texture2D } from '@/resource/texture';

@@ -1,13 +1,12 @@
-import { Material } from '@/node/material/material';
-import { Shader } from '@/shader/shader';
-import mesh_shader from '@/shader/mesh/standard_shader';
-import colors, { type Color3f, type Color4f } from '@/math/colors';
 import { createSolidColorTexture } from '@/loader/texture_loader';
+import { Material } from '@/material/material';
+import colors, { type Color3f, type Color4f } from '@/math/colors';
 import { Texture2D } from '@/resource/texture';
+import { StandardShaderSource } from '@/shader/shader_source';
 
 export class StandardMaterial extends Material {
   constructor() {
-    super(new Shader(mesh_shader));
+    super(StandardShaderSource);
 
     // default textures
     this.setTexture('albedoMap', defaultBaseColor);

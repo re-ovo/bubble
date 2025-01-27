@@ -1,5 +1,5 @@
 import { VertexAttribute } from '@/resource/attribute';
-import { Mesh } from '@/node/mesh/mesh';
+import { Mesh } from '@/mesh/mesh';
 
 export function createCubeMesh(): Mesh {
   const mesh = new Mesh();

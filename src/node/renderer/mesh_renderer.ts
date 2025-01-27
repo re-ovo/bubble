@@ -1,5 +1,5 @@
 import { RendererComponent } from '@/node/renderer/renderer';
-import { Mesh } from '@/node/mesh/mesh';
+import { Mesh } from '@/mesh/mesh';
 import { Entity } from '@/core';
 
 export class MeshRendererComponent extends RendererComponent {

@@ -18,8 +18,8 @@ import {
 } from '@/resource/buffer';
 import type { Shader } from '@/shader/shader';
 import { RenderPipelineBuilder } from '@/pipeline/builder/render_pipeline_builder';
-import { Material, MaterialBlendMode } from '@/node/material/material';
-import type { Mesh } from '@/node/mesh/mesh';
+import { Material, MaterialBlendMode } from '@/material/material';
+import type { Mesh } from '@/mesh/mesh';
 import { RendererComponent } from '@/node';
 import { TransformDirtyFlag } from '@/core';
 import { generateMipmap, numMipLevels } from 'webgpu-utils';
